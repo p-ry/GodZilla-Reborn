@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.LimelightHelpers;
+import frc.robot.LimelightHelpers.PoseEstimate;
 import au.grapplerobotics.LaserCan; 
 import au.grapplerobotics.ConfigurationFailedException;
 
@@ -25,6 +26,7 @@ public class Robot extends TimedRobot {
   public final RobotContainer m_robotContainer;
 
   private final boolean kUseLimelight = true;
+  public PoseEstimate best = new PoseEstimate();
 
   public Robot() {
     //enableLiveWindowInTest(true);
@@ -36,6 +38,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotInit() {
+    
     laserCan = new LaserCan(10);
     //m_robotContainer.drivetrain.gyro.setYaw(0);
     // Optionally initialise the settings of the LaserCAN, if you haven't already done so in GrappleHook
@@ -45,6 +48,23 @@ public class Robot extends TimedRobot {
       laserCan.setTimingBudget(LaserCan.TimingBudget.TIMING_BUDGET_33MS);
     } catch (ConfigurationFailedException e) {
       System.out.println("Configuration failed! " + e);
+    }
+    if (kUseLimelight) {
+      var driveState = m_robotContainer.drivetrain.getState();
+      double headingDeg = driveState.Pose.getRotation().getDegrees();
+      double omegaRps = Units.radiansToRotations(driveState.Speeds.omegaRadiansPerSecond);
+
+      LimelightHelpers.SetRobotOrientation("limelight-left", headingDeg, 0, 0, 0, 0, 0);
+      var llMeasurement = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-left");
+      LimelightHelpers.SetRobotOrientation("limelight-right", headingDeg, 0, 0, 0, 0, 0);
+      var llMeasurement2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-right");
+      Utilitys utils = new Utilitys();
+      best = utils.bestEstimate(llMeasurement, llMeasurement2);
+      //LimelightHelpers.Se
+      if (best != null && best.tagCount > 0 && Math.abs(omegaRps) < 2.0) {
+        
+        m_robotContainer.drivetrain.addVisionMeasurement(llMeasurement.pose, llMeasurement.timestampSeconds);
+      }
     }
   }
 
@@ -75,17 +95,7 @@ public class Robot extends TimedRobot {
   
   
   
-     if (kUseLimelight) {
-      var driveState = m_robotContainer.drivetrain.getState();
-      double headingDeg = driveState.Pose.getRotation().getDegrees();
-      double omegaRps = Units.radiansToRotations(driveState.Speeds.omegaRadiansPerSecond);
-
-      LimelightHelpers.SetRobotOrientation("limelight-left", headingDeg, 0, 0, 0, 0, 0);
-      var llMeasurement = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-left");
-      if (llMeasurement != null && llMeasurement.tagCount > 0 && Math.abs(omegaRps) < 2.0) {
-        m_robotContainer.drivetrain.addVisionMeasurement(llMeasurement.pose, llMeasurement.timestampSeconds);
-      }
-    }
+    
 
 
 
