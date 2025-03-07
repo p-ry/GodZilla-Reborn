@@ -34,9 +34,9 @@ public class UpperArm extends SubsystemBase {
   double kI = 0.0;
   double kD = 0.000;
   double maxVel = 200;
-  double maxAcc = 600;
+  double maxAcc = 300;
   double minVel = 0;
-  double kJerk = 2000;
+  double kJerk = 800;
   boolean change = false;
   boolean updatePID = false;
   // TalonFXConfigurator leftConfigurator;
@@ -73,7 +73,10 @@ var motorConfigs = new MotorOutputConfigs();
     // LowerArmRightFollower = new Follower(31, true);
     // LowerArmRight.setControl(LowerArmRightFollower);
     
-    UpperArmRight.getConfigurator().apply(motorConfigs);    
+    UpperArmRight.getConfigurator().apply(motorConfigs); 
+    
+    UpperArmLeft.setNeutralMode(NeutralModeValue.Brake);
+    UpperArmRight.setNeutralMode(NeutralModeValue.Brake);
 
 
 

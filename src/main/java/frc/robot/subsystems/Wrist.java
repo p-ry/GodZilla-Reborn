@@ -46,7 +46,7 @@ public class Wrist extends SubsystemBase {
     
     //SmartDashboard.putString("motor", ww
     wristConfigs = new TalonFXConfiguration();
-    wristConfigs.Slot0.kP = 0.5;
+    wristConfigs.Slot0.kP = 0.05;
    // wristConfigs.Commutation.MotorArrangement = MotorArrangementValue.Minion_JST;
     SmartDashboard.putString("motor", wrist.getConnectedMotor().toString());
     wristConfigs.ClosedLoopGeneral.ContinuousWrap = false;

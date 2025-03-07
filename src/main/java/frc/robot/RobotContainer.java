@@ -46,7 +46,9 @@ public class RobotContainer {
         private final SwerveRequest.RobotCentric forwardStraight = new SwerveRequest.RobotCentric()
                         .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
-        private final Telemetry logger = new Telemetry(MaxSpeed);
+        // private final Telemetry logger = new Telemetry(MaxSpeed);
+
+        // ace.setBrakeMode(true);
 
         private final CommandXboxController driver = new CommandXboxController(0);
         private final Joystick copilot = new Joystick(1);
@@ -55,7 +57,7 @@ public class RobotContainer {
         public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
         public final ArmAssembly mArm = new ArmAssembly(99/* provide necessary arguments here */);
         public final Ace ace = new Ace();
-        //public final Wrist Wrist = new Wrist();
+        // public final Wrist Wrist = new Wrist();
         private final CommandXboxController controller = new CommandXboxController(0);
 
         /* Path follower */
@@ -64,7 +66,6 @@ public class RobotContainer {
         public RobotContainer() {
                 AutoChooser = AutoBuilder.buildAutoChooser("none");
                 SmartDashboard.putData("AutoChooser", AutoChooser);
-                
 
                 configureBindings();
         }
@@ -74,14 +75,17 @@ public class RobotContainer {
                 // and Y is defined as to the left according to WPILib convention.
                 drivetrain.setDefaultCommand(
                                 // Drivetrain will execute this command periodically
-                                drivetrain.applyRequest(() -> drive.withVelocityX(- (controller.getLeftY()*controller.getLeftY()*controller.getLeftY()) * MaxSpeed) // Drive
-                                                                                                                     // forward
-                                                                                                                     // with
-                                                                                                                     // negative
-                                                                                                                     // Y
-                                                                                                                     // (forward)
-                                                .withVelocityY(-(controller.getLeftX()*controller.getLeftX()*controller.getLeftX()) * MaxSpeed) // Drive left with
-                                                                                                  // negative X (left)
+                                drivetrain.applyRequest(() -> drive.withVelocityX(
+                                                -(controller.getLeftY() * controller.getLeftY() * controller.getLeftY())
+                                                                * MaxSpeed) // Drive
+                                                // forward
+                                                // with
+                                                // negative
+                                                // Y
+                                                // (forward)
+                                                .withVelocityY(-(controller.getLeftX() * controller.getLeftX()
+                                                                * controller.getLeftX()) * MaxSpeed) // Drive left with
+                                                // negative X (left)
                                                 .withRotationalRate(-controller.getRightX() * MaxAngularRate) // Drive
                                                                                                               // counterclockwise
                                                                                                               // with
@@ -100,93 +104,105 @@ public class RobotContainer {
                 final JoystickButton Lv3R = new JoystickButton(copilot, 5);
                 final JoystickButton Lv4L = new JoystickButton(copilot, 6);
                 final JoystickButton Lv4R = new JoystickButton(copilot, 7);
-                //final JoystickButton Climb = new JoystickButton(copilot, 8);
-                //final JoystickButton Pull = new JoystickButton(copilot, 9);
+                // final JoystickButton Climb = new JoystickButton(copilot, 8);
+                // final JoystickButton Pull = new JoystickButton(copilot, 9);
                 final JoystickButton Intake = new JoystickButton(copilot, 10);
                 final JoystickButton Outtake = new JoystickButton(copilot, 11);
-                //final JoystickButton Process = new JoystickButton(copilot, 12);
-                //final JoystickButton Load = new JoystickButton(copilot2, 1);
-                //final JoystickButton Barge = new JoystickButton(copilot2, 2);
-                
+                // final JoystickButton Process = new JoystickButton(copilot, 12);
+                // final JoystickButton Load = new JoystickButton(copilot2, 1);
+                // final JoystickButton Barge = new JoystickButton(copilot2, 2);
 
-              
-                //Process
-                //.onTrue(new MoveArm(mArm, 12));
+                // Process
+                // .onTrue(new MoveArm(mArm, 12));
                 Dump
-                .onTrue(new MoveArm(mArm, 1));
+                                .whileTrue(new MoveArm(mArm, 1));
+                Dump
+                                .onFalse(new MoveArm(mArm, 0));
                 Lv2L
-                .onTrue(new MoveArm(mArm, 2));
+                                .whileTrue(new MoveArm(mArm, 2));
+                Lv2L
+                                .onFalse(new MoveArm(mArm, 0));
                 Lv2R
-                .onTrue(new MoveArm(mArm, 2));
+                                .whileTrue(new MoveArm(mArm, 2));
+                Lv2R
+                                .onFalse(new MoveArm(mArm, 0));
                 Lv3L
-                .onTrue(new MoveArm(mArm, 3));
+                                .whileTrue(new MoveArm(mArm, 3));
+                Lv3L
+                                .onFalse(new MoveArm(mArm, 0));
                 Lv3R
-                .onTrue(new MoveArm(mArm, 3));
+                                .whileTrue(new MoveArm(mArm, 3));
+                Lv3R
+                                .onFalse(new MoveArm(mArm, 0));
                 Lv4L
-                .onTrue(new MoveArm(mArm, 4));
+                                .whileTrue(new MoveArm(mArm, 4));
+                Lv4L
+                                .onFalse(new MoveArm(mArm, 0));
                 Lv4R
-                .onTrue(new MoveArm(mArm, 4));
-                /*Climb need to find correct Position
-                .onTrue(new MoveArm(mArm, 2));
-                Pull
-                .onTrue(new MoveArm(mArm, 2));*/
+                                .whileTrue(new MoveArm(mArm, 4));
+                Lv4R
+                                .onFalse(new MoveArm(mArm, 0));
+                /*
+                 * Climb need to find correct Position
+                 * .onTrue(new MoveArm(mArm, 2));
+                 * Pull
+                 * .onTrue(new MoveArm(mArm, 2));
+                 */
                 Intake
-                .whileTrue(new InstantCommand(()-> ace.setSpeed(1)));
+                                .whileTrue(new InstantCommand(() -> ace.setSpeed(1)));
                 Intake
-                .onFalse(new InstantCommand(() -> ace.setSpeed(0)));
+                                .onFalse(new InstantCommand(() -> ace.setSpeed(0)));
                 Outtake
-                .whileTrue(new InstantCommand(()-> ace.setSpeed(-1.0)));
+                                .whileTrue(new InstantCommand(() -> ace.setSpeed(-1.0)));
                 Outtake
-                .onFalse(new InstantCommand(() -> ace.setSpeed(0)));
-                /*Process need to find corect Position
-                .onTrue(new MoveArm(mArm, 2));
-                Load
-                .onTrue(new MoveArm(mArm, 2));
-                Barge
-                .onTrue(new MoveArm(mArm, 2));*/
-
+                                .onFalse(new InstantCommand(() -> ace.setSpeed(0)));
+                /*
+                 * Process need to find corect Position
+                 * .onTrue(new MoveArm(mArm, 2));
+                 * Load
+                 * .onTrue(new MoveArm(mArm, 2));
+                 * Barge
+                 * .onTrue(new MoveArm(mArm, 2));
+                 */
 
                 driver.rightBumper()
-                .onTrue(new DriveToAmpPath());
-
-
-
-
+                                .onTrue(new DriveToAmpPath());
 
                 controller
                                 .start()
                                 .onTrue(new InstantCommand(() -> drivetrain.gyro.reset()));
 
-              /*  controller
-                                .a()
-                                .onTrue(new MoveArm(mArm, 1));
-                // new InstantCommand(() -> lowerArm.setPos(38.0) ));
-                controller
-                                .b()
-                                .onTrue(new MoveArm(mArm, 2));
-
-                controller
-                                .leftBumper()
-                                .onTrue(new MoveArm(mArm, 0));
-
-                
-                controller
-                                .rightBumper()
-                                .onTrue(new InstantCommand(() -> {
-                                        ace.setSpeed(1);
-                                        ace.LaserCANStop();
-                                }));
-
-                controller
-                                .y()
-                                .onTrue(new MoveArm(mArm, 3));
-                controller
-                                .rightBumper()
-                                .onFalse(new InstantCommand(() -> ace.setSpeed(0)));
-                controller
-                                .x()
-                                .onTrue(new MoveArm(mArm, 4));
-*/
+                /*
+                 * controller
+                 * .a()
+                 * .onTrue(new MoveArm(mArm, 1));
+                 * // new InstantCommand(() -> lowerArm.setPos(38.0) ));
+                 * controller
+                 * .b()
+                 * .onTrue(new MoveArm(mArm, 2));
+                 * 
+                 * controller
+                 * .leftBumper()
+                 * .onTrue(new MoveArm(mArm, 0));
+                 * 
+                 * 
+                 * controller
+                 * .rightBumper()
+                 * .onTrue(new InstantCommand(() -> {
+                 * ace.setSpeed(1);
+                 * ace.LaserCANStop();
+                 * }));
+                 * 
+                 * controller
+                 * .y()
+                 * .onTrue(new MoveArm(mArm, 3));
+                 * controller
+                 * .rightBumper()
+                 * .onFalse(new InstantCommand(() -> ace.setSpeed(0)));
+                 * controller
+                 * .x()
+                 * .onTrue(new MoveArm(mArm, 4));
+                 */
                 // joystick.a().whileTrue(drivetrain.applyRequest(() -> brake));
                 driver.b().whileTrue(drivetrain.applyRequest(
                                 () -> point.withModuleDirection(
@@ -200,7 +216,7 @@ public class RobotContainer {
 
                 // Run SysId routines when holding back/start and X/Y.
                 // Note that each routine should be run exactly once in a single log.
-            
+
                 /*
                  * driver.back().and(joystick.y()).whileTrue(drivetrain.sysIdDynamic(Direction
                  * .kForward));
@@ -219,11 +235,11 @@ public class RobotContainer {
                  * joystick.leftBumper().onTrue(drivetrain.runOnce(() ->
                  * drivetrain.seedFieldCentric()));
                  */
-               // drivetrain.registerTelemetry(logger::telemeterize);
+                // drivetrain.registerTelemetry(logger::telemeterize);
         }
+
         public Command getAutonomousCommand() {
                 /* Run the path selected from the auto chooser */
                 return AutoChooser.getSelected();
         }
 }
-

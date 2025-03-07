@@ -22,41 +22,43 @@ import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 
 public class Slider extends SubsystemBase {
-TalonFXS slider;
-  
+  TalonFXS slider;
+
   TalonFXSConfigurator sliderConfigurator;
   PositionDutyCycle sliderController;
-  
+
   TalonFXSConfiguration sliderConfigs;
   double requestedPosition;
   boolean atPosition;
   SparkMaxConfig config;
   public double kP, kI, kD, kIz, kFF, kMaxOutput, kMinOutput, maxRPM, maxVel, minVel, maxAcc, allowedErr;
-  public double i,d,ff,aFF;
+  public double i, d, ff, aFF;
+
   /** Creates a new Slider. */
   public Slider() {
 
-slider = new TalonFXS(35);      
-  
+    slider = new TalonFXS(35);
 
-    
   }
-  
-  public void setPos(double position){
+
+  public void setPos(double position) {
     sliderController = new PositionDutyCycle(position);
     slider.setControl(sliderController);
     requestedPosition = position;
     SmartDashboard.putNumber("Slider", position);
+    slider.setNeutralMode(NeutralModeValue.Brake);
 
-    
   }
-  public double getPos(){
+
+  public double getPos() {
     return slider.getRotorPosition().getValueAsDouble();
-    
+
   }
-  public boolean atPos(){
+
+  public boolean atPos() {
     return atPosition;
   }
+
   @Override
   public void periodic() {
     if (Math.abs(getPos() - requestedPosition) < 0.8) {

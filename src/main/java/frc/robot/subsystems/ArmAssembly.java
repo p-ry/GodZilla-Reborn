@@ -73,9 +73,9 @@ public class ArmAssembly extends SubsystemBase {
         upperArm.dynamic.Jerk = 50;
         upperArm.UpperArmLeft.setControl(upperArm.dynamic.withPosition(1.0));
         upperArm.UpperArmRight.setControl(upperArm.dynamic.withPosition(1.0));
-        upperArm.setPos(0.5);//0.0 load
+        //upperArm.setPos(0.5);//0.0 load
          slider.setPos(0);
-         wrist.setPos(2.0);
+         wrist.setPos(0.0);
         // ace.setSpeed(0);
 
         // System.out.println("home");
@@ -91,7 +91,7 @@ public class ArmAssembly extends SubsystemBase {
        lowerArm.setPos(13.5);
       upperArm.setPos(11.5);
          slider.setPos(-0.5);
-        wrist.setPos(13);
+        wrist.setPos(8.0);
         // System.out.println("Level 2");
         // m_rob .setSpeed(1);
 
@@ -100,7 +100,7 @@ public class ArmAssembly extends SubsystemBase {
       lowerArm.setPos(22);
       upperArm.setPos(22);
          slider.setPos(-0.5);
-        wrist.setPos(13);
+        wrist.setPos(8);
       
        
 
@@ -108,24 +108,42 @@ public class ArmAssembly extends SubsystemBase {
         break;
 
       case 4:
+       lowerArm.setPos(28.2);
+       upperArm.setPos(33.5);
+       slider.setPos(-43.4);
+       wrist.setPos(8.8);
+
+        // System.out.println("Level 4");
+        break;
+
+       case 5:
        lowerArm.setPos(klowerarm);
        upperArm.setPos(kupperarm);
        slider.setPos(kslider);
        wrist.setPos(kwrist);
 
-        // System.out.println("Level 4");
-        break;
+
+       break;
+       
+
+       
+
       case 12:
         wrist.setPos(wrist.getPos() + 1.0);
         break;
 
       default:
-        lowerArm.setPos(lowerArm.getPos());
-        upperArm.setPos(upperArm.getPos());
-        ;
-        // slider.setPos(slider.getPos());
-        wrist.setPos(3.0);
-        // ace.setSpeed(0);
+      lowerArm.setPos(1.0); // 16.10 load
+
+      upperArm.dynamic.Velocity = 1;
+      upperArm.dynamic.Acceleration = 1;
+      upperArm.dynamic.Jerk = 50;
+      upperArm.UpperArmLeft.setControl(upperArm.dynamic.withPosition(1.0));
+      upperArm.UpperArmRight.setControl(upperArm.dynamic.withPosition(1.0));
+      //upperArm.setPos(0.5);//0.0 load
+       slider.setPos(-0.50);
+       wrist.setPos(0.0);
+       
 
         // System.out.println("home");
         

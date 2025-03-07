@@ -5,7 +5,7 @@ import static edu.wpi.first.units.Units.*;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-import com.ctre.phoenix6.SignalLogger;
+//import com.ctre.phoenix6.SignalLogger;
 import frc.robot.Utilitys;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.hardware.Pigeon2;
@@ -100,8 +100,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * SysId routine for characterizing translation. This is used to find PID gains
      * for the drive motors.
      */
-    
- 
+
     public CommandSwerveDrivetrain(SwerveDrivetrainConstants drivetrainConstants,
             SwerveModuleConstants<?, ?, ?>... modules) {
         super(drivetrainConstants, modules);
@@ -238,7 +237,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * @param direction Direction of the SysId Quasistatic test
      * @return Command to run
      */
-   
 
     public void updateOdometry() {
         boolean doRejectUpdate = false;
@@ -256,17 +254,19 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
         // SmartDashboard.putNumber("tagCount", mt2.tagCount);
         // SmartDashboard.putNumber("mt2PoseX", mt2.pose.getX());
-      if(mt2 != null){
-        if (mt2.tagCount == 0) {
+        if (mt2 != null) {
+            if (mt2.tagCount == 0) {
+                doRejectUpdate = true;
+            }
+            if (mt2.pose.getX() < 0) {
+                doRejectUpdate = true;
+            }
+            if (mt2.pose.getY() > 7.6) {
+                doRejectUpdate = true;
+            }
+        } else {
             doRejectUpdate = true;
         }
-        if (mt2.pose.getX() < 0) {
-            doRejectUpdate = true;
-        }
-        if (mt2.pose.getY() > 7.6) {
-            doRejectUpdate = true;
-        }
-    }
         // if(mt2.rawFiducials !=null){
         // if(mt2.rawFiducials[0].ambiguity>.7){
         // doRejectUpdate=true;
@@ -274,7 +274,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         // }
         if (Math.abs(gyro.getAngularVelocityZWorld().getValueAsDouble()) > 360) // if our angular velocity is greater
                                                                                 // than 720 degrees per second, ignore
-        // vision updates
+
         {
             doRejectUpdate = true;
 
@@ -310,15 +310,15 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         SmartDashboard.putNumber("Heading", getCompassHeading());
         SmartDashboard.putNumber("yaw", gyro.getYaw().getValueAsDouble());
         updateOdometry();
-       // cameraPose = grabPose();
-       // addVisionMeasurement(cameraPose.pose, cameraPose.timestampSeconds);
+        // cameraPose = grabPose();
+        // addVisionMeasurement(cameraPose.pose, cameraPose.timestampSeconds);
         botPose2d = getPose();
-        botPose3d = getPose3d();
+        // botPose3d = getPose3d();
         SmartDashboard.putNumber("BotPoseX", botPose2d.getTranslation().getX());
         SmartDashboard.putNumber("BotPoseY", botPose2d.getTranslation().getY());
         SmartDashboard.putNumber("BotPoseTheta", botPose2d.getRotation().getDegrees());
-        SmartDashboard.putNumber("BotPoseX3d", botPose3d.getTranslation().getX());
-        SmartDashboard.putNumber("BotPoseY3d", botPose3d.getTranslation().getY());
+        // SmartDashboard.putNumber("BotPoseX3d", botPose3d.getTranslation().getX());
+        // SmartDashboard.putNumber("BotPoseY3d", botPose3d.getTranslation().getY());
 
         /*
          * Periodically try to apply the operator perspective.
@@ -331,15 +331,20 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
          * This ensures driving behavior doesn't change until an explicit disable event
          * occurs during testing.
          */
-        if (!m_hasAppliedOperatorPerspective || DriverStation.isDisabled()) {
-            DriverStation.getAlliance().ifPresent(allianceColor -> {
-                setOperatorPerspectiveForward(
-                        allianceColor == Alliance.Red
-                                ? kRedAlliancePerspectiveRotation
-                                : kBlueAlliancePerspectiveRotation);
-                m_hasAppliedOperatorPerspective = true;
-            });
-        }
+
+        /*
+         * if (!m_hasAppliedOperatorPerspective || DriverStation.isDisabled()) {
+         * DriverStation.getAlliance().ifPresent(allianceColor -> {
+         * setOperatorPerspectiveForward(
+         * allianceColor == Alliance.Red
+         * ? kRedAlliancePerspectiveRotation
+         * : kBlueAlliancePerspectiveRotation);
+         * m_hasAppliedOperatorPerspective = true;
+         * });
+         * 
+         * 
+         * }
+         */
     }
 
     private void startSimThread() {
@@ -423,15 +428,16 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
 
     public PoseEstimate grabPose() {
-        LimelightHelpers.SetRobotOrientation("limelight-right",
-                m_poseEstimator.getEstimatedPosition().getRotation().getDegrees(), 0, 0, 0, 0, 0);
-        LimelightHelpers.SetRobotOrientation("limelight-left",
-                m_poseEstimator.getEstimatedPosition().getRotation().getDegrees(), 0, 0, 0, 0, 0);
+        LimelightHelpers.SetRobotOrientation("limelight-right",getGyroYaw().getDegrees(), 0, 0, 0, 0, 0);
+        LimelightHelpers.SetRobotOrientation("limelight-left",getGyroYaw().getDegrees(), 0, 0, 0, 0, 0);
+          //      m_poseEstimator.getEstimatedPosition().getRotation().getDegrees(), 0, 0, 0, 0, 0);
+       /// LimelightHelpers.SetRobotOrientation("limelight-left",
+        //        m_poseEstimator.getEstimatedPosition().getRotation().getDegrees(), 0, 0, 0, 0, 0);
 
         leftPose = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-left");
         rightPose = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-right");
-//mt2 = leftPose;
-  mt2 = utils.bestEstimate(leftPose, rightPose);
+        // mt2 = leftPose;
+        mt2 = utils.bestEstimate(leftPose, rightPose);
 
         return mt2;
 

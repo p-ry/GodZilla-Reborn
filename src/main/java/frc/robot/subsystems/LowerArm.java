@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
@@ -57,6 +58,9 @@ public class LowerArm extends SubsystemBase {
 
     talonFXConfigsLeft = new TalonFXConfiguration();
     talonFXConfigsRight = new TalonFXConfiguration();
+
+    LowerArmLeft.setNeutralMode(NeutralModeValue.Brake);
+    LowerArmRight.setNeutralMode(NeutralModeValue.Brake);
 
     // set slot 0 gains
     var slot0Configs = talonFXConfigsLeft.Slot0;

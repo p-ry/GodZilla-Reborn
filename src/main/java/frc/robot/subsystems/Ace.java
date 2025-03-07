@@ -36,7 +36,7 @@ VelocityVoltage aceController;
   /** Creates a new Ace. */
   public Ace() {
     ace = new TalonFX(37);
-    
+    ace.setNeutralMode(NeutralModeValue.Brake);
  
   }
 
