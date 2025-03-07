@@ -7,12 +7,12 @@ package frc.robot.subsystems;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
-import com.ctre.phoenix6.configs.TalonFXSConfiguration;
-import com.ctre.phoenix6.configs.TalonFXSConfigurator;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.configs.TalonFXConfigurator;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.PositionDutyCycle;
 import com.ctre.phoenix6.controls.VelocityVoltage;
-import com.ctre.phoenix6.hardware.TalonFXS;
+import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
@@ -20,12 +20,12 @@ import com.revrobotics.spark.SparkClosedLoopController;
 import au.grapplerobotics.LaserCan;
 
 public class Ace extends SubsystemBase {
- TalonFXS ace;
+ TalonFX ace;
   MotionMagicVoltage controlace;
-  TalonFXSConfigurator aceConfigurator;
+  TalonFXConfigurator aceConfigurator;
 VelocityVoltage aceController;
   
-  TalonFXSConfiguration aceConfigs;
+  TalonFXConfiguration aceConfigs;
   double requestedPosition;
   boolean atPosition;
   SparkMaxConfig config;
@@ -35,7 +35,7 @@ VelocityVoltage aceController;
 
   /** Creates a new Ace. */
   public Ace() {
-    ace = new TalonFXS(37);
+    ace = new TalonFX(37);
     
  
   }

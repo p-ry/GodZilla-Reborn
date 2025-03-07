@@ -100,75 +100,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * SysId routine for characterizing translation. This is used to find PID gains
      * for the drive motors.
      */
-    private final SysIdRoutine m_sysIdRoutineTranslation = new SysIdRoutine(
-            new SysIdRoutine.Config(
-                    null, // Use default ramp rate (1 V/s)
-                    Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
-                    null, // Use default timeout (10 s)
-                    // Log state with SignalLogger class
-                    state -> SignalLogger.writeString("SysIdTranslation_State", state.toString())),
-            new SysIdRoutine.Mechanism(
-                    output -> setControl(m_translationCharacterization.withVolts(output)),
-                    null,
-                    this));
-
-    /*
-     * SysId routine for characterizing steer. This is used to find PID gains for
-     * the steer motors.
-     */
-    private final SysIdRoutine m_sysIdRoutineSteer = new SysIdRoutine(
-            new SysIdRoutine.Config(
-                    null, // Use default ramp rate (1 V/s)
-                    Volts.of(7), // Use dynamic voltage of 7 V
-                    null, // Use default timeout (10 s)
-                    // Log state with SignalLogger class
-                    state -> SignalLogger.writeString("SysIdSteer_State", state.toString())),
-            new SysIdRoutine.Mechanism(
-                    volts -> setControl(m_steerCharacterization.withVolts(volts)),
-                    null,
-                    this));
-
-    /*
-     * SysId routine for characterizing rotation.
-     * This is used to find PID gains for the FieldCentricFacingAngle
-     * HeadingController.
-     * See the documentation of SwerveRequest.SysIdSwerveRotation for info on
-     * importing the log to SysId.
-     */
-    private final SysIdRoutine m_sysIdRoutineRotation = new SysIdRoutine(
-            new SysIdRoutine.Config(
-                    /* This is in radians per second², but SysId only supports "volts per second" */
-                    Volts.of(Math.PI / 6).per(Second),
-                    /* This is in radians per second, but SysId only supports "volts" */
-                    Volts.of(Math.PI),
-                    null, // Use default timeout (10 s)
-                    // Log state with SignalLogger class
-                    state -> SignalLogger.writeString("SysIdRotation_State", state.toString())),
-            new SysIdRoutine.Mechanism(
-                    output -> {
-                        /* output is actually radians per second, but SysId only supports "volts" */
-                        setControl(m_rotationCharacterization.withRotationalRate(output.in(Volts)));
-                        /* also log the requested output for SysId */
-                        SignalLogger.writeDouble("Rotational_Rate", output.in(Volts));
-                    },
-                    null,
-                    this));
-
-    /* The SysId routine to test */
-    private SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineSteer;// m_sysIdRoutineTranslation;
-
-    /**
-     * Constructs a CTRE SwerveDrivetrain using the specified constants.
-     * <p>
-     * This constructs the underlying hardware devices, so users should not
-     * construct
-     * the devices themselves. If they need the devices, they can access them
-     * through
-     * getters in the classes.
-     *
-     * @param drivetrainConstants Drivetrain-wide constants for the swerve drive
-     * @param modules             Constants for each specific module
-     */
+    
+ 
     public CommandSwerveDrivetrain(SwerveDrivetrainConstants drivetrainConstants,
             SwerveModuleConstants<?, ?, ?>... modules) {
         super(drivetrainConstants, modules);
@@ -305,20 +238,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * @param direction Direction of the SysId Quasistatic test
      * @return Command to run
      */
-    public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
-        return m_sysIdRoutineToApply.quasistatic(direction);
-    }
-
-    /**
-     * Runs the SysId Dynamic test in the given direction for the routine
-     * specified by {@link #m_sysIdRoutineToApply}.
-     *
-     * @param direction Direction of the SysId Dynamic test
-     * @return Command to run
-     */
-    public Command sysIdDynamic(SysIdRoutine.Direction direction) {
-        return m_sysIdRoutineToApply.dynamic(direction);
-    }
+   
 
     public void updateOdometry() {
         boolean doRejectUpdate = false;
@@ -336,6 +256,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
         // SmartDashboard.putNumber("tagCount", mt2.tagCount);
         // SmartDashboard.putNumber("mt2PoseX", mt2.pose.getX());
+      if(mt2 != null){
         if (mt2.tagCount == 0) {
             doRejectUpdate = true;
         }
@@ -345,6 +266,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         if (mt2.pose.getY() > 7.6) {
             doRejectUpdate = true;
         }
+    }
         // if(mt2.rawFiducials !=null){
         // if(mt2.rawFiducials[0].ambiguity>.7){
         // doRejectUpdate=true;
@@ -388,8 +310,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         SmartDashboard.putNumber("Heading", getCompassHeading());
         SmartDashboard.putNumber("yaw", gyro.getYaw().getValueAsDouble());
         updateOdometry();
-        cameraPose = grabPose();
-        addVisionMeasurement(cameraPose.pose, cameraPose.timestampSeconds);
+       // cameraPose = grabPose();
+       // addVisionMeasurement(cameraPose.pose, cameraPose.timestampSeconds);
         botPose2d = getPose();
         botPose3d = getPose3d();
         SmartDashboard.putNumber("BotPoseX", botPose2d.getTranslation().getX());
@@ -508,7 +430,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
         leftPose = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-left");
         rightPose = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-right");
-        mt2 = utils.bestEstimate(leftPose, rightPose);
+//mt2 = leftPose;
+  mt2 = utils.bestEstimate(leftPose, rightPose);
 
         return mt2;
 

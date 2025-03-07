@@ -23,8 +23,12 @@ public class Utilitys {
             return left;
         }
         else {
+            if (left.tagCount >0){
             leftAmbiguity = left.rawFiducials[0].ambiguity;
+            }
+            if (right.tagCount >0){
             rightAmbiguity = right.rawFiducials[0].ambiguity;
+            }
             if (leftAmbiguity < rightAmbiguity) {
                 return left;
             }
