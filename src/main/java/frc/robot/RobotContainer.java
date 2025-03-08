@@ -56,7 +56,7 @@ public class RobotContainer {
 
         public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
         public final ArmAssembly mArm = new ArmAssembly(99/* provide necessary arguments here */);
-        public final Ace ace = new Ace();
+        public final Ace ace = new Ace(0);
         // public final Wrist Wrist = new Wrist();
         private final CommandXboxController controller = new CommandXboxController(0);
 
@@ -76,7 +76,7 @@ public class RobotContainer {
                 drivetrain.setDefaultCommand(
                                 // Drivetrain will execute this command periodically
                                 drivetrain.applyRequest(() -> drive.withVelocityX(
-                                                -(controller.getLeftY() * controller.getLeftY() * controller.getLeftY())
+                                                -(controller.getLeftY() * controller.getLeftY() * Math.signum(controller.getLeftY()))
                                                                 * MaxSpeed) // Drive
                                                 // forward
                                                 // with
@@ -84,7 +84,7 @@ public class RobotContainer {
                                                 // Y
                                                 // (forward)
                                                 .withVelocityY(-(controller.getLeftX() * controller.getLeftX()
-                                                                * controller.getLeftX()) * MaxSpeed) // Drive left with
+                                                                * Math.signum(controller.getLeftX()) * MaxSpeed)) // Drive left with
                                                 // negative X (left)
                                                 .withRotationalRate(-controller.getRightX() * MaxAngularRate) // Drive
                                                                                                               // counterclockwise
@@ -93,6 +93,7 @@ public class RobotContainer {
                                                                                                               // X
                                                                                                               // (left)
                                 ));
+                ;
                 // controller
                 // .rightBumper()
                 // .onTrue(new InstantCommand())
@@ -166,7 +167,7 @@ public class RobotContainer {
                  */
 
                 driver.rightBumper()
-                                .onTrue(new DriveToAmpPath());
+                                .onTrue(new DriveToAmpPath(drivetrain));
 
                 controller
                                 .start()

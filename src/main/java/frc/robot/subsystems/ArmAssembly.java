@@ -44,8 +44,9 @@ public class ArmAssembly extends SubsystemBase {
     upperArm = new UpperArm();
     slider = new Slider();
     wrist = new Wrist();
-    ace = new Ace();
     this.level = level;
+   // ace = new Ace(level);
+   
     //Shuffleboard.selectTab("Arm");
     SmartDashboard.putBoolean("update", updatePID);
     SmartDashboard.putNumber("kLowerArm", klowerarm);

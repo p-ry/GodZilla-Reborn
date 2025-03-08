@@ -75,7 +75,7 @@ public class Robot extends TimedRobot {
   public void robotPeriodic() {
     CommandScheduler.getInstance().run();
     LaserCan.Measurement measurement = laserCan.getMeasurement();
-    //System.out.println("Distance: " + measurement.distance_mm);
+    System.out.println("Distance: " + measurement.distance_mm);
     if (measurement != null && measurement.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT) {
       //System.out.println("The target is " + measurement.distance_mm + "mm away!");
     } else {
