@@ -13,6 +13,7 @@ import frc.robot.subsystems.Slider;
 import frc.robot.subsystems.UpperArm;
 import frc.robot.subsystems.Wrist;
 import frc.robot.subsystems.ArmAssembly;
+import frc.robot.commands.DriveToAmpPath;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class MoveArm extends Command {
@@ -44,6 +45,7 @@ public class MoveArm extends Command {
     this.wrist = wrist;
     //this.ace= ace;
     this.slider = slider;
+    DriveToAmpPath moveIt;// = new DriveToAmpPath(RobotContainer.drivetrain, shiftDirection);
     
     //declare subsystem dependencies.
   }
@@ -58,7 +60,8 @@ public class MoveArm extends Command {
   @Override
   public void execute() {
     myArm.level=level;
-    myArm.shiftDirection=shiftDirection;
+    //myArm.shiftDirection=shiftDirection;
+   
     
    
   }

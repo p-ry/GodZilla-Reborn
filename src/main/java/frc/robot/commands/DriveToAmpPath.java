@@ -28,47 +28,24 @@ public class DriveToAmpPath extends Command {
   Pose2d where;
   int tadId;
   double leftDist, rightDist;
+  double shiftDirection;
+
   /** Creates a new DriveToAmpPath. */
-  public DriveToAmpPath(CommandSwerveDrivetrain drivetrain,double shiftDirection) {
-    
-    this.drivetrain = drivetrain;
-    
-    
+  public DriveToAmpPath( double shiftDirection) {
+
+    //this.drivetrain = drivetrain;
+    this.shiftDirection = shiftDirection;
+
     // Use addRequirements() here to declare subsystem dependencies.
 
   }
 
-  
-
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    LimelightHelpers.LimelightResults resultsLeft = LimelightHelpers.getLatestResults("limelight-left");
-    LimelightHelpers.LimelightResults resultsRight = LimelightHelpers.getLatestResults("limelight-right");
-    tadId = 0;
-    if (resultsLeft.valid){
-      leftDist = resultsLeft.botpose_avgdist;
-    }else {
-      leftDist = 999999;
-    }
-    if (resultsRight.valid){
-      rightDist = resultsRight.botpose_avgdist;
-    } else {
-      rightDist = 999999;
-    }
-    if (resultsLeft.valid || resultsRight.valid){ {
-
-      if (leftDist < rightDist){
-        tadId = (int) resultsLeft.targets_Fiducials[0].fiducialID;
-      } else {
-        tadId = (int) resultsRight.targets_Fiducials[0].fiducialID;
-      }
-    }
-    if()
-    where = Utilitys.shiftPoseRight(Utilitys.getAprilTagPose(tadId),0.164285833);
     
+     
   }
-  
 
 
 
@@ -76,30 +53,56 @@ public class DriveToAmpPath extends Command {
   @Override
   public void execute() {
 
+    //LimelightHelpers.LimelightResults resultsLeft = LimelightHelpers.getLatestResults("limelight-left");
 
-    where = where.transformBy(new Transform2d(3.171, 4.189, Rotation2d.fromDegrees(0)));
+    LimelightHelpers.LimelightResults resultsRight = LimelightHelpers.getLatestResults("limelight-right");
+    SmartDashboard.putNumber("right: ", resultsRight.botpose_avgdist);
+    SmartDashboard.putBoolean("valid", resultsRight.valid);
+    tadId = 0;
+   
+   /*
+    if (resultsLeft.valid){
+      leftDist = resultsLeft.botpose_avgdist;
+    }else {
+      leftDist = 999999;
+    }
+      */
+    if (resultsRight.valid){
+      rightDist = resultsRight.botpose_avgdist;
+      
+      tadId = (int) resultsRight.targets_Fiducials[0].fiducialID;
+    } else {
+      rightDist = 999999;
+    }
 
-    SmartDashboard.putNumber("WhereX",where.getX());
-    SmartDashboard.putNumber("WhereY",where.getY());
-    
-    
-    //PathPlannerPath path = PathPlannerPath.fromPathFile("Alpha",true);
-    
+    if(shiftDirection==-1){
+      where  = Utilitys.shiftPoseLeft(Utilitys.getAprilTagPose(tadId),0.164285833);
+          }
+     if (shiftDirection == 1){     
+    where = Utilitys.shiftPoseRight(Utilitys.getAprilTagPose(tadId),0.164285833);
+     }
+//
+    SmartDashboard.putNumber("WhereX", where.getX());
+    SmartDashboard.putNumber("WhereY", where.getY());
+
+    SmartDashboard.putNumberArray("Where", new double[] { where.getX(), where.getY(), where.getRotation().getDegrees() });
+
+    // PathPlannerPath path = PathPlannerPath.fromPathFile("Alpha",true);
+
     // Create the constraints to use while pathfinding. The constraints defined in
     // the path will only be used for the path.
-   
-   // PathConstraints constraints = new PathConstraints(
-   //     1.0, 4.0,
-   //     Units.degreesToRadians(540), Units.degreesToRadians(720));
 
-//Command driveit = AutoBuilder.pathfindToPose(where, constraints);
-//driveit.schedule();
+     PathConstraints constraints = new PathConstraints(
+     1.0, 4.0,
+     Units.degreesToRadians(540), Units.degreesToRadians(720));
 
+    Command driveit = AutoBuilder.pathfindToPose(where, constraints);
+     driveit.schedule();
 
     // Since AutoBuilder is configured, we can use it to build pathfinding commands
-  // Command driveIt =
-  // AutoBuilder.pathfindThenFollowPath(path, constraints);//.schedule();
-   // driveIt.execute();
+    // Command driveIt =
+    // AutoBuilder.pathfindThenFollowPath(path, constraints);//.schedule();
+    // driveIt.execute();
 
   }
 

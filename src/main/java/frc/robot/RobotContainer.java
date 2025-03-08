@@ -7,6 +7,8 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
 
+import java.io.Console;
+
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
@@ -50,13 +52,28 @@ public class RobotContainer {
 
         // ace.setBrakeMode(true);
 
-        private final CommandXboxController driver = new CommandXboxController(0);
+        //private final CommandXboxController driver = new CommandXboxController(0);
         private final Joystick copilot = new Joystick(1);
         private final Joystick copilot2 = new Joystick(2);
 
-        public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
-        public final ArmAssembly mArm = new ArmAssembly(99,0);
+        public static final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
+        public final ArmAssembly mArm = new ArmAssembly(false, 99);
         public final Ace ace = new Ace(0);
+
+        final JoystickButton Dump = new JoystickButton(copilot, 1);
+        final JoystickButton Lv2L = new JoystickButton(copilot, 2);
+        final JoystickButton Lv2R = new JoystickButton(copilot, 3);
+        final JoystickButton Lv3L = new JoystickButton(copilot, 4);
+        final JoystickButton Lv3R = new JoystickButton(copilot, 5);
+        final JoystickButton Lv4L = new JoystickButton(copilot, 6);
+        final JoystickButton Lv4R = new JoystickButton(copilot, 7);
+        // final JoystickButton Climb = new JoystickButton(copilot, 8);
+        // final JoystickButton Pull = new JoystickButton(copilot, 9);
+        final JoystickButton Intake = new JoystickButton(copilot, 10);
+        final JoystickButton Outtake = new JoystickButton(copilot, 11);
+        // final JoystickButton Process = new JoystickButton(copilot, 12);
+        // final JoystickButton Load = new JoystickButton(copilot2, 1);
+        // final JoystickButton Barge = new JoystickButton(copilot2, 2);
         // public final Wrist Wrist = new Wrist();
         private final CommandXboxController controller = new CommandXboxController(0);
 
@@ -64,14 +81,8 @@ public class RobotContainer {
         private final SendableChooser<Command> AutoChooser;
 
         public RobotContainer() {
-                AutoChooser = AutoBuilder.buildAutoChooser("none");
-                SmartDashboard.putData("AutoChooser", AutoChooser);
 
-                configureBindings();
-        }
-
-        private void configureBindings() {
-                // Note that X is defined as forward according to WPILib convention,
+                                // Note that X is defined as forward according to WPILib convention,
                 // and Y is defined as to the left according to WPILib convention.
                 drivetrain.setDefaultCommand(
                                 // Drivetrain will execute this command periodically
@@ -94,24 +105,20 @@ public class RobotContainer {
                                                                                                               // (left)
                                 ));
                 ;
+                AutoChooser = AutoBuilder.buildAutoChooser("none");
+                SmartDashboard.putData("AutoChooser", AutoChooser);
+
+                configureBindings();
+        }
+
+        private void configureBindings() {
+                
+
                 // controller
                 // .rightBumper()
                 // .onTrue(new InstantCommand())
 
-                final JoystickButton Dump = new JoystickButton(copilot, 1);
-                final JoystickButton Lv2L = new JoystickButton(copilot, 2);
-                final JoystickButton Lv2R = new JoystickButton(copilot, 3);
-                final JoystickButton Lv3L = new JoystickButton(copilot, 4);
-                final JoystickButton Lv3R = new JoystickButton(copilot, 5);
-                final JoystickButton Lv4L = new JoystickButton(copilot, 6);
-                final JoystickButton Lv4R = new JoystickButton(copilot, 7);
-                // final JoystickButton Climb = new JoystickButton(copilot, 8);
-                // final JoystickButton Pull = new JoystickButton(copilot, 9);
-                final JoystickButton Intake = new JoystickButton(copilot, 10);
-                final JoystickButton Outtake = new JoystickButton(copilot, 11);
-                // final JoystickButton Process = new JoystickButton(copilot, 12);
-                // final JoystickButton Load = new JoystickButton(copilot2, 1);
-                // final JoystickButton Barge = new JoystickButton(copilot2, 2);
+
 
                 // Process
                 // .onTrue(new MoveArm(mArm, 12));
@@ -166,8 +173,8 @@ public class RobotContainer {
                  * .onTrue(new MoveArm(mArm, 2));
                  */
 
-                driver.rightBumper()
-                                .onTrue(new DriveToAmpPath(drivetrain));
+                controller.rightBumper()
+                                .onTrue(new DriveToAmpPath(1));
 
                 controller
                                 .start()
@@ -205,13 +212,13 @@ public class RobotContainer {
                  * .onTrue(new MoveArm(mArm, 4));
                  */
                 // joystick.a().whileTrue(drivetrain.applyRequest(() -> brake));
-                driver.b().whileTrue(drivetrain.applyRequest(
+                controller.b().whileTrue(drivetrain.applyRequest(
                                 () -> point.withModuleDirection(
-                                                new Rotation2d(-driver.getLeftY(), -driver.getLeftX()))));
+                                                new Rotation2d(-controller.getLeftY(), -controller.getLeftX()))));
 
-                driver.pov(0).whileTrue(
+                controller.pov(0).whileTrue(
                                 drivetrain.applyRequest(() -> forwardStraight.withVelocityX(0.5).withVelocityY(0)));
-                driver.pov(180)
+                controller.pov(180)
                                 .whileTrue(drivetrain.applyRequest(
                                                 () -> forwardStraight.withVelocityX(-0.5).withVelocityY(0)));
 

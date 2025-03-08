@@ -47,10 +47,10 @@ public class Utilitys {
     public static Pose2d getAprilTagPose(int tagID) {
         try {
             // Load the official FRC AprilTag field layout (2024 example)
-            AprilTagFieldLayout fieldLayout = AprilTagFields.k2025Reefscape.loadAprilTagLayoutField();
+           // AprilTagFieldLayout fieldLayout = AprilTagFields.k2025Reefscape.loadAprilTagLayoutField();
 
             // Get the tag pose
-            Optional<Pose2d> tagPose = fieldLayout.getTagPose(tagID).map(pose3d -> pose3d.toPose2d());
+            Optional<Pose2d> tagPose = Constants.fieldLayout.getTagPose(tagID).map(pose3d -> pose3d.toPose2d());
 
             return tagPose.orElse(null); // Return the pose if found, otherwise null
         } catch (Exception e) {

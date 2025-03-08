@@ -72,6 +72,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     public LimelightHelpers.PoseEstimate mt2;
     public LimelightHelpers.PoseEstimate leftPose;
     public LimelightHelpers.PoseEstimate rightPose;
+    public LimelightHelpers.PoseEstimate[] cameraPoses;
 
     public Pigeon2 gyro;
     public SwerveDriveOdometry swerveOdometry;
@@ -105,6 +106,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             SwerveModuleConstants<?, ?, ?>... modules) {
         super(drivetrainConstants, modules);
         gyro = new Pigeon2(0, "Canivore");
+        gyro.setYaw(0);
 
         SmartDashboard.putNumber("yaw2", gyro.getYaw().getValueAsDouble());
 
@@ -240,6 +242,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     public void updateOdometry() {
         boolean doRejectUpdate = false;
+        LimelightHelpers.PoseEstimate poses;
+
         m_poseEstimator.update(
                 gyro.getRotation2d(),
                 new SwerveModulePosition[] {
@@ -249,42 +253,38 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                         getModule(3).getPosition(true),
 
                 });
+        cameraPoses[0] = grabPose("left");
+        cameraPoses[1] = grabPose("right");
+        for (int i = 0; i < 2; i++) {
 
-        mt2 = grabPose();
-
-        // SmartDashboard.putNumber("tagCount", mt2.tagCount);
-        // SmartDashboard.putNumber("mt2PoseX", mt2.pose.getX());
-        if (mt2 != null) {
-            if (mt2.tagCount == 0) {
+            if (cameraPoses[i] != null) {
+                if (cameraPoses[i].tagCount == 0) {
+                    doRejectUpdate = true;
+                }
+                if (cameraPoses[i].pose.getX() < 0) {
+                    doRejectUpdate = true;
+                }
+                if (cameraPoses[i].pose.getY() > 7.6) {
+                    doRejectUpdate = true;
+                }
+            } else {
                 doRejectUpdate = true;
             }
-            if (mt2.pose.getX() < 0) {
+            SmartDashboard.putNumber("estimated yaw",
+                    m_poseEstimator.getEstimatedPosition().getRotation().getDegrees());
+            if (gyro.getAngularVelocityZWorld().getValueAsDouble() > 2) // if our angular velocity is greater
+            {
                 doRejectUpdate = true;
             }
-            if (mt2.pose.getY() > 7.6) {
-                doRejectUpdate = true;
+            if (!doRejectUpdate) {
+                m_poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(.7, .7, 9999999));
+                m_poseEstimator.addVisionMeasurement(
+                        cameraPoses[i].pose,
+                        cameraPoses[i].timestampSeconds);
+                swerveOdometry.resetPosition(getGyroYaw(), getModulePositions(),
+                        m_poseEstimator.getEstimatedPosition());
             }
-        } else {
-            doRejectUpdate = true;
-        }
-        // if(mt2.rawFiducials !=null){
-        // if(mt2.rawFiducials[0].ambiguity>.7){
-        // doRejectUpdate=true;
-        // }
-        // }
-        if (Math.abs(gyro.getAngularVelocityZWorld().getValueAsDouble()) > 360) // if our angular velocity is greater
-                                                                                // than 720 degrees per second, ignore
 
-        {
-            doRejectUpdate = true;
-
-        }
-        if (!doRejectUpdate) {
-            m_poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(.7, .7, 9999999));
-            m_poseEstimator.addVisionMeasurement(
-                    mt2.pose,
-                    mt2.timestampSeconds);
-            swerveOdometry.resetPosition(getGyroYaw(), getModulePositions(), m_poseEstimator.getEstimatedPosition());
         }
         /*
          * LimelightHelpers.PoseEstimate limelightMeasurement =
@@ -303,12 +303,19 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     @Override
     public void periodic() {
-        SmartDashboard.putNumber("Mod0", getModule(0).getSteerMotor().getPosition().getValueAsDouble());
-        SmartDashboard.putNumber("Mod1", getModule(1).getSteerMotor().getPosition().getValueAsDouble());
-        SmartDashboard.putNumber("Mod2", getModule(2).getSteerMotor().getPosition().getValueAsDouble());
-        SmartDashboard.putNumber("Mod3", getModule(3).getSteerMotor().getPosition().getValueAsDouble());
-        SmartDashboard.putNumber("Heading", getCompassHeading());
-        SmartDashboard.putNumber("yaw", gyro.getYaw().getValueAsDouble());
+        /*
+         * SmartDashboard.putNumber("Mod0",
+         * getModule(0).getSteerMotor().getPosition().getValueAsDouble());
+         * SmartDashboard.putNumber("Mod1",
+         * getModule(1).getSteerMotor().getPosition().getValueAsDouble());
+         * SmartDashboard.putNumber("Mod2",
+         * getModule(2).getSteerMotor().getPosition().getValueAsDouble());
+         * SmartDashboard.putNumber("Mod3",
+         * getModule(3).getSteerMotor().getPosition().getValueAsDouble());
+         * SmartDashboard.putNumber("Heading", getCompassHeading());
+         * SmartDashboard.putNumber("yaw", gyro.getYaw().getValueAsDouble());
+         */
+
         updateOdometry();
         // cameraPose = grabPose();
         // addVisionMeasurement(cameraPose.pose, cameraPose.timestampSeconds);
@@ -317,6 +324,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         SmartDashboard.putNumber("BotPoseX", botPose2d.getTranslation().getX());
         SmartDashboard.putNumber("BotPoseY", botPose2d.getTranslation().getY());
         SmartDashboard.putNumber("BotPoseTheta", botPose2d.getRotation().getDegrees());
+        SmartDashboard.putNumberArray("BotPose",
+                new double[] { botPose2d.getTranslation().getX(), botPose2d.getTranslation().getY(),
+                        botPose2d.getRotation().getDegrees() });
         // SmartDashboard.putNumber("BotPoseX3d", botPose3d.getTranslation().getX());
         // SmartDashboard.putNumber("BotPoseY3d", botPose3d.getTranslation().getY());
 
@@ -368,7 +378,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     public void resetPose(Pose2d pose) {
         // ************ Major CHANGE */
-        mt2 = grabPose();
+        mt2 = grabPose("left");
         if (mt2.tagCount > 0) {
             pose = mt2.pose;
         }
@@ -424,21 +434,15 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     public Rotation2d getGyroYaw() {
         SmartDashboard.putNumber("yaw", gyro.getYaw().getValueAsDouble());
-        return Rotation2d.fromDegrees(gyro.getYaw().getValueAsDouble());
+        return Rotation2d.fromDegrees(getCompassHeading()); // gyro.getYaw().getValueAsDouble());
     }
 
-    public PoseEstimate grabPose() {
-        LimelightHelpers.SetRobotOrientation("limelight-right",getGyroYaw().getDegrees(), 0, 0, 0, 0, 0);
-        LimelightHelpers.SetRobotOrientation("limelight-left",getGyroYaw().getDegrees(), 0, 0, 0, 0, 0);
-          //      m_poseEstimator.getEstimatedPosition().getRotation().getDegrees(), 0, 0, 0, 0, 0);
-       /// LimelightHelpers.SetRobotOrientation("limelight-left",
-        //        m_poseEstimator.getEstimatedPosition().getRotation().getDegrees(), 0, 0, 0, 0, 0);
+    public PoseEstimate grabPose(String camera) {
+        LimelightHelpers.SetRobotOrientation(camera, getCompassHeading(), 0, 0, 0, 0, 0);
+        // LimelightHelpers.SetRobotOrientation("limelight-left",getGyroYaw().getDegrees(),
+        // 0, 0, 0, 0, 0);
 
-        leftPose = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-left");
-        rightPose = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-right");
-        // mt2 = leftPose;
-        mt2 = utils.bestEstimate(leftPose, rightPose);
-
+        mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(camera);
         return mt2;
 
     }

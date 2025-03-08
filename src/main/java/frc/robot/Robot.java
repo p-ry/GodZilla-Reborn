@@ -26,7 +26,7 @@ public class Robot extends TimedRobot {
   public final RobotContainer m_robotContainer;
 
   private final boolean kUseLimelight = true;
-  public PoseEstimate best = new PoseEstimate();
+  //public PoseEstimate best = new PoseEstimate();
 
   public Robot() {
     //enableLiveWindowInTest(true);
@@ -54,7 +54,7 @@ public class Robot extends TimedRobot {
       double headingDeg = driveState.Pose.getRotation().getDegrees();
       double omegaRps = Units.radiansToRotations(driveState.Speeds.omegaRadiansPerSecond);
 
-      LimelightHelpers.SetRobotOrientation("limelight-left", headingDeg, 0, 0, 0, 0, 0);
+      /*LimelightHelpers.SetRobotOrientation("limelight-left", headingDeg, 0, 0, 0, 0, 0);
       var llMeasurement = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-left");
       LimelightHelpers.SetRobotOrientation("limelight-right", headingDeg, 0, 0, 0, 0, 0);
       var llMeasurement2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-right");
@@ -64,7 +64,7 @@ public class Robot extends TimedRobot {
       if (best != null && best.tagCount > 0 && Math.abs(omegaRps) < 2.0) {
         
         m_robotContainer.drivetrain.addVisionMeasurement(llMeasurement.pose, llMeasurement.timestampSeconds);
-      }
+      }*/
     }
   }
 
@@ -74,14 +74,14 @@ public class Robot extends TimedRobot {
   @Override
   public void robotPeriodic() {
     CommandScheduler.getInstance().run();
-    LaserCan.Measurement measurement = laserCan.getMeasurement();
-    System.out.println("Distance: " + measurement.distance_mm);
-    if (measurement != null && measurement.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT) {
+   // LaserCan.Measurement measurement = laserCan.getMeasurement();
+   // System.out.println("Distance: " + measurement.distance_mm);
+    //if (measurement != null && measurement.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT) {
       //System.out.println("The target is " + measurement.distance_mm + "mm away!");
-    } else {
+    //} else {
       //System.out.println("Oh no! The target is out of range, or we can't get a reliable measurement!");
       // You can still use distance_mm in here, if you're ok tolerating a clamped value or an unreliable measurement.
-    }
+    //}
 
     /*
      * This example of adding Limelight is very simple and may not be sufficient for on-field use.

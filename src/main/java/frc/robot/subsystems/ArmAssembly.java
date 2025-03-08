@@ -34,7 +34,7 @@ public class ArmAssembly extends SubsystemBase {
   // public Ace ace;
 
   /** Creates a new TheArms. */
-  public ArmAssembly(int level) {
+  public ArmAssembly(Boolean algae, int level) {
 
    
     klowerarm = 41.0;
