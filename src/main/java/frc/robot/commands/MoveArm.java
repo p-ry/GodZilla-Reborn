@@ -23,10 +23,14 @@ public class MoveArm extends Command {
  Wrist wrist;
  Slider slider;
  ArmAssembly myArm;
- public MoveArm(ArmAssembly myArm, int level) {
+ int shiftDirection;
+ 
+  /** Creates a new MoveArm. */
+ public MoveArm(ArmAssembly myArm, int level,int direction) {
  
   
   this.level = level;
+  this.shiftDirection = direction;
  
   this.myArm = myArm;
 }
@@ -54,6 +58,8 @@ public class MoveArm extends Command {
   @Override
   public void execute() {
     myArm.level=level;
+    myArm.shiftDirection=shiftDirection;
+    
    
   }
    

@@ -29,6 +29,7 @@ public class ArmAssembly extends SubsystemBase {
   double kupperarm;
   double kwrist;
   double kslider;
+  public double shiftDirection;
 
   // public Ace ace;
 
@@ -45,6 +46,7 @@ public class ArmAssembly extends SubsystemBase {
     slider = new Slider();
     wrist = new Wrist();
     this.level = level;
+    //this.shiftDirection = shiftDirection;
    // ace = new Ace(level);
    
     //Shuffleboard.selectTab("Arm");

@@ -20,14 +20,16 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.LimelightHelpers;
 import frc.robot.RobotContainer;
+import frc.robot.Utilitys;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 
 public class DriveToAmpPath extends Command {
   private CommandSwerveDrivetrain drivetrain;
   Pose2d where;
-  double tadId;
+  int tadId;
+  double leftDist, rightDist;
   /** Creates a new DriveToAmpPath. */
-  public DriveToAmpPath(CommandSwerveDrivetrain drivetrain) {
+  public DriveToAmpPath(CommandSwerveDrivetrain drivetrain,double shiftDirection) {
     
     this.drivetrain = drivetrain;
     
@@ -41,24 +43,32 @@ public class DriveToAmpPath extends Command {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    tadId = drivetrain.mt2.rawFiducials[0].id;
+    LimelightHelpers.LimelightResults resultsLeft = LimelightHelpers.getLatestResults("limelight-left");
+    LimelightHelpers.LimelightResults resultsRight = LimelightHelpers.getLatestResults("limelight-right");
+    tadId = 0;
+    if (resultsLeft.valid){
+      leftDist = resultsLeft.botpose_avgdist;
+    }else {
+      leftDist = 999999;
+    }
+    if (resultsRight.valid){
+      rightDist = resultsRight.botpose_avgdist;
+    } else {
+      rightDist = 999999;
+    }
+    if (resultsLeft.valid || resultsRight.valid){ {
 
+      if (leftDist < rightDist){
+        tadId = (int) resultsLeft.targets_Fiducials[0].fiducialID;
+      } else {
+        tadId = (int) resultsRight.targets_Fiducials[0].fiducialID;
+      }
+    }
+    if()
+    where = Utilitys.shiftPoseRight(Utilitys.getAprilTagPose(tadId),0.164285833);
     
-    drivetrain.mt2.pose.
-       pose.nearest(null);
-
-
-    //where = new Pose2d();
-    //where = new Pose2d(14.0, 5.0, new edu.wpi.first.math.geometry.Rotation2d(4.8));
-    // Load the path we want to pathfind to and follow
-
   }
   
-
-    Pose2d currentPose = // Get the current pose from your odometry system
-    Transform2d desiredTransform = new Transform2d(new Translation2d(x, y), new Rotation2d(angle));
-    Pose2d newPose = currentPose.plus(desiredTransform);
-
 
 
 

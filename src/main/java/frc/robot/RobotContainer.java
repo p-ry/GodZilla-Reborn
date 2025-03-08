@@ -55,7 +55,7 @@ public class RobotContainer {
         private final Joystick copilot2 = new Joystick(2);
 
         public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
-        public final ArmAssembly mArm = new ArmAssembly(99/* provide necessary arguments here */);
+        public final ArmAssembly mArm = new ArmAssembly(99,0);
         public final Ace ace = new Ace(0);
         // public final Wrist Wrist = new Wrist();
         private final CommandXboxController controller = new CommandXboxController(0);
@@ -116,33 +116,33 @@ public class RobotContainer {
                 // Process
                 // .onTrue(new MoveArm(mArm, 12));
                 Dump
-                                .whileTrue(new MoveArm(mArm, 1));
+                                .whileTrue(new MoveArm(mArm, 1,0));
                 Dump
-                                .onFalse(new MoveArm(mArm, 0));
+                                .onFalse(new MoveArm(mArm, 0,0));
                 Lv2L
-                                .whileTrue(new MoveArm(mArm, 2));
+                                .whileTrue(new MoveArm(mArm, 2,-1));
                 Lv2L
-                                .onFalse(new MoveArm(mArm, 0));
+                                .onFalse(new MoveArm(mArm, 0,0));
                 Lv2R
-                                .whileTrue(new MoveArm(mArm, 2));
+                                .whileTrue(new MoveArm(mArm, 2,1));
                 Lv2R
-                                .onFalse(new MoveArm(mArm, 0));
+                                .onFalse(new MoveArm(mArm, 0,0));
                 Lv3L
-                                .whileTrue(new MoveArm(mArm, 3));
+                                .whileTrue(new MoveArm(mArm, 3,-1));
                 Lv3L
-                                .onFalse(new MoveArm(mArm, 0));
+                                .onFalse(new MoveArm(mArm, 0,0));
                 Lv3R
-                                .whileTrue(new MoveArm(mArm, 3));
+                                .whileTrue(new MoveArm(mArm, 3,1));
                 Lv3R
-                                .onFalse(new MoveArm(mArm, 0));
+                                .onFalse(new MoveArm(mArm, 0,0));
                 Lv4L
-                                .whileTrue(new MoveArm(mArm, 4));
+                                .whileTrue(new MoveArm(mArm, 4,-1));
                 Lv4L
-                                .onFalse(new MoveArm(mArm, 0));
+                                .onFalse(new MoveArm(mArm, 0,0));
                 Lv4R
-                                .whileTrue(new MoveArm(mArm, 4));
+                                .whileTrue(new MoveArm(mArm, 4,1));
                 Lv4R
-                                .onFalse(new MoveArm(mArm, 0));
+                                .onFalse(new MoveArm(mArm, 0,0));
                 /*
                  * Climb need to find correct Position
                  * .onTrue(new MoveArm(mArm, 2));
