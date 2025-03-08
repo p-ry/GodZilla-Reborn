@@ -9,6 +9,34 @@ import frc.robot.LimelightHelpers.PoseEstimate;
 /** Add your docs here. */
 public class Utilitys {
 
+    public String bestCamera (PoseEstimate left, PoseEstimate right) {
+        double leftAmbiguity = 0;
+        double rightAmbiguity = 0;
+
+        if (left == null && right == null) {
+            return null;
+        } 
+        else if (left == null) {
+            return "limelight-right";
+        }
+        else if (right == null) {
+            return "limelight-left";
+        }
+        else {
+            if (left.tagCount >0){
+            leftAmbiguity = left.rawFiducials[0].ambiguity;
+            }
+            if (right.tagCount >0){
+            rightAmbiguity = right.rawFiducials[0].ambiguity;
+            }
+            if (leftAmbiguity < rightAmbiguity) {
+                return "left";
+            }
+            else {
+                return "right";
+            }
+        }
+    }
     public PoseEstimate bestEstimate(PoseEstimate left, PoseEstimate right) {
         double leftAmbiguity = 0;
         double rightAmbiguity = 0;

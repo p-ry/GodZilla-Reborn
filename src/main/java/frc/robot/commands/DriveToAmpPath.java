@@ -14,15 +14,18 @@ import com.pathplanner.lib.path.PathPlannerPath;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.LimelightHelpers;
 import frc.robot.RobotContainer;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 
 public class DriveToAmpPath extends Command {
   private CommandSwerveDrivetrain drivetrain;
   Pose2d where;
+  double tadId;
   /** Creates a new DriveToAmpPath. */
   public DriveToAmpPath(CommandSwerveDrivetrain drivetrain) {
     
@@ -38,7 +41,11 @@ public class DriveToAmpPath extends Command {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    where = drivetrain.mt2.pose;
+    tadId = drivetrain.mt2.rawFiducials[0].id;
+
+    
+    drivetrain.mt2.pose.
+       pose.nearest(null);
 
 
     //where = new Pose2d();
@@ -48,9 +55,17 @@ public class DriveToAmpPath extends Command {
   }
   
 
+    Pose2d currentPose = // Get the current pose from your odometry system
+    Transform2d desiredTransform = new Transform2d(new Translation2d(x, y), new Rotation2d(angle));
+    Pose2d newPose = currentPose.plus(desiredTransform);
+
+
+
+
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
+
 
     where = where.transformBy(new Transform2d(3.171, 4.189, Rotation2d.fromDegrees(0)));
 
