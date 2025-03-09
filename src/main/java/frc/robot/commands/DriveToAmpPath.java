@@ -24,17 +24,38 @@ import frc.robot.Utilitys;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.BranchPose;
 
+
+
 public class DriveToAmpPath extends Command {
   private CommandSwerveDrivetrain drivetrain;
   Pose2d where;
-  int tadId;
+  // int tadId;
   double leftDist, rightDist;
   double shiftDirection;
+  int[] tagIds = new int[2];
+  boolean validTarget = false;
+  int tagId = 0;
+
+  // private final CommandSwerveDrivetrain drivetrain;
+  // private final double shiftDirection;
+
+  // private final PathPlannerPath path;
+  // private final PathConstraints constraints;
+
+  // private final AutoBuilder autoBuilder;
+
+  // private final PathPlannerState startState;
+  // private final PathPlannerState endState;
+
+  // private final Pose2d startPose;
+  // private final Pose2d endPose;
 
   /** Creates a new DriveToAmpPath. */
-  public DriveToAmpPath( double shiftDirection) {
+  PathConstraints constraints;
+  Command driveit;
+  public DriveToAmpPath(double shiftDirection) {
 
-    //this.drivetrain = drivetrain;
+    // this.drivetrain = drivetrain;
     this.shiftDirection = shiftDirection;
 
     // Use addRequirements() here to declare subsystem dependencies.
@@ -44,65 +65,75 @@ public class DriveToAmpPath extends Command {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    
-     
+    constraints = new PathConstraints(
+      1.0, 4.0,
+      Units.degreesToRadians(540), Units.degreesToRadians(720));
+      where = RobotContainer.drivetrain.getPose();
+      driveit =  AutoBuilder.pathfindToPose(where, constraints);
+
   }
-
-
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
 
-    //LimelightHelpers.LimelightResults resultsLeft = LimelightHelpers.getLatestResults("limelight-left");
+    LimelightHelpers.LimelightResults resultsLeft = LimelightHelpers.getLatestResults("limelight-left");
 
     LimelightHelpers.LimelightResults resultsRight = LimelightHelpers.getLatestResults("limelight-right");
     SmartDashboard.putNumber("right: ", resultsRight.botpose_avgdist);
     SmartDashboard.putBoolean("valid", resultsRight.valid);
-    tadId = 0;
    
-   /*
-    if (resultsLeft.valid){
+    if (resultsLeft.valid) {
       leftDist = resultsLeft.botpose_avgdist;
-    }else {
+      validTarget = true;
+      tagIds[0] = (int) resultsLeft.targets_Fiducials[0].fiducialID;
+    } else {
       leftDist = 999999;
     }
-      */
-    if (resultsRight.valid){
+
+    if (resultsRight.valid) {
       rightDist = resultsRight.botpose_avgdist;
-      
-      tadId = (int) resultsRight.targets_Fiducials[0].fiducialID;
+
+      tagIds[1] = (int) resultsRight.targets_Fiducials[0].fiducialID;
+      validTarget = true;
     } else {
       rightDist = 999999;
     }
 
-    if(shiftDirection==-1){
-      where  = Utilitys.shiftPoseLeft(Utilitys.getAprilTagPose(tadId),Units.inchesToMeters(5), 0.164285833);
-          }
-     if (shiftDirection == 1){     
-    where = Utilitys.shiftPoseRight(Utilitys.getAprilTagPose(tadId),Units.inchesToMeters(5),0.164285833);
-     }
-//
-  
-    SmartDashboard.putNumberArray("Where", new double[] { where.getX(), where.getY(), where.getRotation().getRadians() });
+    if (validTarget) {
+      if (leftDist < rightDist) {
+        tagId = tagIds[0];
+        SmartDashboard.putString("Camera","left");
+     
+      } else {
+        tagId = tagIds[1];
+        SmartDashboard.putString("Camera","right");
+      }
 
-    // PathPlannerPath path = PathPlannerPath.fromPathFile("Alpha",true);
+      if (shiftDirection == 1) {
+        where = Utilitys.shiftPoseRight(Utilitys.getAprilTagPose(tagId), 16, 6.5); // 0.164285833);
+      }
+      if (shiftDirection == -1) {
+        where = Utilitys.shiftPoseLeft(Utilitys.getAprilTagPose(tagId), 16, 6.5);// 0.164285833);
+      }
+      //
 
-    // Create the constraints to use while pathfinding. The constraints defined in
-    // the path will only be used for the path.
+      SmartDashboard.putNumberArray("Where",
+          new double[] { where.getX(), where.getY(), where.getRotation().getRadians() });
 
-     PathConstraints constraints = new PathConstraints(
-     1.0, 4.0,
-     Units.degreesToRadians(540), Units.degreesToRadians(720));
+      // PathPlannerPath path = PathPlannerPath.fromPathFile("Alpha",true);
 
-/* NOT quite ready to drive it
+      // Create the constraints to use while pathfinding. The constraints defined in
+      // the path will only be used for the path.
 
-    Command driveit = AutoBuilder.pathfindToPose(where, constraints);
-     driveit.schedule();
-
-
-     */
     
+      // NOT quite ready to drive it
+
+      Command driveit = AutoBuilder.pathfindToPose(where, constraints);
+      driveit.execute();//schedule();
+
+    }
+    // */
 
     // Since AutoBuilder is configured, we can use it to build pathfinding commands
     // Command driveIt =
@@ -119,6 +150,6 @@ public class DriveToAmpPath extends Command {
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return true;
+    return false;
   }
 }
