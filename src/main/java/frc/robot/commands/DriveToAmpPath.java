@@ -44,8 +44,17 @@ public class DriveToAmpPath extends Command {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
+<<<<<<< Updated upstream
     
      
+=======
+    constraints = new PathConstraints(
+      2.0, 4.0,
+      Units.degreesToRadians(540), Units.degreesToRadians(720));
+      where = RobotContainer.drivetrain.getPose();
+      //driveit =  AutoBuilder.pathfindToPose(where, constraints);
+
+>>>>>>> Stashed changes
   }
 
 
@@ -103,6 +112,16 @@ public class DriveToAmpPath extends Command {
 
      */
     
+<<<<<<< Updated upstream
+=======
+      // NOT quite ready to drive it
+
+      Command driveit = AutoBuilder.pathfindToPose(where, constraints);
+      driveit.execute();
+
+    }
+    // */
+>>>>>>> Stashed changes
 
     // Since AutoBuilder is configured, we can use it to build pathfinding commands
     // Command driveIt =
