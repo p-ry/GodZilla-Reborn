@@ -10,11 +10,14 @@ import static edu.wpi.first.units.Units.*;
 import java.io.Console;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -55,8 +58,12 @@ public class RobotContainer {
         // private final CommandXboxController driver = new CommandXboxController(0);
         private static final Joystick copilot = new Joystick(1);
         private final Joystick copilot2 = new Joystick(2);
+        public static SwerveModule[] sModules = new SwerveModule[4];
+         public static  SwerveDriveKinematics kinematics;
 
         public static final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
+
+        
         public static final ArmAssembly mArm = new ArmAssembly(false, 99);
         public final Ace ace = new Ace(0);
 
@@ -80,8 +87,19 @@ public class RobotContainer {
 
         /* Path follower */
         private final SendableChooser<Command> AutoChooser;
+        public static double kFeedForward;
+        public static PIDController kPIDController;
+
+
+
 
         public RobotContainer() {
+                drivetrain.sModules[0] = drivetrain.getModule(0);
+                drivetrain.sModules[1] = drivetrain.getModule(1);
+                drivetrain.sModules[2] = drivetrain.getModule(2);
+                drivetrain.sModules[3] = drivetrain.getModule(3);
+                kinematics = drivetrain.getKinematics();
+                kFeedForward = 0.05;
 
                 // Note that X is defined as forward according to WPILib convention,
                 // and Y is defined as to the left according to WPILib convention.

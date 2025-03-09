@@ -79,6 +79,9 @@ public static final SwerveDriveKinematics swerveKinematics = new SwerveDriveKine
                                 new Translation2d(-wheelBase / 2.0, trackWidth / 2.0),
                                 new Translation2d(-wheelBase / 2.0, -trackWidth / 2.0));
 
+
+                                public static final double maxSpeed = 3.0;
+
   public static enum Mode {
     /** Running on a real robot. */
     REAL,
