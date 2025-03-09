@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems;
 
+
+
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -34,9 +36,9 @@ public class UpperArm extends SubsystemBase {
   double kI = 0.0;
   double kD = 0.000;
   double maxVel = 200;
-  double maxAcc = 600;
+  double maxAcc = 300;
   double minVel = 0;
-  double kJerk = 2000;
+  double kJerk = 800;
   boolean change = false;
   boolean updatePID = false;
   // TalonFXConfigurator leftConfigurator;
@@ -73,7 +75,10 @@ var motorConfigs = new MotorOutputConfigs();
     // LowerArmRightFollower = new Follower(31, true);
     // LowerArmRight.setControl(LowerArmRightFollower);
     
-    UpperArmRight.getConfigurator().apply(motorConfigs);    
+    UpperArmRight.getConfigurator().apply(motorConfigs); 
+    
+    UpperArmLeft.setNeutralMode(NeutralModeValue.Brake);
+    UpperArmRight.setNeutralMode(NeutralModeValue.Brake);
 
 
 
@@ -110,9 +115,8 @@ var motorConfigs = new MotorOutputConfigs();
 
   @Override
   public void periodic() {
-    SmartDashboard.putNumber("UpperLeftPOS",getPos());
-    SmartDashboard.putNumber("UpperRightPOS",getRightPos());
-    SmartDashboard.putBoolean("UpperArm", atPosition);
+    SmartDashboard.putNumber("upArm", getPos());
+   
     if(atPos(UpperArmLeft) && atPos(UpperArmRight)){
       atPosition = true;  
      } else {

@@ -12,6 +12,7 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -49,17 +50,39 @@ public class RobotContainer {
         private final Telemetry logger = new Telemetry(MaxSpeed);
 
         private final CommandXboxController driver = new CommandXboxController(0);
-        private final Joystick copilot = new Joystick(1);
+        private static final Joystick copilot = new Joystick(1);
         private final Joystick copilot2 = new Joystick(2);
 
-        public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
-        public final ArmAssembly mArm = new ArmAssembly(99/* provide necessary arguments here */);
-        public final Ace ace = new Ace();
-        //public final Wrist Wrist = new Wrist();
+        public static final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
+       
+       
+            public static final ArmAssembly mArm = new ArmAssembly(false, 99);
+        public final Ace ace = new Ace(0);
+
+        final JoystickButton Dump = new JoystickButton(copilot, 1);
+        final JoystickButton Lv2L = new JoystickButton(copilot, 2);
+        final JoystickButton Lv2R = new JoystickButton(copilot, 3);
+        final JoystickButton Lv3L = new JoystickButton(copilot, 4);
+        final JoystickButton Lv3R = new JoystickButton(copilot, 5);
+        final JoystickButton Lv4L = new JoystickButton(copilot, 6);
+        final JoystickButton Lv4R = new JoystickButton(copilot, 7);
+        // final JoystickButton Climb = new JoystickButton(copilot, 8);
+        // final JoystickButton Pull = new JoystickButton(copilot, 9);
+        final JoystickButton Intake = new JoystickButton(copilot, 10);
+        final JoystickButton Outtake = new JoystickButton(copilot, 11);
+        public static final JoystickButton Algae = new JoystickButton(copilot, 8);
+        final JoystickButton Process = new JoystickButton(copilot2, 1);
+        final JoystickButton Load = new JoystickButton(copilot, 12);
+        // final JoystickButton Barge = new JoystickButton(copilot2, 2);
+        // public final Wrist Wrist = new Wrist();
         private final CommandXboxController controller = new CommandXboxController(0);
 
         /* Path follower */
         private final SendableChooser<Command> AutoChooser;
+        public static double kFeedForward;
+        public static PIDController kPIDController;
+
+
 
         public RobotContainer() {
                 AutoChooser = AutoBuilder.buildAutoChooser("none");
@@ -147,7 +170,7 @@ public class RobotContainer {
 
 
                 driver.rightBumper()
-                .onTrue(new DriveToAmpPath());
+                .onTrue(new DriveToAmpPath(1));
 
 
 
