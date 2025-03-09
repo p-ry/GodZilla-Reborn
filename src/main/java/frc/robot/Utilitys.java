@@ -16,28 +16,39 @@ import edu.wpi.first.math.util.Units;
 /** Add your docs here. */
 public class Utilitys {
 
-    public static Pose2d shiftPoseRight(Pose2d originalPose, double distanceInches) {
+    public static Pose2d shiftPoseRight(Pose2d originalPose, double forwardInches, double rightInches) {
         // Get current pose components
         double x = originalPose.getX();
         double y = originalPose.getY();
         Rotation2d theta = originalPose.getRotation(); // Rotation2d object
         
         // Compute new coordinates
-        double xNew = x + Units.inchesToMeters(distanceInches) * Math.sin(theta.getRadians());
-        double yNew = y - Units.inchesToMeters(distanceInches) * Math.cos(theta.getRadians());
+ // Convert inches to meters (WPILib uses meters)
+ double forwardMeters = Units.inchesToMeters(forwardInches);
+ double rightMeters = Units.inchesToMeters(rightInches);
+ 
+ // Calculate new position
+ double xNew = x + forwardMeters * Math.cos(theta.getRadians()) + rightMeters * Math.sin(theta.getRadians());
+ double yNew = y + forwardMeters * Math.sin(theta.getRadians()) - rightMeters * Math.cos(theta.getRadians());
+
+       
     
         // Return the new pose with the same orientation
         return new Pose2d(xNew, yNew, theta);
     }
-    public static Pose2d shiftPoseLeft(Pose2d originalPose, double distanceInches) {
+    public static Pose2d shiftPoseLeft(Pose2d originalPose, double forwardInches, double leftInches) {
         // Get current pose components
+        
         double x = originalPose.getX();
         double y = originalPose.getY();
         Rotation2d theta = originalPose.getRotation(); // Rotation2d object
-
+        double forwardMeters = Units.inchesToMeters(forwardInches);
+        double rightMeters = Units.inchesToMeters(leftInches);
+        
         // Compute new coordinates (shift left)
-        double xNew = x - Units.inchesToMeters(distanceInches) * Math.sin(theta.getRadians());
-        double yNew = y + Units.inchesToMeters(distanceInches) * Math.cos(theta.getRadians());
+        double xNew = x + forwardMeters * Math.cos(theta.getRadians()) - rightMeters * Math.sin(theta.getRadians());
+        double yNew = y + forwardMeters * Math.sin(theta.getRadians()) + rightMeters * Math.cos(theta.getRadians());
+
 
         // Return the new pose with the same orientation
         return new Pose2d(xNew, yNew, theta);

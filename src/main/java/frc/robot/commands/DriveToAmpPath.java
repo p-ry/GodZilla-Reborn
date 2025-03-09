@@ -22,6 +22,7 @@ import frc.robot.LimelightHelpers;
 import frc.robot.RobotContainer;
 import frc.robot.Utilitys;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.BranchPose;
 
 public class DriveToAmpPath extends Command {
   private CommandSwerveDrivetrain drivetrain;
@@ -76,15 +77,13 @@ public class DriveToAmpPath extends Command {
     }
 
     if(shiftDirection==-1){
-      where  = Utilitys.shiftPoseLeft(Utilitys.getAprilTagPose(tadId),0.164285833);
+      where  = Utilitys.shiftPoseLeft(Utilitys.getAprilTagPose(tadId),Units.inchesToMeters(5), 0.164285833);
           }
      if (shiftDirection == 1){     
-    where = Utilitys.shiftPoseRight(Utilitys.getAprilTagPose(tadId),0.164285833);
+    where = Utilitys.shiftPoseRight(Utilitys.getAprilTagPose(tadId),Units.inchesToMeters(5),0.164285833);
      }
 //
-    SmartDashboard.putNumber("WhereX", where.getX());
-    SmartDashboard.putNumber("WhereY", where.getY());
-
+  
     SmartDashboard.putNumberArray("Where", new double[] { where.getX(), where.getY(), where.getRotation().getRadians() });
 
     // PathPlannerPath path = PathPlannerPath.fromPathFile("Alpha",true);
@@ -96,8 +95,14 @@ public class DriveToAmpPath extends Command {
      1.0, 4.0,
      Units.degreesToRadians(540), Units.degreesToRadians(720));
 
+/* NOT quite ready to drive it
+
     Command driveit = AutoBuilder.pathfindToPose(where, constraints);
      driveit.schedule();
+
+
+     */
+    
 
     // Since AutoBuilder is configured, we can use it to build pathfinding commands
     // Command driveIt =

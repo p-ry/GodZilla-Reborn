@@ -17,6 +17,7 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
+import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import frc.robot.Constants;
 
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -43,8 +44,9 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.LimelightHelpers;
 import frc.robot.LimelightHelpers.PoseEstimate;
 import frc.robot.Robot;
-
+import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
+
 
 /**
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements
@@ -52,17 +54,25 @@ import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
  */
 public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Subsystem {
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     // Define the getModulePositions method
-    public SwerveModulePosition[] getModulePositions() {
-        // Return the positions of the swerve modules
-        return new SwerveModulePosition[] {
-                // Replace with actual module positions
-                new SwerveModulePosition(getModule(0).getDriveMotor().getPosition().getValueAsDouble() * Constants.wheelCircumference, getModule(0).getCurrentState().angle),
-                new SwerveModulePosition(getModule(1).getDriveMotor().getPosition().getValueAsDouble() * Constants.wheelCircumference, getModule(1).getCurrentState().angle),
-                new SwerveModulePosition(getModule(2).getDriveMotor().getPosition().getValueAsDouble() * Constants.wheelCircumference, getModule(2).getCurrentState().angle),
-                new SwerveModulePosition(getModule(3).getDriveMotor().getPosition().getValueAsDouble() * Constants.wheelCircumference, getModule(3).getCurrentState().angle)
-        };
-    }
+  
 
     private static final double kSimLoopPeriod = 0.005; // 5 ms
     private Notifier m_simNotifier = null;
@@ -81,6 +91,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     public Pose3d botPose3d = new Pose3d();
     public PoseEstimate best = new PoseEstimate();
     public Utilitys utils = new Utilitys();
+    private final SwerveModule[] swerveModules = new SwerveModule[] { new SwerveModule(0, 1), new SwerveModule(2, 3),
+            new SwerveModule(4, 5), new SwerveModule(6, 7) };
 
     /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
     private static final Rotation2d kBlueAlliancePerspectiveRotation = Rotation2d.kZero;
@@ -129,37 +141,14 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
        // mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-left");
     }
 
-    /**
-     * Constructs a CTRE SwerveDrivetrain using the specified constants.
-     * <p>
-     * This constructs the underlying hardware devices, so users should not
-     * construct
-     * the devices themselves. If they need the devices, they can access them
-     * through
-     * getters in the classes.
-     *
+     /*
      * @param drivetrainConstants     Drivetrain-wide constants for the swerve drive
      * @param odometryUpdateFrequency The frequency to run the odometry loop. If
      *                                unspecified or set to 0 Hz, this is 250 Hz on
      *                                CAN FD, and 100 Hz on CAN 2.0.
      * @param modules                 Constants for each specific module
      */
-    /*
-     public CommandSwerveDrivetrain(
-
-            SwerveDrivetrainConstants drivetrainConstants,
-            double odometryUpdateFrequency,
-            SwerveModuleConstants<?, ?, ?>... modules) {
-
-        super(drivetrainConstants, odometryUpdateFrequency, modules);
-        if (Utils.isSimulation()) {
-            startSimThread();
-        }
-
-        configureAutoBuilder();
-    }
-        */
-
+    
     /**
      * Constructs a CTRE SwerveDrivetrain using the specified constants.
      * <p>
@@ -187,20 +176,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      *                                  and radians
      * @param modules                   Constants for each specific module
      */
-  /*  public CommandSwerveDrivetrain(
-            SwerveDrivetrainConstants drivetrainConstants,
-            double odometryUpdateFrequency,
-            Matrix<N3, N1> odometryStandardDeviation,
-            Matrix<N3, N1> visionStandardDeviation,
-            SwerveModuleConstants<?, ?, ?>... modules) {
-        super(drivetrainConstants, odometryUpdateFrequency, odometryStandardDeviation, visionStandardDeviation,
-                modules);
-        if (Utils.isSimulation()) {
-            startSimThread();
-        }
-        configureAutoBuilder();
-    }
-*/
+  
     private void configureAutoBuilder() {
         try {
             var config = RobotConfig.fromGUISettings();
@@ -484,4 +460,33 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
     // Optional<PoseEstimate> leftEstimate = left.update(swerve.getMegaTag2Yaw());
     // Optional<PoseEstimate> rightEstimate = right.update(swerve.getMegaTag2Yaw());
+
+    public SwerveModulePosition[] getModulePositions() {
+
+        /*AI
+        SwerveModulePosition[] positions = new SwerveModulePosition[swerveModules.length];
+        for (int i = 0; i < swerveModules.length; i++) {
+            positions[i] = swerveModules[i].getPosition();
+        }
+        return positions;
+        */
+
+        // Return the positions of the swerve modules
+        
+        return new SwerveModulePosition[] {
+
+
+
+
+
+
+
+                // Replace with actual module positions
+                new SwerveModulePosition(getModule(0).getDriveMotor().getPosition().getValueAsDouble() * Constants.wheelCircumference/TunerConstants.kDriveGearRatio, getModule(0).getCurrentState().angle),
+                new SwerveModulePosition(getModule(1).getDriveMotor().getPosition().getValueAsDouble() * Constants.wheelCircumference/TunerConstants.kDriveGearRatio, getModule(1).getCurrentState().angle),
+                new SwerveModulePosition(getModule(2).getDriveMotor().getPosition().getValueAsDouble() * Constants.wheelCircumference/TunerConstants.kDriveGearRatio, getModule(2).getCurrentState().angle),
+                new SwerveModulePosition(getModule(3).getDriveMotor().getPosition().getValueAsDouble() * Constants.wheelCircumference/TunerConstants.kDriveGearRatio, getModule(3).getCurrentState().angle)
+        };
+        
+    }
 }
