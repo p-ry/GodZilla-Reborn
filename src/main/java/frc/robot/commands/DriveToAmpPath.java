@@ -85,7 +85,7 @@ public class DriveToAmpPath extends Command {
     SmartDashboard.putNumber("WhereX", where.getX());
     SmartDashboard.putNumber("WhereY", where.getY());
 
-    SmartDashboard.putNumberArray("Where", new double[] { where.getX(), where.getY(), where.getRotation().getDegrees() });
+    SmartDashboard.putNumberArray("Where", new double[] { where.getX(), where.getY(), where.getRotation().getRadians() });
 
     // PathPlannerPath path = PathPlannerPath.fromPathFile("Alpha",true);
 

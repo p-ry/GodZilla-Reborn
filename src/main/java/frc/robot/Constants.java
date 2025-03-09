@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.RobotBase;
 //import frc.robot.Constants.POSES;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.Unit;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.math.geometry.Rotation3d;
 import java.util.List;
@@ -70,7 +71,7 @@ public final class Constants {
   // robot
 public static final double wheelBase = Units.inchesToMeters(22); // TODO: This must be tuned to specific
 // robot
-public static final double wheelCircumference = Units.inchesToMeters(4);
+public static final double wheelCircumference = Units.inchesToMeters(3.93); // TODO: This must be tuned to
   
 public static final SwerveDriveKinematics swerveKinematics = new SwerveDriveKinematics(
                                 new Translation2d(wheelBase / 2.0, trackWidth / 2.0),

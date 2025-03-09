@@ -52,12 +52,12 @@ public class RobotContainer {
 
         // ace.setBrakeMode(true);
 
-        //private final CommandXboxController driver = new CommandXboxController(0);
-        private final Joystick copilot = new Joystick(1);
+        // private final CommandXboxController driver = new CommandXboxController(0);
+        private static final Joystick copilot = new Joystick(1);
         private final Joystick copilot2 = new Joystick(2);
 
         public static final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
-        public final ArmAssembly mArm = new ArmAssembly(false, 99);
+        public static final ArmAssembly mArm = new ArmAssembly(false, 99);
         public final Ace ace = new Ace(0);
 
         final JoystickButton Dump = new JoystickButton(copilot, 1);
@@ -71,8 +71,9 @@ public class RobotContainer {
         // final JoystickButton Pull = new JoystickButton(copilot, 9);
         final JoystickButton Intake = new JoystickButton(copilot, 10);
         final JoystickButton Outtake = new JoystickButton(copilot, 11);
-        // final JoystickButton Process = new JoystickButton(copilot, 12);
-        // final JoystickButton Load = new JoystickButton(copilot2, 1);
+        public static final JoystickButton Algae = new JoystickButton(copilot, 8);
+        final JoystickButton Process = new JoystickButton(copilot2, 1);
+        final JoystickButton Load = new JoystickButton(copilot, 12);
         // final JoystickButton Barge = new JoystickButton(copilot2, 2);
         // public final Wrist Wrist = new Wrist();
         private final CommandXboxController controller = new CommandXboxController(0);
@@ -82,12 +83,13 @@ public class RobotContainer {
 
         public RobotContainer() {
 
-                                // Note that X is defined as forward according to WPILib convention,
+                // Note that X is defined as forward according to WPILib convention,
                 // and Y is defined as to the left according to WPILib convention.
                 drivetrain.setDefaultCommand(
                                 // Drivetrain will execute this command periodically
                                 drivetrain.applyRequest(() -> drive.withVelocityX(
-                                                -(controller.getLeftY() * controller.getLeftY() * Math.signum(controller.getLeftY()))
+                                                -(controller.getLeftY() * controller.getLeftY()
+                                                                * Math.signum(controller.getLeftY()))
                                                                 * MaxSpeed) // Drive
                                                 // forward
                                                 // with
@@ -95,7 +97,9 @@ public class RobotContainer {
                                                 // Y
                                                 // (forward)
                                                 .withVelocityY(-(controller.getLeftX() * controller.getLeftX()
-                                                                * Math.signum(controller.getLeftX()) * MaxSpeed)) // Drive left with
+                                                                * Math.signum(controller.getLeftX()) * MaxSpeed)) // Drive
+                                                                                                                  // left
+                                                                                                                  // with
                                                 // negative X (left)
                                                 .withRotationalRate(-controller.getRightX() * MaxAngularRate) // Drive
                                                                                                               // counterclockwise
@@ -112,44 +116,63 @@ public class RobotContainer {
         }
 
         private void configureBindings() {
-                
 
                 // controller
                 // .rightBumper()
                 // .onTrue(new InstantCommand())
 
-
-
                 // Process
                 // .onTrue(new MoveArm(mArm, 12));
+                Algae
+                                .onTrue(new InstantCommand(() -> ace.setSpeed(-.2)));
+                Algae
+                                .onFalse(new InstantCommand(() -> ace.setSpeed(0)));
+
+                Load
+                                .whileTrue(new MoveArm(mArm, 1, 0));
+                Load
+                                .onTrue(new InstantCommand(() -> ace.gotIt=false));
+                                
+
+                Load
+                                .onFalse(new MoveArm(mArm, 0, 0));
+                Process
+                                .onTrue(new MoveArm(mArm, 5, 0));
+                // Process.whileTrue(new InstantCommand(() -> ace.setSpeed(0.1)));
+
+                Process
+                                .onFalse(new MoveArm(mArm, 0, 0));
+                // Process
+                // .onFalse(new InstantCommand(() -> ace.setSpeed(0)));
+
                 Dump
-                                .whileTrue(new MoveArm(mArm, 1,0));
+                                .whileTrue(new MoveArm(mArm, 6, 0));
                 Dump
-                                .onFalse(new MoveArm(mArm, 0,0));
+                                .onFalse(new MoveArm(mArm, 0, 0));
                 Lv2L
-                                .whileTrue(new MoveArm(mArm, 2,-1));
+                                .whileTrue(new MoveArm(mArm, 2, -1));
                 Lv2L
-                                .onFalse(new MoveArm(mArm, 0,0));
+                                .onFalse(new MoveArm(mArm, 0, 0));
                 Lv2R
-                                .whileTrue(new MoveArm(mArm, 2,1));
+                                .whileTrue(new MoveArm(mArm, 2, 1));
                 Lv2R
-                                .onFalse(new MoveArm(mArm, 0,0));
+                                .onFalse(new MoveArm(mArm, 0, 0));
                 Lv3L
-                                .whileTrue(new MoveArm(mArm, 3,-1));
+                                .whileTrue(new MoveArm(mArm, 3, -1));
                 Lv3L
-                                .onFalse(new MoveArm(mArm, 0,0));
+                                .onFalse(new MoveArm(mArm, 0, 0));
                 Lv3R
-                                .whileTrue(new MoveArm(mArm, 3,1));
+                                .whileTrue(new MoveArm(mArm, 3, 1));
                 Lv3R
-                                .onFalse(new MoveArm(mArm, 0,0));
+                                .onFalse(new MoveArm(mArm, 0, 0));
                 Lv4L
-                                .whileTrue(new MoveArm(mArm, 4,-1));
+                                .whileTrue(new MoveArm(mArm, 4, -1));
                 Lv4L
-                                .onFalse(new MoveArm(mArm, 0,0));
+                                .onFalse(new MoveArm(mArm, 0, 0));
                 Lv4R
-                                .whileTrue(new MoveArm(mArm, 4,1));
+                                .whileTrue(new MoveArm(mArm, 4, 1));
                 Lv4R
-                                .onFalse(new MoveArm(mArm, 0,0));
+                                .onFalse(new MoveArm(mArm, 0, 0));
                 /*
                  * Climb need to find correct Position
                  * .onTrue(new MoveArm(mArm, 2));
@@ -175,43 +198,15 @@ public class RobotContainer {
 
                 controller.rightBumper()
                                 .onTrue(new DriveToAmpPath(1));
+                controller.leftBumper().onTrue(new InstantCommand(() -> {
+                        drivetrain.resetGyro();
+                }));
 
                 controller
                                 .start()
                                 .onTrue(new InstantCommand(() -> drivetrain.gyro.reset()));
 
-                /*
-                 * controller
-                 * .a()
-                 * .onTrue(new MoveArm(mArm, 1));
-                 * // new InstantCommand(() -> lowerArm.setPos(38.0) ));
-                 * controller
-                 * .b()
-                 * .onTrue(new MoveArm(mArm, 2));
-                 * 
-                 * controller
-                 * .leftBumper()
-                 * .onTrue(new MoveArm(mArm, 0));
-                 * 
-                 * 
-                 * controller
-                 * .rightBumper()
-                 * .onTrue(new InstantCommand(() -> {
-                 * ace.setSpeed(1);
-                 * ace.LaserCANStop();
-                 * }));
-                 * 
-                 * controller
-                 * .y()
-                 * .onTrue(new MoveArm(mArm, 3));
-                 * controller
-                 * .rightBumper()
-                 * .onFalse(new InstantCommand(() -> ace.setSpeed(0)));
-                 * controller
-                 * .x()
-                 * .onTrue(new MoveArm(mArm, 4));
-                 */
-                // joystick.a().whileTrue(drivetrain.applyRequest(() -> brake));
+            
                 controller.b().whileTrue(drivetrain.applyRequest(
                                 () -> point.withModuleDirection(
                                                 new Rotation2d(-controller.getLeftY(), -controller.getLeftX()))));

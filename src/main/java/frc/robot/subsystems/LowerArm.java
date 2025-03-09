@@ -101,15 +101,7 @@ public class LowerArm extends SubsystemBase {
     // leftConfigurator.apply(talonFXConfigs);
 
     requestedPosition = getPos();
-    SmartDashboard.putNumber("lowerArmP", kP);
-    SmartDashboard.putNumber("lowerArmI", kI);
-    SmartDashboard.putNumber("lowerArmD", kD);
-
-    SmartDashboard.putNumber("lowerArmMaxVel", maxVel);
-    SmartDashboard.putNumber("lowerArmMaxAcc", maxAcc);
-    SmartDashboard.putNumber("lowerArmJerk", kJerk);
-    SmartDashboard.putBoolean("update", updatePID);
-    // Shuffleboard.getTab("Arm").addDouble("kkP",() -> this.kP).getEntry();
+   
 
   }
 
@@ -142,7 +134,8 @@ public class LowerArm extends SubsystemBase {
   @Override
   public void periodic() {
     //updatePID = SmartDashboard.getBoolean("update", updatePID);
-
+    SmartDashboard.putNumber("LowArm", getPos());
+     
     if (atPos(LowerArmLeft) && atPos(LowerArmRight)) {
       atPosition = true;
     } else {
@@ -150,76 +143,6 @@ public class LowerArm extends SubsystemBase {
     }
    
     
-    SmartDashboard.putBoolean("LowerArm", atPosition);
-    
-    SmartDashboard.putNumber("LowerLeft Pos", getPos());
-    SmartDashboard.putNumber("LowerRight Pos", getRightPos());
-    
-    // read PID coefficients from SmartDashboard
-
-    double p = SmartDashboard.getNumber("lowerArmP", kP);
-    double i = SmartDashboard.getNumber("lowerArmI", kI);
-
-    double d = SmartDashboard.getNumber("lowerArmD", kD);
-    double maxV = SmartDashboard.getNumber("lowerArMaxVel", maxVel);
-    double maxA = SmartDashboard.getNumber("lowerArmMaxAcc", maxAcc);
-
-    double jerk = SmartDashboard.getNumber("lowerArmJerk", kJerk);
-    SmartDashboard.putBoolean("change", change);
-    // if PID coefficients on SmartDashboard have changed, write new values to
-    // controller
-    if ((p != kP)) {
-      talonFXConfigsLeft.Slot0.kP = p;
-      talonFXConfigsRight.Slot0.kP = p;
-      kP = p;
-      change = true;
-
-    }
-    if ((i != kI)) {
-      talonFXConfigsLeft.Slot0.kI = i;
-      talonFXConfigsRight.Slot0.kI = i;
-      kI = i;
-      change = true;
-
-    }
-    if ((d != kD)) {
-      talonFXConfigsLeft.Slot0.kD = d;
-      talonFXConfigsRight.Slot0.kD = d;
-      kD = d;
-      change = true;
-
-    }
-
-    if ((maxV != maxVel)) {
-      talonFXConfigsLeft.MotionMagic.MotionMagicCruiseVelocity = maxV;
-      talonFXConfigsRight.MotionMagic.MotionMagicCruiseVelocity = maxV;
-
-      
-      maxVel = maxV;
-      change = true;
-
-    }
-
-    if ((maxA != maxAcc)) {
-      talonFXConfigsLeft.MotionMagic.MotionMagicAcceleration = maxA;
-      talonFXConfigsRight.MotionMagic.MotionMagicAcceleration = maxA;
-      maxAcc = maxA;
-      change = true;
-
-    }
-    if ((jerk != kJerk)) {
-      talonFXConfigsLeft.MotionMagic.MotionMagicJerk = jerk;
-      talonFXConfigsRight.MotionMagic.MotionMagicJerk = jerk;
-      kJerk = jerk;
-      change = true;
-    }
-    if (change) {
-      LowerArmRight.getConfigurator().apply(talonFXConfigsRight);
-      LowerArmLeft.getConfigurator().apply(talonFXConfigsLeft);
-      // leftConfigurator.apply(talonFXConfigs);
-
-      change = false;
-    }
 
   }
 

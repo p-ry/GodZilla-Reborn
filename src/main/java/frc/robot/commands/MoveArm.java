@@ -45,7 +45,7 @@ public class MoveArm extends Command {
     this.wrist = wrist;
     //this.ace= ace;
     this.slider = slider;
-    DriveToAmpPath moveIt;// = new DriveToAmpPath(RobotContainer.drivetrain, shiftDirection);
+    //DriveToAmpPath moveIt;// = new DriveToAmpPath(RobotContainer.drivetrain, shiftDirection);
     
     //declare subsystem dependencies.
   }

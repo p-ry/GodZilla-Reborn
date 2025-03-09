@@ -41,8 +41,9 @@ public class Wrist extends SubsystemBase {
   public Wrist() {
     wrist = new TalonFX(36);
     wristConfigurator =  wrist.getConfigurator();
-    commutationConfigs = new CommutationConfigs();
-    commutationConfigs.MotorArrangement = MotorArrangementValue.Minion_JST;
+    //commutationConfigs = new CommutationConfigs();
+    wristController = new PositionDutyCycle(0);
+    //commutationConfigs.MotorArrangement = MotorArrangementValue.Minion_JST;
     
     //SmartDashboard.putString("motor", ww
     wristConfigs = new TalonFXConfiguration();
@@ -78,8 +79,8 @@ public class Wrist extends SubsystemBase {
   }
 
   public void setPos(double position) {
-    wristController = new PositionDutyCycle(position);
-    wrist.setControl(wristController);
+   
+    wrist.setControl(wristController.withPosition(position));  // wristController = new PositionDutyCycle(position);
     requestedPosition = position;
     SmartDashboard.putNumber("Request", position);
     

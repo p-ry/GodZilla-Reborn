@@ -32,27 +32,29 @@ public class Robot extends TimedRobot {
     //enableLiveWindowInTest(true);
     
     m_robotContainer = new RobotContainer();
-    //CanBridge.runTCP();
+    CanBridge.runTCP();
   }
 
 
   @Override
   public void robotInit() {
     
-    laserCan = new LaserCan(10);
+   // laserCan = new LaserCan(10);
     //m_robotContainer.drivetrain.gyro.setYaw(0);
     // Optionally initialise the settings of the LaserCAN, if you haven't already done so in GrappleHook
-    try {
-      laserCan.setRangingMode(LaserCan.RangingMode.SHORT);
-      laserCan.setRegionOfInterest(new LaserCan.RegionOfInterest(8, 8, 16, 16));
+    /* try {
+      //laserCan.setRangingMode(LaserCan.RangingMode.SHORT);
+      //laserCan.setRegionOfInterest(new LaserCan.RegionOfInterest(8, 8, 16, 16));
       laserCan.setTimingBudget(LaserCan.TimingBudget.TIMING_BUDGET_33MS);
     } catch (ConfigurationFailedException e) {
       System.out.println("Configuration failed! " + e);
     }
-    if (kUseLimelight) {
-      var driveState = m_robotContainer.drivetrain.getState();
-      double headingDeg = driveState.Pose.getRotation().getDegrees();
-      double omegaRps = Units.radiansToRotations(driveState.Speeds.omegaRadiansPerSecond);
+
+    */
+   // if (kUseLimelight) {
+    //  var driveState = m_robotContainer.drivetrain.getState();
+     // double headingDeg = driveState.Pose.getRotation().getDegrees();
+     // double omegaRps = Units.radiansToRotations(driveState.Speeds.omegaRadiansPerSecond);
 
       /*LimelightHelpers.SetRobotOrientation("limelight-left", headingDeg, 0, 0, 0, 0, 0);
       var llMeasurement = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-left");
@@ -65,7 +67,7 @@ public class Robot extends TimedRobot {
         
         m_robotContainer.drivetrain.addVisionMeasurement(llMeasurement.pose, llMeasurement.timestampSeconds);
       }*/
-    }
+    //}
   }
 
   

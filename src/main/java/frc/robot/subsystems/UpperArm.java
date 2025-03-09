@@ -113,9 +113,8 @@ var motorConfigs = new MotorOutputConfigs();
 
   @Override
   public void periodic() {
-    SmartDashboard.putNumber("UpperLeftPOS",getPos());
-    SmartDashboard.putNumber("UpperRightPOS",getRightPos());
-    SmartDashboard.putBoolean("UpperArm", atPosition);
+    SmartDashboard.putNumber("upArm", getPos());
+   
     if(atPos(UpperArmLeft) && atPos(UpperArmRight)){
       atPosition = true;  
      } else {

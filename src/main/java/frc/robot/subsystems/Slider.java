@@ -38,15 +38,17 @@ public class Slider extends SubsystemBase {
   public Slider() {
 
     slider = new TalonFXS(35);
+    sliderController = new PositionDutyCycle(0);
+     slider.setNeutralMode(NeutralModeValue.Brake);
 
   }
 
   public void setPos(double position) {
-    sliderController = new PositionDutyCycle(position);
-    slider.setControl(sliderController);
+   // sliderController = new PositionDutyCycle(position);
+    slider.setControl(sliderController.withPosition(position));
     requestedPosition = position;
-    SmartDashboard.putNumber("Slider", position);
-    slider.setNeutralMode(NeutralModeValue.Brake);
+    
+   
 
   }
 
