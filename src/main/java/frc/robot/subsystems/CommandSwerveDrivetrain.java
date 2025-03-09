@@ -19,6 +19,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import frc.robot.Constants;
+import com.ctre.phoenix6.swerve.SwerveModule;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
@@ -91,8 +92,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     public Pose3d botPose3d = new Pose3d();
     public PoseEstimate best = new PoseEstimate();
     public Utilitys utils = new Utilitys();
-    private final SwerveModule[] swerveModules = new SwerveModule[] { new SwerveModule(0, 1), new SwerveModule(2, 3),
-            new SwerveModule(4, 5), new SwerveModule(6, 7) };
+   //private final SwerveModule[] swerveModules = new SwerveModule[] { new SwerveModule(0, 1), new SwerveModule(2, 3),
+   //        new SwerveModule(4, 5), new SwerveModule(6, 7) };
 
     /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
     private static final Rotation2d kBlueAlliancePerspectiveRotation = Rotation2d.kZero;
@@ -191,7 +192,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                                     .withWheelForceFeedforwardsY(feedforwards.robotRelativeForcesYNewtons())),
                     new PPHolonomicDriveController(
                             // PID constants for translation
-                            new PIDConstants(2, 0, 0), // kP10
+                            new PIDConstants(2.0, 0, 0),
+                             // kP10
                             // PID constants for rotation
                             new PIDConstants(7, 0, 0)),
                     config,
@@ -376,6 +378,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
 
     public void setHeading(Rotation2d heading) {
+
+        getCompassHeading();
         swerveOdometry.resetPosition(getGyroYaw(), getModulePositions(),
                 new Pose2d(getPose().getTranslation(), heading));
     }
@@ -398,12 +402,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      */
 
     public double getCompassHeading() {
-
+SmartDashboard.putNumber("CompassHeading", Math.IEEEremainder(gyro.getYaw().getValueAsDouble(),360  ));
         return Math.IEEEremainder(gyro.getYaw().getValueAsDouble(), 360.0);
     }
 
     public Rotation2d getGyroYaw() {
-    //    SmartDashboard.putNumber("yaw", gyro.getYaw().getValueAsDouble());
+       SmartDashboard.putNumber("yaw", gyro.getYaw().getValueAsDouble());
         return Rotation2d.fromDegrees(gyro.getYaw().getValueAsDouble());
     }
 

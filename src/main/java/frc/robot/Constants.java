@@ -71,7 +71,7 @@ public final class Constants {
   // robot
 public static final double wheelBase = Units.inchesToMeters(22); // TODO: This must be tuned to specific
 // robot
-public static final double wheelCircumference = Units.inchesToMeters(3.93*Math.PI); // TODO: This must be tuned to
+public static final double wheelCircumference = Units.inchesToMeters(4*Math.PI); // TODO: This must be tuned to
   
 public static final SwerveDriveKinematics swerveKinematics = new SwerveDriveKinematics(
                                 new Translation2d(wheelBase / 2.0, trackWidth / 2.0),

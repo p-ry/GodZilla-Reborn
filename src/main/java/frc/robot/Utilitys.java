@@ -10,17 +10,19 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import frc.robot.LimelightHelpers.PoseEstimate;
 import edu.wpi.first.math.util.Units;
 
 /** Add your docs here. */
 public class Utilitys {
 
-    public static Pose2d shiftPoseRight(Pose2d originalPose, double forwardInches, double rightInches) {
+    public static Pose2d shiftPoseLeft(Pose2d originalPose, double forwardInches, double rightInches) {
         // Get current pose components
         double x = originalPose.getX();
         double y = originalPose.getY();
-        Rotation2d theta = originalPose.getRotation(); // Rotation2d object
+        Rotation2d theta = originalPose.getRotation();
+        Rotation2d invTheta = theta.fromRadians(theta.getRadians() + Math.PI);
         
         // Compute new coordinates
  // Convert inches to meters (WPILib uses meters)
@@ -34,9 +36,9 @@ public class Utilitys {
        
     
         // Return the new pose with the same orientation
-        return new Pose2d(xNew, yNew, theta);
+        return new Pose2d(xNew, yNew, invTheta);
     }
-    public static Pose2d shiftPoseLeft(Pose2d originalPose, double forwardInches, double leftInches) {
+    public static Pose2d shiftPoseRight(Pose2d originalPose, double forwardInches, double leftInches) {
         // Get current pose components
         
         double x = originalPose.getX();
@@ -44,6 +46,7 @@ public class Utilitys {
         Rotation2d theta = originalPose.getRotation(); // Rotation2d object
         double forwardMeters = Units.inchesToMeters(forwardInches);
         double rightMeters = Units.inchesToMeters(leftInches);
+        Rotation2d invTheta = theta.fromRadians(theta.getRadians() + Math.PI);
         
         // Compute new coordinates (shift left)
         double xNew = x + forwardMeters * Math.cos(theta.getRadians()) - rightMeters * Math.sin(theta.getRadians());
@@ -51,7 +54,7 @@ public class Utilitys {
 
 
         // Return the new pose with the same orientation
-        return new Pose2d(xNew, yNew, theta);
+        return new Pose2d(xNew, yNew, invTheta);
     }
 
 

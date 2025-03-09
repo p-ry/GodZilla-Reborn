@@ -198,9 +198,12 @@ public class RobotContainer {
 
                 controller.rightBumper()
                                 .onTrue(new DriveToAmpPath(1));
-                controller.leftBumper().onTrue(new InstantCommand(() -> {
-                        drivetrain.resetGyro();
-                }));
+                controller.leftBumper().onTrue(new InstantCommand(() -> 
+                        drivetrain.resetGyro()));
+
+controller.leftBumper().onTrue(new InstantCommand(() -> drivetrain.setHeading(new Rotation2d(0))));
+
+                
 
                 controller
                                 .start()
