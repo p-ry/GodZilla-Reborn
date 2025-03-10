@@ -106,7 +106,9 @@ public class Robot extends TimedRobot {
   }
 
   @Override
-  public void disabledInit() {}
+  public void disabledInit() {
+    RobotContainer.drivetrain.gyro.setYaw(0);
+  }
 
   @Override
   public void disabledPeriodic() {}
