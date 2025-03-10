@@ -72,7 +72,7 @@ public class DriveToAmpPath extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-
+ if(!validTarget){
     LimelightHelpers.LimelightResults resultsLeft = LimelightHelpers.getLatestResults("limelight-left");
 
     LimelightHelpers.LimelightResults resultsRight = LimelightHelpers.getLatestResults("limelight-right");
@@ -112,6 +112,7 @@ public class DriveToAmpPath extends Command {
       if (shiftDirection == -1) {
         where = Utilitys.shiftPoseLeft(Utilitys.getAprilTagPose(tagId), 16, 6.5);// 0.164285833);
       }
+    }
       //
 
       SmartDashboard.putNumberArray("Where",
@@ -127,6 +128,7 @@ public class DriveToAmpPath extends Command {
 
       Command driveit = AutoBuilder.pathfindToPose(where, constraints);
       driveit.schedule();
+      
 
     }
     // */
@@ -141,6 +143,7 @@ public class DriveToAmpPath extends Command {
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
+    validTarget=false;
   }
 
   // Returns true when the command should end.

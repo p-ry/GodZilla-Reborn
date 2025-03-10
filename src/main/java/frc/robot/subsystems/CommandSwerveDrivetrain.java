@@ -58,7 +58,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         return new SwerveModulePosition[] {
                 // Replace with actual module positions
                new SwerveModulePosition(getModule(0).getDriveMotor().getPosition().getValueAsDouble()/TunerConstants.kDriveGearRatio * Constants.wheelCircumference, getModule(0).getCurrentState().angle),
-                new SwerveModulePosition(getModule(1).getDriveMotor().getPosition().getValueAsDouble() /TunerConstants.kDriveGearRatio * Constants.wheelCircumference, getModule(1).getCurrentState().angle),
+               new SwerveModulePosition(getModule(1).getDriveMotor().getPosition().getValueAsDouble() /TunerConstants.kDriveGearRatio * Constants.wheelCircumference, getModule(1).getCurrentState().angle),
                 new SwerveModulePosition(getModule(2).getDriveMotor().getPosition().getValueAsDouble() /TunerConstants.kDriveGearRatio * Constants.wheelCircumference, getModule(2).getCurrentState().angle),
                 new SwerveModulePosition(getModule(3).getDriveMotor().getPosition().getValueAsDouble() /TunerConstants.kDriveGearRatio * Constants.wheelCircumference, getModule(3).getCurrentState().angle)
         };
@@ -181,7 +181,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         if (Utils.isSimulation()) {
             startSimThread();
         }
-
+        swerveOdometry.update(getGyroYaw(), getModulePositions());
         m_poseEstimator = new SwerveDrivePoseEstimator(Constants.swerveKinematics, getGyroYaw(),
                 getModulePositions(), getPose());
         configureAutoBuilder();
@@ -213,7 +213,29 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         if (Utils.isSimulation()) {
             startSimThread();
         }
+        gyro = new Pigeon2(0, "Canivore");
+        gyro.setYaw(0);
+        getModule(0).getDriveMotor().setPosition(0);
+        getModule(1).getDriveMotor().setPosition(0);
+        getModule(2).getDriveMotor().setPosition(0);
+        getModule(3).getDriveMotor().setPosition(0);
 
+
+        SmartDashboard.putNumber("yaw2", gyro.getYaw().getValueAsDouble());
+        swerveOdometry = new SwerveDriveOdometry(getKinematics(), getGyroYaw(),
+        getModulePositions());
+       // swerveOdometry = new SwerveDriveOdometry(getKinematics(), kBlueAlliancePerspectiveRotation,
+       //         getModulePositions());
+        if (Utils.isSimulation()) {
+            startSimThread();
+        }
+       
+
+        swerveOdometry.update(getGyroYaw(), getModulePositions());
+        m_poseEstimator = new SwerveDrivePoseEstimator(Constants.swerveKinematics, getGyroYaw(),
+                getModulePositions(), getPose());
+        configureAutoBuilder();
+        mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight");
         configureAutoBuilder();
     }
 
@@ -373,15 +395,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     @Override
     public void periodic() {
-        SmartDashboard.putNumber("Mod0", getModule(0).getSteerMotor().getPosition().getValueAsDouble());
-        SmartDashboard.putNumber("Mod1", getModule(1).getSteerMotor().getPosition().getValueAsDouble());
-        SmartDashboard.putNumber("Mod2", getModule(2).getSteerMotor().getPosition().getValueAsDouble());
-        SmartDashboard.putNumber("Mod3", getModule(3).getSteerMotor().getPosition().getValueAsDouble());
+       
         SmartDashboard.putNumber("Heading", getCompassHeading());
         SmartDashboard.putNumber("yaw", gyro.getYaw().getValueAsDouble());
 
 
-        swerveOdometry.update(getGyroYaw(), getModulePositions());
+        //swerveOdometry.update(getGyroYaw(), getModulePositions());
 
         m_poseEstimator.update(
            gyro.getRotation2d(),
@@ -389,12 +408,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
        updateOdometry();
         botPose2d = getPose();
         botPose3d = getPose3d();
-        SmartDashboard.putNumber("BotPoseX", botPose2d.getTranslation().getX());
-        SmartDashboard.putNumber("BotPoseY", botPose2d.getTranslation().getY());
-        SmartDashboard.putNumber("BotPoseTheta", botPose2d.getRotation().getDegrees());
-        SmartDashboard.putNumber("BotPoseX3d", botPose3d.getTranslation().getX());
-        SmartDashboard.putNumber("BotPoseY3d", botPose3d.getTranslation().getY());
-
+        SmartDashboard.putNumberArray("BotPose",
+        new double[] { botPose2d.getTranslation().getX(), botPose2d.getTranslation().getY(),
+                     botPose2d.getRotation().getRadians() });
         /*
          * Periodically try to apply the operator perspective.
          * If we haven't applied the operator perspective before, then we should apply

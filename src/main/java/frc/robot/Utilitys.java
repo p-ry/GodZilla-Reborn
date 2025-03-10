@@ -32,7 +32,7 @@ public class Utilitys {
        
     
         // Return the new pose with the same orientation
-        return new Pose2d(xNew, yNew, theta);
+        return new Pose2d(xNew, yNew, theta.plus(new Rotation2d(Math.PI)));
     }
     public static Pose2d shiftPoseLeft(Pose2d originalPose, double forwardInches, double leftInches) {
         // Get current pose components
@@ -49,7 +49,7 @@ public class Utilitys {
 
 
         // Return the new pose with the same orientation
-        return new Pose2d(xNew, yNew, theta);
+        return new Pose2d(xNew, yNew, theta.plus(new Rotation2d(Math.PI)));
     }
 
 
