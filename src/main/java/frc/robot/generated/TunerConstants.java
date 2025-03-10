@@ -31,8 +31,8 @@ public class TunerConstants {
     // When using closed-loop control, the drive motor uses the control
     // output type specified by SwerveModuleConstants.DriveMotorClosedLoopOutput
     private static final Slot0Configs driveGains = new Slot0Configs()
-        .withKP(0.1).withKI(0).withKD(0)
-        .withKS(0).withKV(0.124);
+        .withKP(60).withKI(0).withKD(0)
+        .withKS(0).withKV(1.2);
    
    /*
     private static final Slot0Configs steerGains = new Slot0Configs()
@@ -214,7 +214,7 @@ public class TunerConstants {
      */
     public static CommandSwerveDrivetrain createDrivetrain() {
         return new CommandSwerveDrivetrain(
-            DrivetrainConstants, FrontLeft, FrontRight, BackLeft, BackRight
+            DrivetrainConstants, 200,FrontLeft, FrontRight, BackLeft, BackRight
         );
     }
 

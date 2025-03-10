@@ -5,6 +5,7 @@
 package frc.robot;
 
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -14,6 +15,7 @@ import au.grapplerobotics.LaserCan;
 import au.grapplerobotics.ConfigurationFailedException;
 
 import com.ctre.phoenix6.hardware.Pigeon2;
+import com.pathplanner.lib.commands.PathfindingCommand;
 
 import au.grapplerobotics.CanBridge;
 
@@ -22,6 +24,7 @@ import au.grapplerobotics.CanBridge;
 public class Robot extends TimedRobot {
   private LaserCan laserCan;
   private Command m_autonomousCommand;
+  public static boolean blue,gyroSet;
 
   public final RobotContainer m_robotContainer;
 
@@ -38,7 +41,11 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotInit() {
+
+     PathfindingCommand.warmupCommand().schedule();
+
    
+
   }
 
   
@@ -70,10 +77,52 @@ public class Robot extends TimedRobot {
   }
 
   @Override
-  public void disabledInit() {}
+  public void disabledInit() {
+
+ var alliance = DriverStation.getAlliance();
+    if (alliance.isPresent()) {
+      if(alliance.get() == DriverStation.Alliance.Red){
+        
+        //m_robotContainer.s_Candle.setColourProperties(255, 0, 0, 0.75);
+        //m_robotContainer.s_Candle.colorLEDs();
+         blue=false;
+      } else if(alliance.get() == DriverStation.Alliance.Blue){
+        
+       // m_robotContainer.s_Candle.setColourProperties(0, 0, 255, 0.75);
+       // m_robotContainer.s_Candle.colorLEDs();
+        blue=true;
+      }
+    }
+
+  }
 
   @Override
-  public void disabledPeriodic() {}
+  public void disabledPeriodic() {
+    var alliance = DriverStation.getAlliance();
+    if (alliance.isPresent()) {
+      if(alliance.get() == DriverStation.Alliance.Red){
+        
+        //m_robotContainer.s_Candle.setColourProperties(255, 0, 0, 0.75);
+        //m_robotContainer.s_Candle.colorLEDs();
+         blue=false;
+      } else if(alliance.get() == DriverStation.Alliance.Blue){
+        
+       // m_robotContainer.s_Candle.setColourProperties(0, 0, 255, 0.75);
+       // m_robotContainer.s_Candle.colorLEDs();
+        blue=true;
+      }
+    }
+
+    if(!gyroSet){
+      m_robotContainer.drivetrain.zeroGyro();
+      if(!blue){
+        LimelightHelpers.setCameraPose_RobotSpace("limelight",-0.057,0.016,0.627,0.0,30.0,0.0);
+      }else{
+        LimelightHelpers.setCameraPose_RobotSpace("limelight",-0.057,0.016,0.627,0.0,30.0,180.0);
+      }
+      gyroSet=true;
+    }
+  }
 
   @Override
   public void disabledExit() {}

@@ -89,6 +89,18 @@ public static final SwerveDriveKinematics swerveKinematics = new SwerveDriveKine
     REPLAY
   }
 
+     /* Drive Motor PID Values */
+     public static final double driveKP = 0.6;// 0.12; //TODO: This must be tuned to specific robot
+     public static final double driveKI = 0.0;
+     public static final double driveKD = 0.0;
+     public static final double driveKF = 0.0;
+
+     /* Drive Motor Characterization Values From SYSID */
+     public static final double driveKS = 0.95;// 0.32; //TODO: This must be tuned to specific robot
+     public static final double driveKV = 2.01;// 1.51;
+     public static final double driveKA = 0.87;// 0.27;
+
+
 public static final double kLowerArmPosL0 = 1.0;
 public static final double kUpperArmPosL0 = 1.0;
 public static final double kSliderPosL0 = 0;
