@@ -170,7 +170,7 @@ public class RobotContainer {
 
 
                 driver.rightBumper()
-                .onTrue(new DriveToAmpPath(1));
+                .whileTrue(new DriveToAmpPath(1));
 
 
 

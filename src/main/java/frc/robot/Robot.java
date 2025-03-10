@@ -14,6 +14,7 @@ import au.grapplerobotics.LaserCan;
 import au.grapplerobotics.ConfigurationFailedException;
 
 import com.ctre.phoenix6.hardware.Pigeon2;
+import com.pathplanner.lib.commands.PathfindingCommand;
 
 import au.grapplerobotics.CanBridge;
 
@@ -38,6 +39,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotInit() {
+    PathfindingCommand.warmupCommand().schedule();
    
   }
 
