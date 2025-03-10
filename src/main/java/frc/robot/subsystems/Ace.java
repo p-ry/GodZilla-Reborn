@@ -86,7 +86,7 @@ public class Ace extends SubsystemBase {
   @Override
   public void periodic() {
     level = RobotContainer.mArm.level;
-
+/*
     if (level == 1) {
       measurement = laserCan.getMeasurement();
       distance = measurement.distance_mm;
@@ -103,12 +103,13 @@ public class Ace extends SubsystemBase {
           gotIt = true;
         }
       }
+        */
       // level = RobotContainer.
 
       // if ((ace.getTorqueCurrent().getValueAsDouble()>35.0) && (level==1)){
       // setSpeed(0);
       // }
       // This method will be called once per scheduler run
-    }
+    
   }
 }
