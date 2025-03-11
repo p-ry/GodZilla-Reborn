@@ -225,7 +225,7 @@ controller.leftBumper().onTrue(new InstantCommand(() -> drivetrain.setHeading(ne
 
                 controller
                                 .start()
-                                .onTrue(new InstantCommand(() -> drivetrain.gyro.reset()));
+                                .onTrue(new InstantCommand(() -> gyro.reset()));
 
             
                 controller.b().whileTrue(drivetrain.applyRequest(

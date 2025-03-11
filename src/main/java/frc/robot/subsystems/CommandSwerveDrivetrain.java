@@ -45,6 +45,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.LimelightHelpers;
 import frc.robot.LimelightHelpers.PoseEstimate;
 import frc.robot.Robot;
+import frc.robot.RobotContainer;
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 
@@ -85,7 +86,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     public LimelightHelpers.PoseEstimate rightPose;
     public LimelightHelpers.PoseEstimate[] cameraPoses = new LimelightHelpers.PoseEstimate[2];
 
-    public Pigeon2 gyro;
+    //public Pigeon2 gyro;
     public SwerveDriveOdometry swerveOdometry;
     public PoseEstimate cameraPose;
     public Pose2d botPose2d = new Pose2d();
@@ -118,8 +119,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     public CommandSwerveDrivetrain(SwerveDrivetrainConstants drivetrainConstants,
             SwerveModuleConstants<?, ?, ?>... modules) {
         super(drivetrainConstants, modules);
-        gyro = new Pigeon2(0, "Canivore");
-        gyro.setYaw(0);
+       
+        RobotContainer.gyro.setYaw(0);
 
      //   SmartDashboard.putNumber("yaw2", gyro.getYaw().getValueAsDouble());
 
@@ -252,7 +253,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             }
            /// SmartDashboard.putNumber("estimated yaw",
                     //m_poseEstimator.getEstimatedPosition().getRotation().getDegrees();
-            if (gyro.getAngularVelocityZWorld().getValueAsDouble() > 360) // if our angular velocity is greater
+            if (RobotContainer.gyro.getAngularVelocityZWorld().getValueAsDouble() > 360) // if our angular velocity is greater
             {
                 doRejectUpdate = true;
             }
@@ -286,7 +287,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
        
        swerveOdometry.update(getGyroYaw(), getModulePositions());
          m_poseEstimator.update(
-            gyro.getRotation2d(),
+            RobotContainer.gyro.getRotation2d(),
             getModulePositions());
       
         botPose2d = m_poseEstimator.getEstimatedPosition();
@@ -302,7 +303,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
          * This ensures driving behavior doesn't change until an explicit disable event
          * occurs during testing.
          */
-        if (!m_hasAppliedOperatorPerspective || DriverStation.isDisabled()) {
+   /*     if (!m_hasAppliedOperatorPerspective || DriverStation.isDisabled()) {
             DriverStation.getAlliance().ifPresent(allianceColor -> {
                 setOperatorPerspectiveForward(
                     allianceColor == Alliance.Red
@@ -312,12 +313,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 m_hasAppliedOperatorPerspective = true;
             });
         }
-        
+     */   
     }
 
     
     public Rotation2d getGyroscopeRotation() {
-        return Rotation2d.fromDegrees(gyro.getYaw().getValueAsDouble());
+        return Rotation2d.fromDegrees(RobotContainer.gyro.getYaw().getValueAsDouble());
     }
 
     public void resetPose(Pose2d pose) {
@@ -333,7 +334,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         // pose);
     }
     public void resetGyro(){
-        gyro.setYaw(0);
+        RobotContainer.gyro.setYaw(0);
     }
 
     public Pose2d getPose() {
@@ -377,17 +378,17 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      */
 
     public double getCompassHeading() {
-SmartDashboard.putNumber("CompassHeading", Math.IEEEremainder(gyro.getYaw().getValueAsDouble(),360  ));
-        return Math.IEEEremainder(gyro.getYaw().getValueAsDouble(), 360.0);
+SmartDashboard.putNumber("CompassHeading", Math.IEEEremainder(RobotContainer.gyro.getYaw().getValueAsDouble(),360  ));
+        return Math.IEEEremainder(RobotContainer.gyro.getYaw().getValueAsDouble(), 360.0);
     }
 
     public Rotation2d getGyroYaw() {
-       SmartDashboard.putNumber("yaw", gyro.getYaw().getValueAsDouble());
-        return Rotation2d.fromDegrees(gyro.getYaw().getValueAsDouble());
+       SmartDashboard.putNumber("yaw", RobotContainer.gyro.getYaw().getValueAsDouble());
+        return Rotation2d.fromDegrees(RobotContainer.gyro.getYaw().getValueAsDouble());
     }
 
     public PoseEstimate grabPose(String camera) {
-        LimelightHelpers.SetRobotOrientation(camera, gyro.getYaw().getValueAsDouble(), 0, 0, 0, 0, 0);
+        LimelightHelpers.SetRobotOrientation(camera, RobotContainer.gyro.getYaw().getValueAsDouble(), 0, 0, 0, 0, 0);
         // LimelightHelpers.SetRobotOrientation("limelight-left",getGyroYaw().getDegrees(),
         // 0, 0, 0, 0, 0);
 
