@@ -83,18 +83,18 @@ var motorConfigs = new MotorOutputConfigs();
 
 //    UpperArmRightFollower = new Follower(33, true);
 //    UpperArmRight.setControl(UpperArmRightFollower);
-    requestedPosition = getPos();
+    //requestedPosition = getPos();
   }
 
   public void setPos(double position) {
     boolean changePos = true;
-    
+    requestedPosition = position;
+   
     UpperArmLeft.setControl(controlUpper.withPosition(position));
     UpperArmRight.setControl(controlUpper.withPosition(position));
     // motorRequest = new PositionDutyCycle(position);
     // UpperArmLeft.setControl(motorRequest);
-    requestedPosition = position;
-   
+    
 
    
 

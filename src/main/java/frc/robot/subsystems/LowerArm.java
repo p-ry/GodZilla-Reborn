@@ -100,16 +100,16 @@ public class LowerArm extends SubsystemBase {
     // leftConfigurator = LowerArmLeft.getConfigurator();
     // leftConfigurator.apply(talonFXConfigs);
 
-    requestedPosition = getPos();
+    
    
 
   }
 
   public void setPos(double position) {
-
+    requestedPosition = position;
     LowerArmLeft.setControl(leftRequest.withPosition(position));
     LowerArmRight.setControl(rightRequest.withPosition(position));
-    requestedPosition = position;
+    
   }
 
   public void setSpeed(double speed) {

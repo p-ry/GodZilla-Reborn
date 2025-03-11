@@ -90,7 +90,7 @@ public class MoveArmFix extends Command {
           myArm.upperArm.setPos(1.0);
           // upperArm.UpperArmRight.setControl(upperArm.dynamic.withPosition(1.0));
           // upperArm.setPos(0.5);//0.0 load
-          myArm.slider.setPos(0);
+          myArm.slider.setPos(-0.50);
           myArm.wrist.setPos(0.0);
         
         // ace.setSpeed(0);
@@ -154,7 +154,7 @@ public class MoveArmFix extends Command {
       case 4:
         myArm.lowerArm.setPos(28.2);
         myArm.upperArm.setPos(33.5);
-        myArm.slider.setPos(-43.4);
+        //myArm.slider.setPos(-43.4);
         myArm.wrist.setPos(8.8);
 
         // System.out.println("Level 4");
@@ -219,7 +219,7 @@ public class MoveArmFix extends Command {
     double elaspedTime = Timer.getTimestamp()-startTime;
     SmartDashboard.putBoolean("AtLevel", myArm.isAtLevel(level));
     return (myArm.isAtLevel(level)
-        || (elaspedTime > 2.0));
+        || (elaspedTime > 3.0));
     
 
   }
