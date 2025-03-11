@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.DriveToAmpPath;
+import frc.robot.commands.Extend;
 import frc.robot.commands.MoveArmFix;
 //import frc.robot.commands.MoveArmFix;
 import frc.robot.commands.Retract;
@@ -183,13 +184,13 @@ public class RobotContainer {
                 Lv3R
                 .onFalse(new Retract(mArm,3).andThen(new MoveArmFix(mArm, 0, 0)));
                 Lv4L
-                                .whileTrue(new MoveArmFix(mArm, 4, -1));
+                                .whileTrue(new MoveArmFix(mArm, 4, -1).andThen(new Extend(mArm,4)));
                 Lv4L
-                .onFalse(new Retract(mArm,3).andThen(new MoveArmFix(mArm, 0, 0)));
+                .onFalse(new Retract(mArm,4).andThen(new Extend(mArm, 99). andThen(new MoveArmFix(mArm, 0, 0))));
                 Lv4R
-                                .whileTrue(new MoveArmFix(mArm, 4, 1));
+                                .whileTrue(new MoveArmFix(mArm, 4, 1).andThen(new Extend(mArm,4)));
                 Lv4R
-                .onFalse(new Retract(mArm,3).andThen(new MoveArmFix(mArm, 0, 0)));
+                .onFalse(new Retract(mArm,4).andThen(new Extend(mArm, 99). andThen(new MoveArmFix(mArm, 0, 0))));
                 /*
                  * Climb need to find correct Position
                  * .onTrue(new MoveArmFix(mArm, 2));
