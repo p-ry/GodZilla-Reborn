@@ -141,6 +141,49 @@ public class Utilitys {
         }
     }
 
+    public static int grabTagID() {
+        double leftDist, rightDist;
+        double shiftDirection;
+        int[] tagIds = new int[2];
+        boolean validTarget = false;
+        int tagId = 0;
+        LimelightHelpers.LimelightResults resultsLeft = LimelightHelpers.getLatestResults("limelight-left");
+
+        LimelightHelpers.LimelightResults resultsRight = LimelightHelpers.getLatestResults("limelight-right");
+        SmartDashboard.putNumber("right: ", resultsRight.botpose_avgdist);
+        SmartDashboard.putBoolean("valid", resultsRight.valid);
+
+        if (resultsLeft.valid) {
+            leftDist = resultsLeft.botpose_avgdist;
+            validTarget = true;
+            tagIds[0] = (int) resultsLeft.targets_Fiducials[0].fiducialID;
+        } else {
+            leftDist = 999999;
+        }
+
+        if (resultsRight.valid) {
+            rightDist = resultsRight.botpose_avgdist;
+
+            tagIds[1] = (int) resultsRight.targets_Fiducials[0].fiducialID;
+            validTarget = true;
+        } else {
+            rightDist = 999999;
+        }
+
+        if (validTarget) {
+            if (leftDist < rightDist) {
+                tagId = tagIds[0];
+                SmartDashboard.putString("Camera", "left");
+
+            } else {
+                tagId = tagIds[1];
+                SmartDashboard.putString("Camera", "right");
+            }
+        }
+        return tagId;
+
+    }
+
     public void updateOdometry() {
         boolean doRejectUpdate = false;
         Pigeon2 gyro = RobotContainer.gyro;

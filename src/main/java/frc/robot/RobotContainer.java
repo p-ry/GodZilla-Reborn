@@ -25,7 +25,9 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.DriveToAmpPath;
-import frc.robot.commands.MoveArm;
+import frc.robot.commands.MoveArmFix;
+//import frc.robot.commands.MoveArmFix;
+import frc.robot.commands.Retract;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Ace;
 import frc.robot.subsystems.ArmAssembly;
@@ -81,6 +83,9 @@ public class RobotContainer {
         // final JoystickButton Barge = new JoystickButton(copilot2, 2);
         // public final Wrist Wrist = new Wrist();
         private final CommandXboxController controller = new CommandXboxController(0);
+        
+
+
 
         /* Path follower */
         private final SendableChooser<Command> AutoChooser;
@@ -128,62 +133,62 @@ public class RobotContainer {
                 // .onTrue(new InstantCommand())
 
                 // Process
-                // .onTrue(new MoveArm(mArm, 12));
+                // .onTrue(new MoveArmFix(mArm, 12));
                 Algae
                                 .onTrue(new InstantCommand(() -> ace.setSpeed(-.2)));
                 Algae
                                 .onFalse(new InstantCommand(() -> ace.setSpeed(0)));
 
                 Load
-                                .whileTrue(new MoveArm(mArm, 1, 0));
+                                .whileTrue(new MoveArmFix(mArm, 1, 0));
                 Load
                                 .onTrue(new InstantCommand(() -> ace.gotIt=false));
                                 
 
                 Load
-                                .onFalse(new MoveArm(mArm, 0, 0));
+                                .onFalse(new MoveArmFix(mArm, 0, 0));
                 Process
-                                .onTrue(new MoveArm(mArm, 5, 0));
+                                .onTrue(new MoveArmFix(mArm, 5, 0));
                 // Process.whileTrue(new InstantCommand(() -> ace.setSpeed(0.1)));
 
                 Process
-                                .onFalse(new MoveArm(mArm, 0, 0));
+                                .onFalse(new MoveArmFix(mArm, 0, 0));
                 // Process
                 // .onFalse(new InstantCommand(() -> ace.setSpeed(0)));
 
                 Dump
-                                .whileTrue(new MoveArm(mArm, 6, 0));
+                                .whileTrue(new MoveArmFix(mArm, 6, 0));
                 Dump
-                                .onFalse(new MoveArm(mArm, 0, 0));
+                                .onFalse(new MoveArmFix(mArm, 0, 0));
                 Lv2L
-                                .whileTrue(new MoveArm(mArm, 2, -1));
+                                .whileTrue(new MoveArmFix(mArm, 2, -1));
                 Lv2L
-                                .onFalse(new MoveArm(mArm, 0, 0));
+                                .onFalse(new MoveArmFix(mArm, 0, 0));
                 Lv2R
-                                .whileTrue(new MoveArm(mArm, 2, 1));
+                                .whileTrue(new MoveArmFix(mArm, 2, 1));
                 Lv2R
-                                .onFalse(new MoveArm(mArm, 0, 0));
+                                .onFalse(new MoveArmFix(mArm, 0, 0));
                 Lv3L
-                                .whileTrue(new MoveArm(mArm, 3, -1));
+                                .whileTrue(new MoveArmFix(mArm, 3, -1));
                 Lv3L
-                                .onFalse(new MoveArm(mArm, 0, 0));
+                        .onFalse(new Retract(mArm,3).andThen(new MoveArmFix(mArm, 0, 0)));
                 Lv3R
-                                .whileTrue(new MoveArm(mArm, 3, 1));
+                                .whileTrue(new MoveArmFix(mArm, 3, 1));
                 Lv3R
-                                .onFalse(new MoveArm(mArm, 0, 0));
+                .onFalse(new Retract(mArm,3).andThen(new MoveArmFix(mArm, 0, 0)));
                 Lv4L
-                                .whileTrue(new MoveArm(mArm, 4, -1));
+                                .whileTrue(new MoveArmFix(mArm, 4, -1));
                 Lv4L
-                                .onFalse(new MoveArm(mArm, 0, 0));
+                .onFalse(new Retract(mArm,3).andThen(new MoveArmFix(mArm, 0, 0)));
                 Lv4R
-                                .whileTrue(new MoveArm(mArm, 4, 1));
+                                .whileTrue(new MoveArmFix(mArm, 4, 1));
                 Lv4R
-                                .onFalse(new MoveArm(mArm, 0, 0));
+                .onFalse(new Retract(mArm,3).andThen(new MoveArmFix(mArm, 0, 0)));
                 /*
                  * Climb need to find correct Position
-                 * .onTrue(new MoveArm(mArm, 2));
+                 * .onTrue(new MoveArmFix(mArm, 2));
                  * Pull
-                 * .onTrue(new MoveArm(mArm, 2));
+                 * .onTrue(new MoveArmFix(mArm, 2));
                  */
                 Intake
                                 .whileTrue(new InstantCommand(() -> ace.setSpeed(1)));
@@ -195,9 +200,9 @@ public class RobotContainer {
                                 .onFalse(new InstantCommand(() -> ace.setSpeed(0)));
                 /*
                  * Process need to find corect Position
-                 * .onTrue(new MoveArm(mArm, 2));
+                 * .onTrue(new MoveArmFix(mArm, 2));
                  * Load
-                 * .onTrue(new MoveArm(mArm, 2));
+                 * .onTrue(new MoveArmFix(mArm, 2));
                  * Barge
                  * .onTrue(new MoveArm(mArm, 2));
                  */
