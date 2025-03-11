@@ -36,11 +36,9 @@ public class Retract extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    SmartDashboard.putBoolean("fini", finished);
-    SmartDashboard.putNumber("starttime",startTime);
-    SmartDashboard.putNumber("finishtime", timeout);
     
-    timeout=Timer.getTimestamp();
+    
+    
     if (level==3){
       myArm.upperArm.setPos(22+5);
       
@@ -60,10 +58,12 @@ public class Retract extends Command {
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
+    double elaspedTime = Timer.getTimestamp()-startTime;
     SmartDashboard.putBoolean("retractFinished",(myArm.upperArm.atPos()||(timeout-startTime>2.0)));
-    SmartDashboard.putBoolean("timeout", (timeout-startTime>2.0));
+    SmartDashboard.putNumber("elaspedTime", elaspedTime);
+    
     
      return (myArm.upperArm.atPos() 
-    || (timeout-startTime>2.0));
+    || (elaspedTime>2.0));
   }
 }

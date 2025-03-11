@@ -61,7 +61,6 @@ public class MoveArmFix extends Command {
       SmartDashboard.putNumberArray("AprilTag",
       new double[] { aprilTag.getX(), aprilTag.getY(), aprilTag.getRotation().getRadians() });
 
-
     }
 
     startTime = Timer.getFPGATimestamp();   
@@ -217,9 +216,10 @@ public class MoveArmFix extends Command {
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
+    double elaspedTime = Timer.getTimestamp()-startTime;
     SmartDashboard.putBoolean("AtLevel", myArm.isAtLevel(level));
     return (myArm.isAtLevel(level)
-        || (Timer.getFPGATimestamp() - startTime > 2.0));
+        || (elaspedTime > 2.0));
     
 
   }
