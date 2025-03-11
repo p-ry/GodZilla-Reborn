@@ -115,7 +115,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void disabledInit() {
-    RobotContainer.gyro.setYaw(0);
+    RobotContainer.drivetrain.gyro.setYaw(0);
       var alliance = DriverStation.getAlliance();
    
    /*
