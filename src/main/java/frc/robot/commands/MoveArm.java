@@ -73,8 +73,8 @@ public class MoveArm extends Command {
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    SmartDashboard.putBoolean("AtLevel", myArm.isAtLevel(level));
-    return myArm.isAtLevel(level);
+    SmartDashboard.putBoolean("AtLevel", myArm.isAtLevel());
+    return myArm.isAtLevel();
     
   }
 }

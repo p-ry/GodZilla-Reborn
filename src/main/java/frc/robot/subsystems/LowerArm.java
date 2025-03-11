@@ -119,13 +119,13 @@ public class LowerArm extends SubsystemBase {
   }
 
   public double getPos() {
-    return LowerArmLeft.getRotorPosition().getValueAsDouble();
+    return LowerArmLeft.getPosition().getValueAsDouble();
   }
   public double getRightPos() {
-    return LowerArmRight.getRotorPosition().getValueAsDouble();
+    return LowerArmRight.getPosition().getValueAsDouble();
   }
  public boolean atPos(TalonFX talon) {
-    return Math.abs(talon.getRotorPosition().getValueAsDouble() - requestedPosition) < 0.8;
+    return Math.abs(talon.getPosition().getValueAsDouble() - requestedPosition) < 0.8;
   }
   public boolean atPos() {
     return atPosition;

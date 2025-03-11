@@ -53,7 +53,7 @@ public class Slider extends SubsystemBase {
   }
 
   public double getPos() {
-    return slider.getRotorPosition().getValueAsDouble();
+    return slider.getPosition().getValueAsDouble();
 
   }
 

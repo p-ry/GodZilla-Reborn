@@ -250,10 +250,14 @@ public class Utilitys {
         LimelightHelpers.SetRobotOrientation(camera, headingDeg, 0, 0, 0, 0, 0);
         mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(camera);
 
-        if (mt2 != null && mt2.tagCount > 0 && mt2.avgTagDist < 3 && omegaRps < 2.0) { // distance was 2
+        if (mt2 != null && mt2.tagCount > 0 ) { // distance was 2
             RobotContainer.drivetrain.setVisionMeasurementStdDevs(VecBuilder.fill(.7, .7, 9999999));
             RobotContainer.drivetrain.addVisionMeasurement(mt2.pose,
                     Utils.fpgaToCurrentTime(mt2.timestampSeconds));
+                RobotContainer.drivetrain.swerveOdometry.resetPosition(RobotContainer.drivetrain.getGyroYaw(),RobotContainer.drivetrain.getModulePositions(),
+                    RobotContainer.drivetrain.m_poseEstimator.getEstimatedPosition());
+                    
+
         }
     }
 }

@@ -77,7 +77,7 @@ SmartDashboard.putNumber("LowerArm", lowerArm.getPos());
 
   }
 
-  public boolean isAtLevel(int level) {
+  public boolean isAtLevel() {
     return lowerArm.atPos() && upperArm.atPos() && slider.atPos() && wrist.atPos();
 
   }

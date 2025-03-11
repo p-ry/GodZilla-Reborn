@@ -82,8 +82,8 @@ public class Robot extends TimedRobot {
   @Override
   public void robotPeriodic() {
     CommandScheduler.getInstance().run();
-    Utilitys.addLimelightVisionMeasurements("limelight-left");
-    Utilitys.addLimelightVisionMeasurements("limelight-right");
+   // Utilitys.addLimelightVisionMeasurements("limelight-left");
+    //Utilitys.addLimelightVisionMeasurements("limelight-right");
    // LaserCan.Measurement measurement = laserCan.getMeasurement();
    // System.out.println("Distance: " + measurement.distance_mm);
     //if (measurement != null && measurement.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT) {
@@ -168,7 +168,10 @@ public class Robot extends TimedRobot {
   }
 
   @Override
-  public void teleopPeriodic() {}
+  public void teleopPeriodic() {
+   //Utilitys.addLimelightVisionMeasurements("limelight-left");
+    //Utilitys.addLimelightVisionMeasurements("limelight-right");
+  }
 
   @Override
   public void teleopExit() {}

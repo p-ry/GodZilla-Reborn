@@ -104,13 +104,13 @@ var motorConfigs = new MotorOutputConfigs();
   }
 
   public double getPos() {
-    return UpperArmLeft.getRotorPosition().getValueAsDouble();
+    return UpperArmLeft.getPosition().getValueAsDouble();
   }
   public double getRightPos(){
-    return UpperArmRight.getRotorPosition().getValueAsDouble();
+    return UpperArmRight.getPosition().getValueAsDouble();
   }
   public boolean atPos(TalonFX talon) {
-    return Math.abs(talon.getRotorPosition().getValueAsDouble() - requestedPosition) < 0.8;
+    return Math.abs(talon.getPosition().getValueAsDouble() - requestedPosition) < 0.8;
   }
   public boolean atPos() {
     return atPosition;

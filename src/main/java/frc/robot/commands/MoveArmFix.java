@@ -217,8 +217,8 @@ public class MoveArmFix extends Command {
   @Override
   public boolean isFinished() {
     double elaspedTime = Timer.getTimestamp()-startTime;
-    SmartDashboard.putBoolean("AtLevel", myArm.isAtLevel(level));
-    return (myArm.isAtLevel(level)
+    SmartDashboard.putBoolean("AtLevel", myArm.isAtLevel());
+    return (myArm.isAtLevel()
         || (elaspedTime > 3.0));
     
 

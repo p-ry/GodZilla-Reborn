@@ -97,7 +97,7 @@ public class Wrist extends SubsystemBase {
     SmartDashboard.putNumber("rotor", rotor);
 
 
-    return wrist.getRotorPosition().getValueAsDouble();
+    return wrist.getPosition().getValueAsDouble();
   }
 
   public boolean atPos() {
