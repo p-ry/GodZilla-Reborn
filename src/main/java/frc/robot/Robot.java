@@ -5,6 +5,7 @@
 package frc.robot;
 
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -115,6 +116,27 @@ public class Robot extends TimedRobot {
   @Override
   public void disabledInit() {
     RobotContainer.drivetrain.gyro.setYaw(0);
+      var alliance = DriverStation.getAlliance();
+   
+   /*
+      if (alliance.isPresent()) {
+      if (alliance.get() == DriverStation.Alliance.Red) {
+        
+         * m_robotContainer.s_Candle.setFireProperties(0.7, 0.5, 0.4, 0.2);
+         * m_robotContainer.s_Candle.fireLEDs();
+        
+       // m_robotContainer.s_Candle.setColourProperties(255, 0, 0, 0.75);
+       // m_robotContainer.s_Candle.colorLEDs();
+      } else if (alliance.get() == DriverStation.Alliance.Blue) {
+        
+         * m_robotContainer.s_Candle.setFireProperties(0.7, 0.5, 0.4, 0.2);
+         * m_robotContainer.s_Candle.fireLEDs();
+         
+       // m_robotContainer.s_Candle.setColourProperties(0, 0, 255, 0.75);
+       // m_robotContainer.s_Candle.colorLEDs();
+      }
+    }
+    */
   }
 
   @Override
