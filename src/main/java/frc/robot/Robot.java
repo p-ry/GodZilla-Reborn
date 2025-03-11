@@ -14,6 +14,9 @@ import au.grapplerobotics.LaserCan;
 import au.grapplerobotics.ConfigurationFailedException;
 
 import com.ctre.phoenix6.hardware.Pigeon2;
+import com.pathplanner.lib.commands.FollowPathCommand;
+import com.pathplanner.lib.pathfinding.LocalADStar;
+import com.pathplanner.lib.pathfinding.Pathfinding;
 
 import au.grapplerobotics.CanBridge;
 
@@ -38,6 +41,8 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotInit() {
+    FollowPathCommand.warmupCommand().schedule();
+    Pathfinding.setPathfinder(new LocalADStar());
     
    // laserCan = new LaserCan(10);
     //m_robotContainer.drivetrain.gyro.setYaw(0);
@@ -76,6 +81,8 @@ public class Robot extends TimedRobot {
   @Override
   public void robotPeriodic() {
     CommandScheduler.getInstance().run();
+    Utilitys.addLimelightVisionMeasurements("limelight-left");
+    Utilitys.addLimelightVisionMeasurements("limelight-right");
    // LaserCan.Measurement measurement = laserCan.getMeasurement();
    // System.out.println("Distance: " + measurement.distance_mm);
     //if (measurement != null && measurement.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT) {

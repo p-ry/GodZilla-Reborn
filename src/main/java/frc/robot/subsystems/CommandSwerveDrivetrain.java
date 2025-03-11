@@ -227,6 +227,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * @return Command to run
      */
 
+     
+
     public void updateOdometry() {
         boolean doRejectUpdate = false;
         cameraPoses[0] = grabPose("limelight-left");
@@ -296,7 +298,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
          m_poseEstimator.update(
             gyro.getRotation2d(),
             getModulePositions());
-        updateOdometry();
+       // updateOdometry();
 
         // cameraPose = grabPose();
         // addVisionMeasurement(cameraPose.pose, cameraPose.timestampSeconds);

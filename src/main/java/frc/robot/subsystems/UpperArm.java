@@ -87,11 +87,16 @@ var motorConfigs = new MotorOutputConfigs();
   }
 
   public void setPos(double position) {
+    boolean changePos = true;
+    
     UpperArmLeft.setControl(controlUpper.withPosition(position));
     UpperArmRight.setControl(controlUpper.withPosition(position));
     // motorRequest = new PositionDutyCycle(position);
     // UpperArmLeft.setControl(motorRequest);
     requestedPosition = position;
+   
+
+   
 
   }
   public void setSpeed(double speed) {

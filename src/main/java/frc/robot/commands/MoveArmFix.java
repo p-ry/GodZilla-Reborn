@@ -2,74 +2,72 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.subsystems;
+package frc.robot.commands;
 
-import java.util.logging.Level;
-
-import edu.wpi.first.networktables.GenericEntry;
-import edu.wpi.first.util.sendable.SendableRegistry;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Robot;
+import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.RobotContainer;
-import frc.robot.Utilitys;
+import frc.robot.subsystems.Ace;
+import frc.robot.subsystems.ArmAssembly;
+import frc.robot.subsystems.LowerArm;
+import frc.robot.subsystems.Slider;
+import frc.robot.subsystems.UpperArm;
+import frc.robot.subsystems.Wrist;
 
-public class ArmAssembly extends SubsystemBase {
+/* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
+public class MoveArmFix extends Command {
+  /** Creates a new Retract. */
 
-  public LowerArm lowerArm;;
-  public UpperArm upperArm;
-  public Slider slider;
-  public Wrist wrist;
-  public Ace ace;
-  public int level;
-  ShuffleboardTab tab = Shuffleboard.getTab("Arm");
-  public boolean updatePID = false;
-  double klowerarm;
-  double kupperarm;
-  double kwrist;
-  double kslider;
-  public double shiftDirection;
+  double position;
+  int level;
+  LowerArm lowerArm;
+  UpperArm upperArm;
+  // Ace ace;
+  Wrist wrist;
+  Slider slider;
+  ArmAssembly myArm;
+  int shiftDirection;
+
   boolean algae;
   public static boolean retract;
   public int prevLevel;
 
-  // public Ace ace;
+  public MoveArmFix(ArmAssembly myArm, int level, int direction) {
 
-  /** Creates a new TheArms. */
-  public ArmAssembly(Boolean algae, int level) {
-
-    retract = false;
-    klowerarm = 41.0;
-    kupperarm = 45;
-    kwrist = 13;
-    kslider = -48;
-    lowerArm = new LowerArm();
-    upperArm = new UpperArm();
-    slider = new Slider();
-    wrist = new Wrist();
     this.level = level;
-    prevLevel = level;
-    // this.shiftDirection = shiftDirection;
-    // ace = new Ace(level);
+    this.shiftDirection = direction;
 
-    // Shuffleboard.selectTab("Arm");
-    SmartDashboard.putBoolean("update", updatePID);
-    SmartDashboard.putNumber("kLowerArm", klowerarm);
-    SmartDashboard.putBoolean("lowerARM", lowerArm.atPos());
-    SmartDashboard.putNumber("kUpperArm", kupperarm);
-    SmartDashboard.putNumber("kSlider", kslider);
-    SmartDashboard.putNumber("kWrist", kwrist);
-
-    // GenericEntry
-    // tab.add("Ace", ace);
-
+    this.myArm = myArm;
   }
 
-  @Override
-  public void periodic() {
+  /** Creates a new MoveArm. */
+  public MoveArmFix(LowerArm lowerArm, UpperArm upperArm, Slider slider, Wrist wrist, int level) {
+    this.level = level;
+    this.lowerArm = lowerArm;
+    this.upperArm = upperArm;
+    this.wrist = wrist;
+    // this.ace= ace;
+    this.slider = slider;
+    // DriveToAmpPath moveIt;// = new DriveToAmpPath(RobotContainer.drivetrain,
+    // shiftDirection);
 
+    // declare subsystem dependencies.
+  }
+
+  // Called when the command is initially scheduled.
+  @Override
+  public void initialize() {
+    position = upperArm.getPos();
+    prevLevel = myArm.level;
+  }
+
+  // Called every time the scheduler runs while the command is scheduled.
+  @Override
+  public void execute() {
+   
+    
     // SmartDashboard.putNumber("Wristpos", wrist.getPos());
     algae = RobotContainer.Algae.getAsBoolean();
     if((prevLevel!=level)&& ((prevLevel==3)||(prevLevel==4))){
@@ -213,25 +211,24 @@ public class ArmAssembly extends SubsystemBase {
           wrist.setPos(0.0);
         }
 
-        // System.out.println("home");
-
-    }
+    //myArm.shiftDirection=shiftDirection;
+   
+    
     
 
-    double lowerArm = SmartDashboard.getNumber("kLowerArm", klowerarm);
-    double upperArm = SmartDashboard.getNumber("kUpperArm", kupperarm);
-    double slider = SmartDashboard.getNumber("kSlider", kslider);
-    double wrist = SmartDashboard.getNumber("kWrist", kwrist);
-
-    // SmartDashboard.putNumber("Slider",slider.getPos());
-    // SmartDashboard.putNumber("Wrist",wrist.getPos());
-
-    // This method will be called once per scheduler run }
-
+    
   }
 
-  public boolean isAtLevel(int level) {
-    return lowerArm.atPos() && upperArm.atPos();// && slider.atPos() && wrist.atPos();
+  // Called once the command ends or is interrupted.
+  @Override
+  public void end(boolean interrupted) {
+  }
+
+  // Returns true when the command should end.
+  @Override
+  public boolean isFinished() {
+    SmartDashboard.putBoolean("AtLevel", myArm.isAtLevel(level));
+    return myArm.isAtLevel(level);
 
   }
 }

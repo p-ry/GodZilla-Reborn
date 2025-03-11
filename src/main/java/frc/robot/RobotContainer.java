@@ -9,6 +9,7 @@ import static edu.wpi.first.units.Units.*;
 
 import java.io.Console;
 
+import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
@@ -32,6 +33,7 @@ import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Wrist;
 
 public class RobotContainer {
+          public static Pigeon2 gyro;
         private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top
                                                                                       // speed
         private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per
@@ -59,6 +61,8 @@ public class RobotContainer {
         public static final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
         public static final ArmAssembly mArm = new ArmAssembly(false, 99);
         public final Ace ace = new Ace(0);
+        public static int prevLevel = 0;
+        
 
         final JoystickButton Dump = new JoystickButton(copilot, 1);
         final JoystickButton Lv2L = new JoystickButton(copilot, 2);
@@ -82,6 +86,7 @@ public class RobotContainer {
         private final SendableChooser<Command> AutoChooser;
 
         public RobotContainer() {
+                gyro = new Pigeon2(0, "Canivore");
 
                 // Note that X is defined as forward according to WPILib convention,
                 // and Y is defined as to the left according to WPILib convention.
@@ -111,6 +116,7 @@ public class RobotContainer {
                 ;
                 AutoChooser = AutoBuilder.buildAutoChooser("none");
                 SmartDashboard.putData("AutoChooser", AutoChooser);
+                
 
                 configureBindings();
         }
