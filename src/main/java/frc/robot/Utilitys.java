@@ -186,7 +186,7 @@ public class Utilitys {
 
     public void updateOdometry() {
         boolean doRejectUpdate = false;
-        Pigeon2 gyro = RobotContainer.gyro;
+        Pigeon2 gyro = RobotContainer.drivetrain.gyro;
         cameraPoses[0] = grabPose("limelight-left");
         cameraPoses[1] = grabPose("limelight-right");
         for (int i = 0; i < 2; i++) {
@@ -231,7 +231,7 @@ public class Utilitys {
     }
 
     public PoseEstimate grabPose(String camera) {
-        LimelightHelpers.SetRobotOrientation(camera, RobotContainer.gyro.getYaw().getValueAsDouble(), 0, 0, 0, 0, 0);
+        LimelightHelpers.SetRobotOrientation(camera, RobotContainer.drivetrain.gyro.getYaw().getValueAsDouble(), 0, 0, 0, 0, 0);
         // LimelightHelpers.SetRobotOrientation("limelight-left",getGyroYaw().getDegrees(),
         // 0, 0, 0, 0, 0);
 

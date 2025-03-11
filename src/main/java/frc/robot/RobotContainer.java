@@ -36,7 +36,7 @@ import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Wrist;
 
 public class RobotContainer {
-          public static Pigeon2 gyro;
+          //public static Pigeon2 gyro;
         private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top
                                                                                       // speed
         private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per
@@ -98,7 +98,7 @@ public class RobotContainer {
         private final SendableChooser<Command> AutoChooser;
 
         public RobotContainer() {
-                gyro = new Pigeon2(0, "Canivore");
+                //gyro = new Pigeon2(0, "Canivore");
 
                 // Note that X is defined as forward according to WPILib convention,
                 // and Y is defined as to the left according to WPILib convention.
