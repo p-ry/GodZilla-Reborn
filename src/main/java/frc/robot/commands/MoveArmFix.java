@@ -36,6 +36,7 @@ public class MoveArmFix extends Command {
   public int prevLevel;
   double startTime; 
  Pose2d aprilTag;
+ public static boolean applyDynamic;
   
 
   public MoveArmFix(ArmAssembly myArm, int level, int direction) {
@@ -76,18 +77,18 @@ public class MoveArmFix extends Command {
 
     // SmartDashboard.putNumber("Wristpos", wrist.getPos());
     algae = RobotContainer.Algae.getAsBoolean();
-   
+    applyDynamic=false;
 
     switch (level) {
       case 0:
-
+        
        
           myArm.lowerArm.setPos(1.0); // 16.10 load
 
           // upperArm.dynamic.Velocity = 1;
           // upperArm.dynamic.Acceleration = 1;
           // upperArm.dynamic.Jerk = 50;
-          myArm.upperArm.setPos(1.0);
+          myArm.upperArm.setPos(1.0,applyDynamic);
           // upperArm.UpperArmRight.setControl(upperArm.dynamic.withPosition(1.0));
           // upperArm.setPos(0.5);//0.0 load
           myArm.slider.setPos(-0.50);
@@ -100,12 +101,12 @@ public class MoveArmFix extends Command {
       case 1:
         if (algae) {
           myArm.lowerArm.setPos(18.0);
-          myArm.upperArm.setPos(1.0);
+          myArm.upperArm.setPos(1.0,applyDynamic);
           myArm.slider.setPos(-2.0);
           myArm.wrist.setPos(0.0);
         } else {
           myArm.lowerArm.setPos(19.00);
-          myArm.upperArm.setPos(3.7);// 0.0 load
+          myArm.upperArm.setPos(3.7,applyDynamic);// 0.0 load
           myArm.wrist.setPos(0);
           myArm.slider.setPos(-0.5);
         }
@@ -114,13 +115,13 @@ public class MoveArmFix extends Command {
       case 2:
         if (algae) {
           myArm.lowerArm.setPos(22.0);
-          myArm.upperArm.setPos(10.0);
+          myArm.upperArm.setPos(10.0,applyDynamic);
           myArm.slider.setPos(-2.0);
           myArm.wrist.setPos(3.0);
         } else {
 
           myArm.lowerArm.setPos(1.0);
-          myArm.upperArm.setPos(6.0);
+          myArm.upperArm.setPos(6.0,applyDynamic);
           myArm.slider.setPos(-10.0);
           myArm.wrist.setPos(5.0);
           break;
@@ -138,12 +139,12 @@ public class MoveArmFix extends Command {
       case 3:
         if (algae) {
           myArm.lowerArm.setPos(25.0);
-          myArm.upperArm.setPos(18.0);
+          myArm.upperArm.setPos(18.0,applyDynamic);
           myArm.slider.setPos(-2.0);
           myArm.wrist.setPos(0.0);
         } else {
           myArm.lowerArm.setPos(22);
-          myArm.upperArm.setPos(22);
+          myArm.upperArm.setPos(22,applyDynamic);
           myArm.slider.setPos(-0.5);
           myArm.wrist.setPos(6.5);
         }
@@ -153,7 +154,7 @@ public class MoveArmFix extends Command {
 
       case 4:
         myArm.lowerArm.setPos(28.2);
-        myArm.upperArm.setPos(33.5);
+        myArm.upperArm.setPos(33.5,applyDynamic);
         //myArm.slider.setPos(-43.4);
         myArm.wrist.setPos(8.8);
 
@@ -163,7 +164,7 @@ public class MoveArmFix extends Command {
       case 5:
 
         myArm.lowerArm.setPos(30.0);
-        myArm.upperArm.setPos(4.0);
+        myArm.upperArm.setPos(4.0,applyDynamic);
         myArm.slider.setPos(-0.50);
         myArm.wrist.setPos(3.0);
 
@@ -173,10 +174,28 @@ public class MoveArmFix extends Command {
       case 6: // Level 1
 
         myArm.lowerArm.setPos(27.30);
-        myArm.upperArm.setPos(8.9);
+        myArm.upperArm.setPos(8.9,applyDynamic);
         myArm.slider.setPos(-0.50);
         myArm.wrist.setPos(0.0);
         break;
+
+      case 7: // going from L4 to L0
+     
+       applyDynamic = true;
+      myArm.lowerArm.setPos(1.0); // 16.10 load
+      myArm.upperArm.setPos(position,applyDynamic);
+
+      
+      
+      
+      // upperArm.setPos(0.5);//0.0 load
+      myArm.slider.setPos(-0.50);
+      myArm.wrist.setPos(0.0);
+    
+    // ace.setSpeed(0);
+
+    // System.out.println("home");
+    break;
       case 12:
         myArm.wrist.setPos(myArm.wrist.getPos() + 1.0);
         break;
@@ -184,13 +203,13 @@ public class MoveArmFix extends Command {
       default:
         if (algae) {
           myArm.lowerArm.setPos(1.0);
-          myArm.upperArm.setPos(1.0);
+          myArm.upperArm.setPos(1.0,applyDynamic);
           myArm.slider.setPos(-2.0);
           myArm.wrist.setPos(3.0);
         } else {
 
           myArm.lowerArm.setPos(1.0); // 16.10 load
-          myArm.upperArm.setPos(1.0);
+          myArm.upperArm.setPos(1.0,applyDynamic);
 
           // myArm.upperArm.dynamic.Velocity = 1;
           // myArm.upperArm.dynamic.Acceleration = 1;

@@ -176,19 +176,19 @@ public class RobotContainer {
                 Lv2R
                                 .onFalse(new MoveArmFix(mArm, 0, 0));
                 Lv3L
-                                .whileTrue(new MoveArmFix(mArm, 3, -1));
+                                .onTrue(new MoveArmFix(mArm, 3, -1));
                 Lv3L
                         .onFalse(new Retract(mArm,3).andThen(new MoveArmFix(mArm, 0, 0)));
                 Lv3R
-                                .whileTrue(new MoveArmFix(mArm, 3, 1));
+                                .onTrue(new MoveArmFix(mArm, 3, 1));
                 Lv3R
                 .onFalse(new Retract(mArm,3).andThen(new MoveArmFix(mArm, 0, 0)));
                 Lv4L
-                                .whileTrue(new MoveArmFix(mArm, 4, -1).andThen(new Extend(mArm,4)));
+                                .onTrue(new MoveArmFix(mArm, 4, -1).andThen(new Extend(mArm,4)));
                 Lv4L
                 .onFalse(new Retract(mArm,4).andThen(new Extend(mArm, 99). andThen(new MoveArmFix(mArm, 0, 0))));
                 Lv4R
-                                .whileTrue(new MoveArmFix(mArm, 4, 1).andThen(new Extend(mArm,4)));
+                                .onTrue(new MoveArmFix(mArm, 4, 1).andThen(new Extend(mArm,4)));
                 Lv4R
                 .onFalse(new Retract(mArm,4).andThen(new Extend(mArm, 99). andThen(new MoveArmFix(mArm, 0, 0))));
                 /*

@@ -40,10 +40,10 @@ public class Retract extends Command {
     
     
     if (level==3){
-      myArm.upperArm.setPos(22+5);
+      myArm.upperArm.setPos(22+5,true);
       
     }else {
-      myArm.upperArm.setPos(40);
+      myArm.upperArm.setPos(36,true);
     }
     
   }

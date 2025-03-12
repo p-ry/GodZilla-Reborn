@@ -19,8 +19,8 @@ import com.ctre.phoenix6.controls.PositionDutyCycle;
 
 public class UpperArm extends SubsystemBase {
 
-  TalonFX UpperArmLeft;
-  TalonFX UpperArmRight;
+  public static TalonFX UpperArmLeft;
+  public static  TalonFX UpperArmRight;
   Follower UpperArmRightFollower;
   PositionDutyCycle motorRequest;
   double requestedPosition;
@@ -28,28 +28,38 @@ public class UpperArm extends SubsystemBase {
   MotionMagicVoltage controlUpper;
   TalonFXConfiguration talonFXConfigs;
   // MotionMagicVoltage controlUpperRight;
-  DynamicMotionMagicVoltage dynamic = new DynamicMotionMagicVoltage(0, 10, 60, 200);
   // PID coefficients
   double kP = 10.0;
   double kI = 0.0;
   double kD = 0.000;
-  double maxVel = 200;
-  double maxAcc = 300;
-  double minVel = 0;
-  double kJerk = 800;
+  public static double maxVel = 300;
+  public static double maxAcc = 300;
+  public static double minVel = 0;
+  public static double kJerk = 800;
   boolean change = false;
   boolean updatePID = false;
+  boolean applyDynamic;
+  public static DynamicMotionMagicVoltage dynamic1 = new DynamicMotionMagicVoltage(0, maxVel,maxAcc,kJerk);
+  
+  public static DynamicMotionMagicVoltage dynamic2 = new DynamicMotionMagicVoltage(0, 10, 60, 200);
+  
+  
+
   // TalonFXConfigurator leftConfigurator;
 
   /** Creates a new UpperArm. */
   public UpperArm() {
 
+    this.applyDynamic = applyDynamic;
+    
     talonFXConfigs = new TalonFXConfiguration();
     controlUpper = new MotionMagicVoltage(0);
     UpperArmLeft = new TalonFX(33);
     UpperArmRight = new TalonFX(34);
     var slot0Configs = talonFXConfigs.Slot0;
     talonFXConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    
+    
     
     slot0Configs.kS = 0.25; // Add 0.25 V output to overcome static friction
     slot0Configs.kV = 0.12; // A velocity target of 1 rps results in 0.12 V output
@@ -86,12 +96,18 @@ var motorConfigs = new MotorOutputConfigs();
     //requestedPosition = getPos();
   }
 
-  public void setPos(double position) {
+  public void setPos(double position, boolean applyDynamic) {
     boolean changePos = true;
+    this.applyDynamic = applyDynamic;
     requestedPosition = position;
-   
+    if (applyDynamic){
+      UpperArmRight.setControl(dynamic1.withPosition(position));
+      UpperArmLeft.setControl(dynamic1.withPosition(position));
+    }else{
+      
     UpperArmLeft.setControl(controlUpper.withPosition(position));
     UpperArmRight.setControl(controlUpper.withPosition(position));
+    }
     // motorRequest = new PositionDutyCycle(position);
     // UpperArmLeft.setControl(motorRequest);
     
