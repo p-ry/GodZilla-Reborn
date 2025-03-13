@@ -14,6 +14,9 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.auto.CommandUtil;
+
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Joystick;
@@ -26,6 +29,7 @@ import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.DriveToAmpPath;
 import frc.robot.commands.Extend;
+import frc.robot.commands.MoveArm;
 import frc.robot.commands.MoveArmFix;
 //import frc.robot.commands.MoveArmFix;
 import frc.robot.commands.Retract;
@@ -90,6 +94,8 @@ public class RobotContainer {
         // final JoystickButton Barge = new JoystickButton(copilot2, 2);
         // public final Wrist Wrist = new Wrist();
         private final CommandXboxController controller = new CommandXboxController(0);
+
+        
         
 
 
@@ -128,6 +134,9 @@ public class RobotContainer {
                 ;
                 AutoChooser = AutoBuilder.buildAutoChooser("none");
                 SmartDashboard.putData("AutoChooser", AutoChooser);
+                NamedCommands.registerCommand("raiseArm", new MoveArmFix(mArm, 42, -1));
+                NamedCommands.registerCommand("level3",new MoveArmFix(mArm, 3,1));
+                
                 
 
                 configureBindings();

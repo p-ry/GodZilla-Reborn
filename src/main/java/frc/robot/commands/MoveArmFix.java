@@ -199,7 +199,9 @@ public class MoveArmFix extends Command {
       case 12:
         myArm.wrist.setPos(myArm.wrist.getPos() + 1.0);
         break;
-
+case 42: //raise upperArm to release kickstand
+        myArm.upperArm.setPos(10,false);
+        
       default:
         if (algae) {
           myArm.lowerArm.setPos(1.0);
