@@ -279,6 +279,10 @@ controller.leftBumper().onTrue(new InstantCommand(() -> drivetrain.setHeading(ne
                 // drivetrain.registerTelemetry(logger::telemeterize);
         }
 
+        public void resetGyro() {
+                drivetrain.resetGyroToAlliance();
+        }
+
         public Command getAutonomousCommand() {
                 /* Run the path selected from the auto chooser */
                 return AutoChooser.getSelected();

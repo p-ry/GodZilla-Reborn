@@ -140,7 +140,7 @@ public class MoveArmFix extends Command {
           myArm.wrist.setPos(0.0);
         } else {
           myArm.lowerArm.setPos(22);
-          myArm.upperArm.setPos(22, applyDynamic);
+          myArm.upperArm.setPos(23, applyDynamic);
           myArm.slider.setPos(-0.5);
           myArm.wrist.setPos(6.5);
         }
