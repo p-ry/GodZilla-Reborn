@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
@@ -193,13 +194,13 @@ public class RobotContainer {
                 Lv3R
                 .onFalse(new Retract(mArm,3).andThen(new MoveArmFix(mArm, 0, 0)));
                 Lv4L
-                                .onTrue(new MoveArmFix(mArm, 4, -1).andThen(new Extend(mArm,4)));
+                                .onTrue(new MoveArmFix(mArm, 4, -1).andThen(new WaitCommand(0.3)).andThen(new Extend(mArm,4)));
                 Lv4L
-                .onFalse(new Retract(mArm,4).andThen(new Extend(mArm, 99). andThen(new MoveArmFix(mArm, 0, 0))));
+                .onFalse(new Retract(mArm,4).andThen(new WaitCommand(0.3)).andThen(new Extend(mArm, 99). andThen(new MoveArmFix(mArm, 0, 0))));
                 Lv4R
-                                .onTrue(new MoveArmFix(mArm, 4, 1).andThen(new Extend(mArm,4)));
+                                .onTrue(new MoveArmFix(mArm, 4, 1).andThen(new WaitCommand(0.3)).andThen(new Extend(mArm,4)));
                 Lv4R
-                .onFalse(new Retract(mArm,4).andThen(new Extend(mArm, 99). andThen(new MoveArmFix(mArm, 0, 0))));
+                .onFalse(new Retract(mArm,4).andThen(new WaitCommand(0.3)).andThen(new Extend(mArm, 99). andThen(new MoveArmFix(mArm, 0, 0))));
                 /*
                  * Climb need to find correct Position
                  * .onTrue(new MoveArmFix(mArm, 2));
