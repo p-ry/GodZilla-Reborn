@@ -86,8 +86,7 @@ public class Ace extends SubsystemBase {
   @Override
   public void periodic() {
     
-
-    if (RobotContainer.loading) {
+/*    if (RobotContainer.loading) {
       measurement = laserCan.getMeasurement();
       distance = measurement.distance_mm;
       SmartDashboard.putNumber("distance", distance);
@@ -111,7 +110,7 @@ public class Ace extends SubsystemBase {
       // }
       // This method will be called once per scheduler run
     
-  }
+  }*/
       
 }
 }

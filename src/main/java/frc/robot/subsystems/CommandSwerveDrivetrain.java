@@ -303,16 +303,16 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
          * This ensures driving behavior doesn't change until an explicit disable event
          * occurs during testing.
          */
-        if (!m_hasAppliedOperatorPerspective || DriverStation.isDisabled()) {
-            DriverStation.getAlliance().ifPresent(allianceColor -> {
-                setOperatorPerspectiveForward(
-                    allianceColor == Alliance.Red
-                        ? kRedAlliancePerspectiveRotation
-                        : kBlueAlliancePerspectiveRotation
-                );
-                m_hasAppliedOperatorPerspective = true;
-            });
-        }
+        // if (!m_hasAppliedOperatorPerspective || DriverStation.isDisabled()) {
+        //     DriverStation.getAlliance().ifPresent(allianceColor -> {
+        //         setOperatsorPerspectiveForward(
+        //             allianceColor == Alliance.Red
+        //                 ? kRedAlliancePerspectiveRotation
+        //                 : kBlueAlliancePerspectiveRotation
+        //         );
+        //         m_hasAppliedOperatorPerspective = true;
+        //     });
+        // }
         
     }
 
@@ -335,6 +335,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
     public void resetGyro(){
         gyro.setYaw(0);
+    }
+
+    public void resetGyroToAlliance() {
+        gyro.setYaw(DriverStation.getAlliance().get() == Alliance.Red ? 0 : 180);
     }
 
     public Pose2d getPose() {

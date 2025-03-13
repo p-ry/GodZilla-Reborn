@@ -231,10 +231,10 @@ public static boolean loading;
                  * .onTrue(new MoveArm(mArm, 2));
                  */
 
-                controller.rightBumper()
-                                .onTrue(new DriveToAmpPath(1));
+                // controller.rightBumper()
+                //                 .onTrue(new DriveToAmpPath(1));
                 controller.leftBumper().onTrue(new InstantCommand(() -> 
-                        drivetrain.resetGyro()));
+                        drivetrain.resetGyroToAlliance()));
 
 controller.leftBumper().onTrue(new InstantCommand(() -> drivetrain.setHeading(new Rotation2d(0))));
 
