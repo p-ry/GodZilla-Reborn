@@ -92,7 +92,7 @@ public class RobotContainer {
         public static final JoystickButton Algae = new JoystickButton(copilot, 8);
         final JoystickButton Process = new JoystickButton(copilot2, 1);
         final JoystickButton Load = new JoystickButton(copilot, 12);
-        // final JoystickButton Barge = new JoystickButton(copilot2, 2);
+         final JoystickButton Barge = new JoystickButton(copilot2, 2);
         // public final Wrist Wrist = new Wrist();
         private final CommandXboxController controller = new CommandXboxController(0);
 
@@ -173,6 +173,12 @@ public class RobotContainer {
                 // Process
                 // .onFalse(new InstantCommand(() -> ace.setSpeed(0)));
 
+                Barge
+                                .onTrue(new MoveArmFix(mArm, 42, -1));
+                Barge
+                                .onFalse(new MoveArmFix(mArm, 0, 0));
+               
+               
                 Dump
                                 .whileTrue(new MoveArmFix(mArm, 6, 0));
                 Dump
