@@ -95,7 +95,7 @@ public class RobotContainer {
          final JoystickButton Barge = new JoystickButton(copilot2, 2);
         // public final Wrist Wrist = new Wrist();
         private final CommandXboxController controller = new CommandXboxController(0);
-
+public static boolean loading;
         
         
 
@@ -133,11 +133,12 @@ public class RobotContainer {
                                                                                                               // (left)
                                 ));
                 ;
-                AutoChooser = AutoBuilder.buildAutoChooser("none");
-                SmartDashboard.putData("AutoChooser", AutoChooser);
+                
                 NamedCommands.registerCommand("raiseArm", new MoveArmFix(mArm, 42, -1));
                 NamedCommands.registerCommand("level3",new MoveArmFix(mArm, 3,1));
-                
+
+                AutoChooser = AutoBuilder.buildAutoChooser("none");
+                SmartDashboard.putData("AutoChooser", AutoChooser);
                 
 
                 configureBindings();

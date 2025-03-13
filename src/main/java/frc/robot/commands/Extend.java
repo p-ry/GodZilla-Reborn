@@ -36,7 +36,7 @@ public class Extend extends Command {
   @Override
   public void execute() {
     if (level==4){
-      myArm.slider.setPos(-43.4);
+      myArm.slider.setPos(-45.4);
       
     }else if(level==99){
       myArm.slider.setPos(-0.5);

@@ -73,6 +73,7 @@ public class MoveArmFix extends Command {
     // SmartDashboard.putNumber("Wristpos", wrist.getPos());
     algae = RobotContainer.Algae.getAsBoolean();
     applyDynamic = false;
+    RobotContainer.loading=false;
 
     switch (level) {
       case 0:
@@ -99,6 +100,7 @@ public class MoveArmFix extends Command {
           myArm.slider.setPos(-2.0);
           myArm.wrist.setPos(0.0);
         } else {
+          RobotContainer.loading=true;
           myArm.lowerArm.setPos(19.00);
           myArm.upperArm.setPos(3.7, applyDynamic);// 0.0 load
           myArm.wrist.setPos(0);
@@ -191,7 +193,7 @@ public class MoveArmFix extends Command {
         myArm.wrist.setPos(myArm.wrist.getPos() + 1.0);
         break;
       case 42: // raise upperArm to release kickstand
-        myArm.upperArm.setPos(15, applyDynamic);
+        myArm.upperArm.setPos(16, applyDynamic);
         break;
 
       default:
