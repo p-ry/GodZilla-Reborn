@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -140,7 +141,10 @@ public class Robot extends TimedRobot {
   }
 
   @Override
-  public void disabledPeriodic() {}
+  public void disabledPeriodic() {
+    RobotContainer.drivetrain.updateOdometry();
+    RobotContainer.drivetrain.setHeading(new Rotation2d(0));
+  }
 
   @Override
   public void disabledExit() {}
