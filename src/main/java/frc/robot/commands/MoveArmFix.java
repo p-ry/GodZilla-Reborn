@@ -73,18 +73,19 @@ public class MoveArmFix extends Command {
     // SmartDashboard.putNumber("Wristpos", wrist.getPos());
     algae = RobotContainer.Algae.getAsBoolean();
     applyDynamic = false;
-    RobotContainer.loading=false;
+    RobotContainer.loading = false;
 
     switch (level) {
       case 0:
 
         myArm.lowerArm.setPos(1.0); // 16.10 load
-
-        // upperArm.dynamic.Velocity = 1;
-        // upperArm.dynamic.Acceleration = 1;
-        // upperArm.dynamic.Jerk = 50;
-        myArm.upperArm.setPos(1.0, applyDynamic);
-        // upperArm.UpperArmRight.setControl(upperArm.dynamic.withPosition(1.0));
+        if (algae) { // upperArm.dynamic.Velocity = 1;
+                     // upperArm.dynamic.Acceleration = 1;
+                     // upperArm.dynamic.Jerk = 50;
+          myArm.upperArm.setPos(5, applyDynamic);
+        } else {
+          myArm.upperArm.setPos(0, applyDynamic);
+        } // upperArm.UpperArmRight.setControl(upperArm.dynamic.withPosition(1.0));
         // upperArm.setPos(0.5);//0.0 load
         myArm.slider.setPos(-0.50);
         myArm.wrist.setPos(0.0);
@@ -100,7 +101,7 @@ public class MoveArmFix extends Command {
           myArm.slider.setPos(-2.0);
           myArm.wrist.setPos(0.0);
         } else {
-          RobotContainer.loading=true;
+          RobotContainer.loading = true;
           myArm.lowerArm.setPos(19.00);
           myArm.upperArm.setPos(3.7, applyDynamic);// 0.0 load
           myArm.wrist.setPos(0);
@@ -111,7 +112,7 @@ public class MoveArmFix extends Command {
       case 2:
         if (algae) {
           myArm.lowerArm.setPos(22.0);
-          myArm.upperArm.setPos(10.0, applyDynamic);
+          myArm.upperArm.setPos(13.0, applyDynamic);
           myArm.slider.setPos(-2.0);
           myArm.wrist.setPos(3.0);
         } else {
@@ -135,7 +136,7 @@ public class MoveArmFix extends Command {
       case 3:
         if (algae) {
           myArm.lowerArm.setPos(25.0);
-          myArm.upperArm.setPos(18.0, applyDynamic);
+          myArm.upperArm.setPos(20.0, applyDynamic);
           myArm.slider.setPos(-2.0);
           myArm.wrist.setPos(0.0);
         } else {
