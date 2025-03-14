@@ -93,7 +93,7 @@ public class RobotContainer {
         final JoystickButton Process = new JoystickButton(copilot2, 1);
         final JoystickButton Load = new JoystickButton(copilot, 12);
          final JoystickButton Barge = new JoystickButton(copilot2, 2);
-        // public final Wrist Wrist = new Wrist();
+        final JoystickButton Chomp= new JoystickButton(copilot, 9);
         private final CommandXboxController controller = new CommandXboxController(0);
 public static boolean loading;
         
@@ -153,7 +153,7 @@ public static boolean loading;
                 // Process
                 // .onTrue(new MoveArmFix(mArm, 12));
                 Algae
-                                .onTrue(new InstantCommand(() -> ace.setSpeed(-.2)));
+                                .onTrue(new InstantCommand(() -> ace.setSpeed(-.7)));
                 Algae
                                 .onFalse(new InstantCommand(() -> ace.setSpeed(0)));
 
@@ -201,13 +201,16 @@ public static boolean loading;
                 Lv3R
                 .onFalse(new Retract(mArm,3).andThen(new MoveArmFix(mArm, 0, 0)));
                 Lv4L
-                                .onTrue(new MoveArmFix(mArm, 4, -1).andThen(new WaitCommand(0.3)).andThen(new Extend(mArm,4)));
+                                .onTrue(new MoveArmFix(mArm, 4, -1).alongWith(new WaitCommand(0.3)).andThen(new Extend(mArm,4)));
                 Lv4L
                 .onFalse(new Retract(mArm,4).andThen(new WaitCommand(0.3)).andThen(new Extend(mArm, 99). andThen(new MoveArmFix(mArm, 0, 0))));
                 Lv4R
-                                .onTrue(new MoveArmFix(mArm, 4, 1).andThen(new WaitCommand(0.3)).andThen(new Extend(mArm,4)));
+                                .onTrue(new MoveArmFix(mArm, 4, 1).alongWith(new WaitCommand(0.3).andThen(new Extend(mArm,4))));
                 Lv4R
                 .onFalse(new Retract(mArm,4).andThen(new WaitCommand(0.3)).andThen(new Extend(mArm, 99). andThen(new MoveArmFix(mArm, 0, 0))));
+                //Chomp.onTrue((new MoveArmFix(mArm,50,1)));
+                //Chomp.onFalse(new MoveArmFix(mArm, 50,0));
+                
                 /*
                  * Climb need to find correct Position
                  * .onTrue(new MoveArmFix(mArm, 2));
@@ -254,6 +257,7 @@ controller.leftBumper().onTrue(new InstantCommand(() -> drivetrain.setHeading(ne
                 controller.pov(180)
                                 .whileTrue(drivetrain.applyRequest(
                                                 () -> forwardStraight.withVelocityX(-0.5).withVelocityY(0)));
+
 
                 // Run SysId routines when holding back/start and X/Y.
                 // Note that each routine should be run exactly once in a single log.

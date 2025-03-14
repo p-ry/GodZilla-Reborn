@@ -85,7 +85,9 @@ public class Wrist extends SubsystemBase {
     SmartDashboard.putNumber("Request", position);
     
   }
-
+ public void setSpeed(double speed){
+  wrist.set(speed);
+ }
   public double getPos() {
     var pos = wrist.getPosition();
      // var pulseWidth = wrist.getRawPulseWidthPosition().getValueAsDouble();
