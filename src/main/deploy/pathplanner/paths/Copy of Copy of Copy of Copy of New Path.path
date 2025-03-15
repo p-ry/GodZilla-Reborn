@@ -33,8 +33,8 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 3.0,
-    "maxAcceleration": 3.0,
+    "maxVelocity": 0.5,
+    "maxAcceleration": 0.53,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
@@ -48,7 +48,7 @@
   "folder": "Cj in progress path",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -51.34019174590997
+    "rotation": -51.340191745909976
   },
   "useDefaultConstraints": true
 }

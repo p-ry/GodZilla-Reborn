@@ -100,16 +100,16 @@ public class LowerArm extends SubsystemBase {
     // leftConfigurator = LowerArmLeft.getConfigurator();
     // leftConfigurator.apply(talonFXConfigs);
 
-    requestedPosition = getPos();
+    
    
 
   }
 
   public void setPos(double position) {
-
+    requestedPosition = position;
     LowerArmLeft.setControl(leftRequest.withPosition(position));
     LowerArmRight.setControl(rightRequest.withPosition(position));
-    requestedPosition = position;
+    
   }
 
   public void setSpeed(double speed) {
@@ -119,13 +119,13 @@ public class LowerArm extends SubsystemBase {
   }
 
   public double getPos() {
-    return LowerArmLeft.getRotorPosition().getValueAsDouble();
+    return LowerArmLeft.getPosition().getValueAsDouble();
   }
   public double getRightPos() {
-    return LowerArmRight.getRotorPosition().getValueAsDouble();
+    return LowerArmRight.getPosition().getValueAsDouble();
   }
  public boolean atPos(TalonFX talon) {
-    return Math.abs(talon.getRotorPosition().getValueAsDouble() - requestedPosition) < 0.8;
+    return Math.abs(talon.getPosition().getValueAsDouble() - requestedPosition) < 0.8;
   }
   public boolean atPos() {
     return atPosition;

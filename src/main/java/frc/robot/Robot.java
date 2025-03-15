@@ -4,7 +4,9 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -14,6 +16,9 @@ import au.grapplerobotics.LaserCan;
 import au.grapplerobotics.ConfigurationFailedException;
 
 import com.ctre.phoenix6.hardware.Pigeon2;
+import com.pathplanner.lib.commands.FollowPathCommand;
+import com.pathplanner.lib.pathfinding.LocalADStar;
+import com.pathplanner.lib.pathfinding.Pathfinding;
 
 import au.grapplerobotics.CanBridge;
 
@@ -38,6 +43,8 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotInit() {
+    FollowPathCommand.warmupCommand().schedule();
+    Pathfinding.setPathfinder(new LocalADStar());
     
    // laserCan = new LaserCan(10);
     //m_robotContainer.drivetrain.gyro.setYaw(0);
@@ -76,6 +83,8 @@ public class Robot extends TimedRobot {
   @Override
   public void robotPeriodic() {
     CommandScheduler.getInstance().run();
+   // Utilitys.addLimelightVisionMeasurements("limelight-left");
+    //Utilitys.addLimelightVisionMeasurements("limelight-right");
    // LaserCan.Measurement measurement = laserCan.getMeasurement();
    // System.out.println("Distance: " + measurement.distance_mm);
     //if (measurement != null && measurement.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT) {
@@ -106,10 +115,36 @@ public class Robot extends TimedRobot {
   }
 
   @Override
-  public void disabledInit() {}
+  public void disabledInit() {
+    RobotContainer.drivetrain.gyro.setYaw(0);
+      var alliance = DriverStation.getAlliance();
+   
+   /*
+      if (alliance.isPresent()) {
+      if (alliance.get() == DriverStation.Alliance.Red) {
+        
+         * m_robotContainer.s_Candle.setFireProperties(0.7, 0.5, 0.4, 0.2);
+         * m_robotContainer.s_Candle.fireLEDs();
+        
+       // m_robotContainer.s_Candle.setColourProperties(255, 0, 0, 0.75);
+       // m_robotContainer.s_Candle.colorLEDs();
+      } else if (alliance.get() == DriverStation.Alliance.Blue) {
+        
+         * m_robotContainer.s_Candle.setFireProperties(0.7, 0.5, 0.4, 0.2);
+         * m_robotContainer.s_Candle.fireLEDs();
+         
+       // m_robotContainer.s_Candle.setColourProperties(0, 0, 255, 0.75);
+       // m_robotContainer.s_Candle.colorLEDs();
+      }
+    }
+    */
+  }
 
   @Override
-  public void disabledPeriodic() {}
+  public void disabledPeriodic() {
+    RobotContainer.drivetrain.updateOdometry();
+    RobotContainer.drivetrain.setHeading(new Rotation2d(0));
+  }
 
   @Override
   public void disabledExit() {}
@@ -121,6 +156,8 @@ public class Robot extends TimedRobot {
     if (m_autonomousCommand != null) {
       m_autonomousCommand.schedule();
     }
+
+    m_robotContainer.resetGyro();
   }
 
   @Override
@@ -137,7 +174,10 @@ public class Robot extends TimedRobot {
   }
 
   @Override
-  public void teleopPeriodic() {}
+  public void teleopPeriodic() {
+   //Utilitys.addLimelightVisionMeasurements("limelight-left");
+    //Utilitys.addLimelightVisionMeasurements("limelight-right");
+  }
 
   @Override
   public void teleopExit() {}

@@ -19,6 +19,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import frc.robot.Constants;
+import com.ctre.phoenix6.swerve.SwerveModule;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
@@ -91,8 +92,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     public Pose3d botPose3d = new Pose3d();
     public PoseEstimate best = new PoseEstimate();
     public Utilitys utils = new Utilitys();
-    private final SwerveModule[] swerveModules = new SwerveModule[] { new SwerveModule(0, 1), new SwerveModule(2, 3),
-            new SwerveModule(4, 5), new SwerveModule(6, 7) };
+   //private final SwerveModule[] swerveModules = new SwerveModule[] { new SwerveModule(0, 1), new SwerveModule(2, 3),
+   //        new SwerveModule(4, 5), new SwerveModule(6, 7) };
 
     /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
     private static final Rotation2d kBlueAlliancePerspectiveRotation = Rotation2d.kZero;
@@ -130,6 +131,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
         swerveOdometry = new SwerveDriveOdometry(getKinematics(), getGyroYaw(),
         getModulePositions());
+        
         //swerveOdometry = new SwerveDriveOdometry(getKinematics(), kBlueAlliancePerspectiveRotation,              getModulePositions());
        // if (Utils.isSimulation()) {
         //    startSimThread();
@@ -191,13 +193,14 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                                     .withWheelForceFeedforwardsY(feedforwards.robotRelativeForcesYNewtons())),
                     new PPHolonomicDriveController(
                             // PID constants for translation
-                            new PIDConstants(2, 0, 0), // kP10
+                            new PIDConstants(0.5, 0, 0),
+                             // kP10
                             // PID constants for rotation
-                            new PIDConstants(7, 0, 0)),
+                            new PIDConstants(25, 0, 0)),
                     config,
                     // Assume the path needs to be flipped for Red vs Blue, this is normally the
                     // case
-                    () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
+                    () -> false,
                     this // Subsystem for requirements
             );
         } catch (Exception ex) {
@@ -224,6 +227,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * @param direction Direction of the SysId Quasistatic test
      * @return Command to run
      */
+
+     
 
     public void updateOdometry() {
         boolean doRejectUpdate = false;
@@ -278,43 +283,19 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     @Override
     public void periodic() {
-        /*
-         * SmartDashboard.putNumber("Mod0",
-         * getModule(0).getSteerMotor().getPosition().getValueAsDouble());
-         * SmartDashboard.putNumber("Mod1",
-         * getModule(1).getSteerMotor().getPosition().getValueAsDouble());
-         * SmartDashboard.putNumber("Mod2",
-         * getModule(2).getSteerMotor().getPosition().getValueAsDouble());
-         * SmartDashboard.putNumber("Mod3",
-         * getModule(3).getSteerMotor().getPosition().getValueAsDouble());
-         * SmartDashboard.putNumber("Heading", getCompassHeading());
-         * SmartDashboard.putNumber("yaw", gyro.getYaw().getValueAsDouble());
-         */
+       
        swerveOdometry.update(getGyroYaw(), getModulePositions());
          m_poseEstimator.update(
             gyro.getRotation2d(),
             getModulePositions());
-        updateOdometry();
-
-        // cameraPose = grabPose();
-        // addVisionMeasurement(cameraPose.pose, cameraPose.timestampSeconds);
-        //botPose2d = getPose();
+      
         botPose2d = m_poseEstimator.getEstimatedPosition();
-        //SmartDashboard.putNumber("BotPoseX", botPose2d.getTranslation().getX());
-        // botPose3d = getPose3d();
-        //SmartDashboard.putNumber("BotPoseX", botPose2d.getTranslation().getX());
-        //SmartDashboard.putNumber("BotPoseY", botPose2d.getTranslation().getY());
-        //SmartDashboard.putNumber("BotPoseTheta", botPose2d.getRotation().getDegrees());
+        updateOdometry();
+       
         SmartDashboard.putNumberArray("BotPose",
        new double[] { botPose2d.getTranslation().getX(), botPose2d.getTranslation().getY(),
                     botPose2d.getRotation().getRadians() });
-        // SmartDashboard.putNumber("BotPoseX3d", botPose3d.getTranslation().getX());
-        // SmartDashboard.putNumber("BotPoseY3d", botPose3d.getTranslation().getY());
-
-        /*
-         * Periodically try to apply the operator perspective.
-         * If we haven't applied the operator perspective before, then we should apply
-         * it regardless of DS state.
+       /*
          * This allows us to correct the perspective in case the robot code restarts
          * mid-match.
          * Otherwise, only check and apply the operator perspective if the DS is
@@ -322,20 +303,17 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
          * This ensures driving behavior doesn't change until an explicit disable event
          * occurs during testing.
          */
-
-        /*
-         * if (!m_hasAppliedOperatorPerspective || DriverStation.isDisabled()) {
-         * DriverStation.getAlliance().ifPresent(allianceColor -> {
-         * setOperatorPerspectiveForward(
-         * allianceColor == Alliance.Red
-         * ? kRedAlliancePerspectiveRotation
-         * : kBlueAlliancePerspectiveRotation);
-         * m_hasAppliedOperatorPerspective = true;
-         * });
-         * 
-         * 
-         * }
-         */
+        // if (!m_hasAppliedOperatorPerspective || DriverStation.isDisabled()) {
+        //     DriverStation.getAlliance().ifPresent(allianceColor -> {
+        //         setOperatsorPerspectiveForward(
+        //             allianceColor == Alliance.Red
+        //                 ? kRedAlliancePerspectiveRotation
+        //                 : kBlueAlliancePerspectiveRotation
+        //         );
+        //         m_hasAppliedOperatorPerspective = true;
+        //     });
+        // }
+        
     }
 
     
@@ -359,6 +337,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         gyro.setYaw(0);
     }
 
+    public void resetGyroToAlliance() {
+        gyro.setYaw(DriverStation.getAlliance().get() == Alliance.Red ? 0 : 180);
+    }
+
     public Pose2d getPose() {
         return swerveOdometry.getPoseMeters();
     }
@@ -376,6 +358,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
 
     public void setHeading(Rotation2d heading) {
+
+        getCompassHeading();
         swerveOdometry.resetPosition(getGyroYaw(), getModulePositions(),
                 new Pose2d(getPose().getTranslation(), heading));
     }
@@ -398,12 +382,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      */
 
     public double getCompassHeading() {
-
+SmartDashboard.putNumber("CompassHeading", Math.IEEEremainder(gyro.getYaw().getValueAsDouble(),360  ));
         return Math.IEEEremainder(gyro.getYaw().getValueAsDouble(), 360.0);
     }
 
     public Rotation2d getGyroYaw() {
-    //    SmartDashboard.putNumber("yaw", gyro.getYaw().getValueAsDouble());
+       SmartDashboard.putNumber("yaw", gyro.getYaw().getValueAsDouble());
         return Rotation2d.fromDegrees(gyro.getYaw().getValueAsDouble());
     }
 

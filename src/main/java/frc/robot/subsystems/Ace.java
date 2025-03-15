@@ -19,9 +19,12 @@ import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkClosedLoopController;
 import au.grapplerobotics.LaserCan;
+import au.grapplerobotics.interfaces.LaserCanInterface.RangingMode;
 import frc.robot.RobotContainer;
 import frc.robot.Robot;
 import frc.robot.subsystems.ArmAssembly;
+import au.grapplerobotics.ConfigurationFailedException;
+
 
 public class Ace extends SubsystemBase {
   TalonFX ace;
@@ -51,6 +54,14 @@ public class Ace extends SubsystemBase {
     this.level = level;
     laserCan = new LaserCan(10);
 
+    try {
+      laserCan.setRangingMode(LaserCan.RangingMode.SHORT);
+      laserCan.setRegionOfInterest(new LaserCan.RegionOfInterest(4, 6, 9, 7));
+      laserCan.setTimingBudget(LaserCan.TimingBudget.TIMING_BUDGET_33MS);
+    } catch (ConfigurationFailedException e) {
+      e.printStackTrace();
+    }
+
   }
 
   public void setSpeed(double speed) {
@@ -74,29 +85,32 @@ public class Ace extends SubsystemBase {
 
   @Override
   public void periodic() {
-    level = RobotContainer.mArm.level;
-   
-    if (level == 1) {
+    
+/*    if (RobotContainer.loading) {
       measurement = laserCan.getMeasurement();
       distance = measurement.distance_mm;
       SmartDashboard.putNumber("distance", distance);
       if (!gotIt) {
         setSpeed(0.6);
       }
-     
+
       if (measurement != null && measurement.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT) {
         distance = measurement.distance_mm;
         SmartDashboard.putNumber("distance", distance);
-        if (distance > 370) {
+        if ((distance > 370 )&&(distance <800)) {
           setSpeed(0);
           gotIt = true;
-        }     }
+        }
+      }
+        
       // level = RobotContainer.
 
       // if ((ace.getTorqueCurrent().getValueAsDouble()>35.0) && (level==1)){
       // setSpeed(0);
       // }
       // This method will be called once per scheduler run
-    }
-  }
+    
+  }*/
+      
+}
 }

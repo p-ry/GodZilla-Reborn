@@ -9,10 +9,14 @@ import static edu.wpi.first.units.Units.*;
 
 import java.io.Console;
 
+import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.auto.CommandUtil;
+
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Joystick;
@@ -20,11 +24,16 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.DriveToAmpPath;
+import frc.robot.commands.Extend;
 import frc.robot.commands.MoveArm;
+import frc.robot.commands.MoveArmFix;
+//import frc.robot.commands.MoveArmFix;
+import frc.robot.commands.Retract;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Ace;
 import frc.robot.subsystems.ArmAssembly;
@@ -32,6 +41,7 @@ import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Wrist;
 
 public class RobotContainer {
+          //public static Pigeon2 gyro;
         private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top
                                                                                       // speed
         private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per
@@ -39,10 +49,12 @@ public class RobotContainer {
                                                                                           // max angular velocity
 
         /* Setting up bindings for necessary control of the swerve drive platform */
-        private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
+        /* private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
                         .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
                         .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive
                                                                                  // motors
+
+            */
         private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
         private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
         private final SwerveRequest.RobotCentric forwardStraight = new SwerveRequest.RobotCentric()
@@ -59,6 +71,12 @@ public class RobotContainer {
         public static final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
         public static final ArmAssembly mArm = new ArmAssembly(false, 99);
         public final Ace ace = new Ace(0);
+        public static int prevLevel = 0;
+        private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
+            .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1)
+            .withDriveRequestType(DriveRequestType.Velocity);
+
+   
 
         final JoystickButton Dump = new JoystickButton(copilot, 1);
         final JoystickButton Lv2L = new JoystickButton(copilot, 2);
@@ -74,14 +92,20 @@ public class RobotContainer {
         public static final JoystickButton Algae = new JoystickButton(copilot, 8);
         final JoystickButton Process = new JoystickButton(copilot2, 1);
         final JoystickButton Load = new JoystickButton(copilot, 12);
-        // final JoystickButton Barge = new JoystickButton(copilot2, 2);
-        // public final Wrist Wrist = new Wrist();
+         final JoystickButton Barge = new JoystickButton(copilot2, 2);
+        final JoystickButton Chomp= new JoystickButton(copilot, 9);
         private final CommandXboxController controller = new CommandXboxController(0);
+public static boolean loading;
+        
+        
+
+
 
         /* Path follower */
         private final SendableChooser<Command> AutoChooser;
 
         public RobotContainer() {
+                //gyro = new Pigeon2(0, "Canivore");
 
                 // Note that X is defined as forward according to WPILib convention,
                 // and Y is defined as to the left according to WPILib convention.
@@ -109,8 +133,13 @@ public class RobotContainer {
                                                                                                               // (left)
                                 ));
                 ;
+                
+                NamedCommands.registerCommand("raiseArm", new MoveArmFix(mArm, 42, -1));
+                NamedCommands.registerCommand("level3",new MoveArmFix(mArm, 3,1));
+
                 AutoChooser = AutoBuilder.buildAutoChooser("none");
                 SmartDashboard.putData("AutoChooser", AutoChooser);
+                
 
                 configureBindings();
         }
@@ -122,62 +151,71 @@ public class RobotContainer {
                 // .onTrue(new InstantCommand())
 
                 // Process
-                // .onTrue(new MoveArm(mArm, 12));
+                // .onTrue(new MoveArmFix(mArm, 12));
                 Algae
-                                .onTrue(new InstantCommand(() -> ace.setSpeed(-.2)));
+                                .onTrue(new InstantCommand(() -> ace.setSpeed(-.7)));
                 Algae
                                 .onFalse(new InstantCommand(() -> ace.setSpeed(0)));
 
                 Load
-                                .whileTrue(new MoveArm(mArm, 1, 0));
+                                .whileTrue(new MoveArmFix(mArm, 1, 0));
                 Load
                                 .onTrue(new InstantCommand(() -> ace.gotIt=false));
                                 
 
                 Load
-                                .onFalse(new MoveArm(mArm, 0, 0));
+                                .onFalse(new MoveArmFix(mArm, 0, 0));
                 Process
-                                .onTrue(new MoveArm(mArm, 5, 0));
+                                .onTrue(new MoveArmFix(mArm, 5, 0));
                 // Process.whileTrue(new InstantCommand(() -> ace.setSpeed(0.1)));
 
                 Process
-                                .onFalse(new MoveArm(mArm, 0, 0));
+                                .onFalse(new MoveArmFix(mArm, 0, 0));
                 // Process
                 // .onFalse(new InstantCommand(() -> ace.setSpeed(0)));
 
+                Barge
+                                .onTrue(new MoveArmFix(mArm, 42, -1));
+                Barge
+                                .onFalse(new MoveArmFix(mArm, 0, 0));
+               
+               
                 Dump
-                                .whileTrue(new MoveArm(mArm, 6, 0));
+                                .whileTrue(new MoveArmFix(mArm, 6, 0));
                 Dump
-                                .onFalse(new MoveArm(mArm, 0, 0));
+                                .onFalse(new MoveArmFix(mArm, 0, 0));
                 Lv2L
-                                .whileTrue(new MoveArm(mArm, 2, -1));
+                                .whileTrue(new MoveArmFix(mArm, 2, -1));
                 Lv2L
-                                .onFalse(new MoveArm(mArm, 0, 0));
+                                .onFalse(new MoveArmFix(mArm, 0, 0));
                 Lv2R
-                                .whileTrue(new MoveArm(mArm, 2, 1));
+                                .whileTrue(new MoveArmFix(mArm, 2, 1));
                 Lv2R
-                                .onFalse(new MoveArm(mArm, 0, 0));
+                                .onFalse(new MoveArmFix(mArm, 0, 0));
                 Lv3L
-                                .whileTrue(new MoveArm(mArm, 3, -1));
+                                .onTrue(new MoveArmFix(mArm, 3, -1));
                 Lv3L
-                                .onFalse(new MoveArm(mArm, 0, 0));
+                        .onFalse(new Retract(mArm,3).andThen(new MoveArmFix(mArm, 0, 0)));
                 Lv3R
-                                .whileTrue(new MoveArm(mArm, 3, 1));
+                                .onTrue(new MoveArmFix(mArm, 3, 1));
                 Lv3R
-                                .onFalse(new MoveArm(mArm, 0, 0));
+                .onFalse(new Retract(mArm,3).andThen(new MoveArmFix(mArm, 0, 0)));
                 Lv4L
-                                .whileTrue(new MoveArm(mArm, 4, -1));
+                                .onTrue(new MoveArmFix(mArm, 4, -1).alongWith(new WaitCommand(0.3)).andThen(new Extend(mArm,4)));
                 Lv4L
-                                .onFalse(new MoveArm(mArm, 0, 0));
+                .onFalse(new Retract(mArm,4).andThen(new WaitCommand(0.3)).andThen(new Extend(mArm, 99). andThen(new MoveArmFix(mArm, 0, 0))));
                 Lv4R
-                                .whileTrue(new MoveArm(mArm, 4, 1));
+                                .onTrue(new MoveArmFix(mArm, 4, 1).alongWith(new WaitCommand(0.3).andThen(new Extend(mArm,4))));
                 Lv4R
-                                .onFalse(new MoveArm(mArm, 0, 0));
+                .onFalse(new Retract(mArm,4).andThen(new WaitCommand(0.3)).andThen(new Extend(mArm, 99). andThen(new MoveArmFix(mArm, 0, 0))));
+                //Chomp.onTrue((new MoveArmFix(mArm,50,1)));
+                //Chomp.onFalse(new MoveArmFix(mArm, 50,0));
+                
                 /*
                  * Climb need to find correct Position
-                 * .onTrue(new MoveArm(mArm, 2));
+                 * .onTrue(new MoveArmFix(mArm, 2));
                  * Pull
-                 * .onTrue(new MoveArm(mArm, 2));
+                 * .onTrue(new MoveArmFix(mArm, 2));
                  */
                 Intake
                                 .whileTrue(new InstantCommand(() -> ace.setSpeed(1)));
@@ -189,18 +227,21 @@ public class RobotContainer {
                                 .onFalse(new InstantCommand(() -> ace.setSpeed(0)));
                 /*
                  * Process need to find corect Position
-                 * .onTrue(new MoveArm(mArm, 2));
+                 * .onTrue(new MoveArmFix(mArm, 2));
                  * Load
-                 * .onTrue(new MoveArm(mArm, 2));
+                 * .onTrue(new MoveArmFix(mArm, 2));
                  * Barge
                  * .onTrue(new MoveArm(mArm, 2));
                  */
 
-                controller.rightBumper()
-                                .onTrue(new DriveToAmpPath(1));
-                controller.leftBumper().onTrue(new InstantCommand(() -> {
-                        drivetrain.resetGyro();
-                }));
+                // controller.rightBumper()
+                //                 .onTrue(new DriveToAmpPath(1));
+                controller.leftBumper().onTrue(new InstantCommand(() -> 
+                        drivetrain.resetGyroToAlliance()));
+
+controller.leftBumper().onTrue(new InstantCommand(() -> drivetrain.setHeading(new Rotation2d(0))));
+
+                
 
                 controller
                                 .start()
@@ -216,6 +257,7 @@ public class RobotContainer {
                 controller.pov(180)
                                 .whileTrue(drivetrain.applyRequest(
                                                 () -> forwardStraight.withVelocityX(-0.5).withVelocityY(0)));
+
 
                 // Run SysId routines when holding back/start and X/Y.
                 // Note that each routine should be run exactly once in a single log.
@@ -239,6 +281,10 @@ public class RobotContainer {
                  * drivetrain.seedFieldCentric()));
                  */
                 // drivetrain.registerTelemetry(logger::telemeterize);
+        }
+
+        public void resetGyro() {
+                drivetrain.resetGyroToAlliance();
         }
 
         public Command getAutonomousCommand() {
