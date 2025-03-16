@@ -37,6 +37,7 @@ public class MoveArmFix extends Command {
   double startTime;
   Pose2d aprilTag;
   public static boolean applyDynamic;
+  public static boolean slow;
 
   public MoveArmFix(ArmAssembly myArm, int level, int direction) {
 
@@ -45,6 +46,7 @@ public class MoveArmFix extends Command {
 
     this.myArm = myArm;
     aprilTag = new Pose2d();
+    slow = true;
   }
 
   /** Creates a new MoveArm. */
@@ -159,7 +161,7 @@ public class MoveArmFix extends Command {
       case 4:
         myArm.lowerArm.setPos(27.2);// 28.2
         myArm.upperArm.setPos(33.5, applyDynamic);
-        // myArm.slider.setPos(-43.4);
+        myArm.slider.setPos(-45.4, slow);
         myArm.wrist.setPos(8.8);
 
         // System.out.println("Level 4");
@@ -195,7 +197,7 @@ public class MoveArmFix extends Command {
 
         // ace.setSpeed(0);
 
-        // System.out.println("home");
+         System.out.println("WARNING!!!!  OLD MOVE!!!!!!!");
         break;
       case 12:
         myArm.wrist.setPos(myArm.wrist.getPos() + 1.0);
@@ -203,6 +205,19 @@ public class MoveArmFix extends Command {
       case 42: // raise upperArm to release kickstand
         myArm.upperArm.setPos(16, applyDynamic);
         break;
+
+      case 44: // lower from position 4   MOVE THAT SLIDER FAST
+        applyDynamic = true;
+        myArm.lowerArm.setPos(1.0); // 16.10 load
+        myArm.upperArm.setPos(position, applyDynamic);
+
+        // upperArm.setPos(0.5);//0.0 load
+        myArm.slider.setPos(-0.50, !slow);
+        myArm.wrist.setPos(0.0);
+
+        // System.out.println("Level 4");
+        break;
+
       case 50: // chomp
         if (shiftDirection == 1) {
           myArm.wrist.setSpeed(0.2);
@@ -228,7 +243,7 @@ public class MoveArmFix extends Command {
           // myArm.upperArm.myArm.upperArmLeft.setControl(myArm.upperArm.dynamic.withPosition(1.0));
           // myArm.upperArm.myArm.upperArmRight.setControl(myArm.upperArm.dynamic.withPosition(1.0));
           // myArm.upperArm.setPos(0.5);//0.0 load
-          myArm.slider.setPos(-0.50);
+          myArm.slider.setPos(-0.50, false);
           myArm.wrist.setPos(0.0);
         }
 

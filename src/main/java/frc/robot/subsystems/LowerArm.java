@@ -5,8 +5,11 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.shuffleboard.SimpleWidget;
 import edu.wpi.first.wpilibj.shuffleboard.WidgetType;
+import edu.wpi.first.util.sendable.Sendable;
+import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -23,7 +26,7 @@ import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.PositionDutyCycle;
 
-public class LowerArm extends SubsystemBase {
+public class LowerArm extends SubsystemBase implements Sendable{
 
   TalonFX LowerArmLeft;
   TalonFX LowerArmRight;
@@ -33,9 +36,11 @@ public class LowerArm extends SubsystemBase {
   boolean atPosition;
 
   MotionMagicVoltage controlLower;
-  TalonFXConfiguration talonFXConfigsLeft,talonFXConfigsRight;
+  TalonFXConfiguration talonFXConfigs;
   TalonFXConfigurator leftConfigurator;
   MotionMagicVoltage leftRequest, rightRequest;
+  private Slot0Configs pidConfigs = new Slot0Configs();
+  private MotionMagicConfigs mmConfigs = new MotionMagicConfigs();
   // PID coefficients
   double kP = 10.0;
   double kI = 0.0;
@@ -56,51 +61,43 @@ public class LowerArm extends SubsystemBase {
     leftRequest = new MotionMagicVoltage(0);
     rightRequest = new MotionMagicVoltage(0);
 
-    talonFXConfigsLeft = new TalonFXConfiguration();
-    talonFXConfigsRight = new TalonFXConfiguration();
+    talonFXConfigs = new TalonFXConfiguration();
+   //talonFXConfigsRight = new TalonFXConfiguration();
 
     LowerArmLeft.setNeutralMode(NeutralModeValue.Brake);
     LowerArmRight.setNeutralMode(NeutralModeValue.Brake);
 
     // set slot 0 gains
-    var slot0Configs = talonFXConfigsLeft.Slot0;
-    slot0Configs.kS = 0.25; // Add 0.25 V output to overcome static friction
-    slot0Configs.kV = 0.12; // A velocity target of 1 rps results in 0.12 V output
-    slot0Configs.kA = 0.01; // An acceleration of 1 rps/s requires 0.01 V output
-    slot0Configs.kP = kP; // A position error of 2.5 rotations results in 12 V output
-    slot0Configs.kI = kI; // no output for integrated error
-    slot0Configs.kD = kD; // A velocity error of 1 rps results in 0.1 V output
+    pidConfigs = talonFXConfigs.Slot0;
+    pidConfigs.kS = 0.25; // Add 0.25 V output to overcome static friction
+    pidConfigs.kV = 0.12; // A velocity target of 1 rps results in 0.12 V output
+    pidConfigs.kA = 0.01; // An acceleration of 1 rps/s requires 0.01 V output
+    pidConfigs.kP = kP; // A position error of 2.5 rotations results in 12 V output
+    pidConfigs.kI = kI; // no output for integrated error
+    pidConfigs.kD = kD; // A velocity error of 1 rps results in 0.1 V output
     // set Motion Magic settings
-    var motionMagicConfigs = talonFXConfigsLeft.MotionMagic;
-    motionMagicConfigs.MotionMagicCruiseVelocity = maxVel; // Target cruise velocity of 80 rps
-    motionMagicConfigs.MotionMagicAcceleration = maxAcc; // Target acceleration of 160 rps/s (0.5 seconds)
-    motionMagicConfigs.MotionMagicJerk = kJerk; // Target jerk of 1600 rps/s/s (0.1 seconds)
-    var slot0ConfigsRight = talonFXConfigsRight.Slot0;
-    slot0ConfigsRight.kS = 0.25; // Add 0.25 V output to overcome static friction
-    slot0ConfigsRight.kV = 0.12; // A velocity target of 1 rps results in 0.12 V output
-    slot0ConfigsRight.kA = 0.01; // An acceleration of 1 rps/s requires 0.01 V output
-    slot0ConfigsRight.kP = kP; // A position error of 2.5 rotations results in 12 V output
-    slot0ConfigsRight.kI = kI; // no output for integrated error
-    slot0ConfigsRight.kD = kD; // A velocity error of 1 rps results in 0.1 V output
-    // set Motion Magic settings
-    var motionMagicConfigsRight = talonFXConfigsRight.MotionMagic;
-    motionMagicConfigsRight.MotionMagicCruiseVelocity = maxVel; // Target cruise velocity of 80 rps
-    motionMagicConfigsRight.MotionMagicAcceleration = maxAcc; // Target acceleration of 160 rps/s (0.5 seconds)
-    motionMagicConfigsRight.MotionMagicJerk = kJerk; // Target jerk of 1600 rps/s/s (0.1 seconds)
+    mmConfigs = talonFXConfigs.MotionMagic;
+    mmConfigs.MotionMagicCruiseVelocity = maxVel; // Target cruise velocity of 80 rps
+    mmConfigs.MotionMagicAcceleration = maxAcc; // Target acceleration of 160 rps/s (0.5 seconds)
+    mmConfigs.MotionMagicJerk = kJerk; // Target jerk of 1600 rps/s/s (0.1 seconds)
+   
      
-    var motorConfigs = new MotorOutputConfigs();
-    motorConfigs.Inverted = InvertedValue.Clockwise_Positive;
+    var rightMotorConfigs = new MotorOutputConfigs();
+    rightMotorConfigs.Inverted = InvertedValue.Clockwise_Positive;
+
     
     // LowerArmRightFollower = new Follower(31, true);
     // LowerArmRight.setControl(LowerArmRightFollower);
-    LowerArmLeft.getConfigurator().apply(talonFXConfigsLeft);
-    LowerArmRight.getConfigurator().apply(talonFXConfigsRight);
-    LowerArmRight.getConfigurator().apply(motorConfigs);    
+    LowerArmLeft.getConfigurator().apply(talonFXConfigs);
+    LowerArmRight.getConfigurator().apply(talonFXConfigs);
+    LowerArmRight.getConfigurator().apply(rightMotorConfigs);    
 
     // leftConfigurator = LowerArmLeft.getConfigurator();
     // leftConfigurator.apply(talonFXConfigs);
 
     
+ ShuffleboardTab tab = Shuffleboard.getTab("Arms");
+    tab.add("LowerArm", this);
    
 
   }
@@ -134,7 +131,7 @@ public class LowerArm extends SubsystemBase {
   @Override
   public void periodic() {
     //updatePID = SmartDashboard.getBoolean("update", updatePID);
-    SmartDashboard.putNumber("LowArm", getPos());
+    
      
     if (atPos(LowerArmLeft) && atPos(LowerArmRight)) {
       atPosition = true;
@@ -145,9 +142,51 @@ public class LowerArm extends SubsystemBase {
     
 
   }
-
-  // if PID coefficients on SmartDashboard have changed, write new values to
-  // controller
-
-  // This method will be called once per scheduler run
+@Override
+  public void initSendable(SendableBuilder builder) {
+    builder.setSmartDashboardType("LowerArm");
+    // builder.addDoubleProperty("Velocity RPM", () ->
+    // wrist.getVelocity().getValueAsDouble() * 60, null);
+    builder.addDoubleProperty("Position - Left", () -> LowerArmLeft.getPosition().getValueAsDouble(), null);
+    builder.addDoubleProperty("Position - Right",()-> LowerArmRight.getPosition().getValueAsDouble(), null);
+    builder.addDoubleProperty("Setpoint", () -> requestedPosition, this::setPos);
+    // builder.addDoubleProperty("Output Voltage", () ->
+    // wrist.getMotorVoltage().getValueAsDouble(), null);
+    // PID Tuning
+    builder.addDoubleProperty("kP", () -> pidConfigs.kP, (val) -> {
+      pidConfigs.kP = val;
+      LowerArmLeft.getConfigurator().apply(pidConfigs);
+      LowerArmRight.getConfigurator().apply(pidConfigs);
+    });
+    builder.addDoubleProperty("kI", () -> pidConfigs.kI, (val) -> {
+      pidConfigs.kI = val;
+      LowerArmLeft.getConfigurator().apply(pidConfigs);
+      LowerArmRight.getConfigurator().apply(pidConfigs);
+    });
+    builder.addDoubleProperty("kD", () -> pidConfigs.kD, (val) -> {
+      pidConfigs.kD = val;
+      LowerArmLeft.getConfigurator().apply(pidConfigs);
+      LowerArmRight.getConfigurator().apply(pidConfigs);
+    });
+    builder.addDoubleProperty("kF", () -> pidConfigs.kV, (val) -> {
+      pidConfigs.kV = val;
+      LowerArmLeft.getConfigurator().apply(pidConfigs);
+      LowerArmRight.getConfigurator().apply(pidConfigs);
+    });
+    builder.addDoubleProperty("MMVel", () -> mmConfigs.MotionMagicCruiseVelocity, (val) -> {
+      mmConfigs.MotionMagicCruiseVelocity = val;
+      LowerArmLeft.getConfigurator().apply(mmConfigs );
+      LowerArmRight.getConfigurator().apply(mmConfigs);
+    });
+    builder.addDoubleProperty("MMAccel", () -> mmConfigs.MotionMagicAcceleration, (val) -> {
+      mmConfigs.MotionMagicAcceleration = val;
+      LowerArmLeft.getConfigurator().apply(mmConfigs );
+      LowerArmRight.getConfigurator().apply(mmConfigs);
+    });
+    builder.addDoubleProperty("MMJerk", () -> mmConfigs.MotionMagicJerk, (val) -> {
+      mmConfigs.MotionMagicJerk = val;
+      LowerArmLeft.getConfigurator().apply(mmConfigs );
+      LowerArmRight.getConfigurator().apply(mmConfigs);
+    });
+  }
 }

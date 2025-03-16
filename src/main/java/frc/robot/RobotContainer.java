@@ -200,15 +200,20 @@ public static boolean loading;
                                 .onTrue(new MoveArmFix(mArm, 3, 1));
                 Lv3R
                 .onFalse(new Retract(mArm,3).andThen(new MoveArmFix(mArm, 0, 0)));
-                Lv4L
-                                .onTrue(new MoveArmFix(mArm, 4, -1).alongWith(new WaitCommand(0.3)).andThen(new Extend(mArm,4)));
-                Lv4L
-                .onFalse(new Retract(mArm,4).andThen(new WaitCommand(0.3)).andThen(new Extend(mArm, 99). andThen(new MoveArmFix(mArm, 0, 0))));
-                Lv4R
-                                .onTrue(new MoveArmFix(mArm, 4, 1).alongWith(new WaitCommand(0.3).andThen(new Extend(mArm,4))));
-                Lv4R
-                .onFalse(new Retract(mArm,4).andThen(new WaitCommand(0.3)).andThen(new Extend(mArm, 99). andThen(new MoveArmFix(mArm, 0, 0))));
-                //Chomp.onTrue((new MoveArmFix(mArm,50,1)));
+                Lv4L.onTrue(new MoveArmFix(mArm, 4,-1));
+                Lv4L.onFalse(new MoveArmFix(mArm, 44,  -1));
+                Lv4R.onTrue(new MoveArmFix(mArm, 4,1));
+                Lv4R.onFalse(new MoveArmFix(mArm, 44,  1));
+                
+                // Lv4L
+                //                 .onTrue(new MoveArmFix(mArm, 4, -1).alongWith(new WaitCommand(0.3)).andThen(new Extend(mArm,4)));
+                // Lv4L
+                // .onFalse(new Retract(mArm,4).andThen(new WaitCommand(0.3)).andThen(new Extend(mArm, 99). andThen(new MoveArmFix(mArm, 0, 0))));
+                // Lv4R
+                //                 .onTrue(new MoveArmFix(mArm, 4, 1).alongWith(new WaitCommand(0.3).andThen(new Extend(mArm,4))));
+                // Lv4R
+                // .onFalse(new Retract(mArm,4).andThen(new WaitCommand(0.3)).andThen(new Extend(mArm, 99). andThen(new MoveArmFix(mArm, 0, 0))));
+                // //Chomp.onTrue((new MoveArmFix(mArm,50,1)));
                 //Chomp.onFalse(new MoveArmFix(mArm, 50,0));
                 
                 /*
