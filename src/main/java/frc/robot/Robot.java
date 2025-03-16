@@ -156,8 +156,10 @@ public class Robot extends TimedRobot {
     if (m_autonomousCommand != null) {
       m_autonomousCommand.schedule();
     }
+// major Change 3/15/2025  
+// why am i resetting the gyro when auto starts up?
 
-    m_robotContainer.resetGyro();
+   // m_robotContainer.resetGyro();
   }
 
   @Override

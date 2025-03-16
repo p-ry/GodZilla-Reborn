@@ -254,7 +254,7 @@ public class Utilitys {
             RobotContainer.drivetrain.setVisionMeasurementStdDevs(VecBuilder.fill(.7, .7, 9999999));
             RobotContainer.drivetrain.addVisionMeasurement(mt2.pose,
                     Utils.fpgaToCurrentTime(mt2.timestampSeconds));
-                RobotContainer.drivetrain.swerveOdometry.resetPosition(RobotContainer.drivetrain.getGyroYaw(),RobotContainer.drivetrain.getModulePositions(),
+                RobotContainer.drivetrain.swerveOdometry.resetPosition(RobotContainer.drivetrain.getGyroRotation2D(),RobotContainer.drivetrain.getModulePositions(),
                     RobotContainer.drivetrain.m_poseEstimator.getEstimatedPosition());
                     
 
