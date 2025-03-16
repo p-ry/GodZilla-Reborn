@@ -1705,4 +1705,21 @@ public class LimelightHelpers {
 
         return results;
     }
+
+    public double getTrustFactor(String limelightName) {
+        double ambiguity = NetworkTableInstance.getDefault().getTable("limelightName").getEntry("ta").getDouble(0);
+        double numTags = NetworkTableInstance.getDefault().getTable("limelightName").getEntry("numTags").getDouble(1);
+        double targetArea = NetworkTableInstance.getDefault().getTable("limelightName").getEntry("ta").getDouble(0);
+    
+        // High confidence if multiple tags detected
+        if (numTags >= 2) return 1.0; 
+    
+        // Adjust trust for single-tag detections
+        double trust = Math.max(0.1, Math.min(1.0, targetArea / (1.0 + ambiguity)));
+    
+        return trust * 0.75 + 0.2; // Slightly higher baseline trust
+    }
+    
+
+
 }

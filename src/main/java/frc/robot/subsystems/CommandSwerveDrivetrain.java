@@ -34,6 +34,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -56,25 +57,6 @@ import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Subsystem {
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // Define the getModulePositions method
-  
-
     private static final double kSimLoopPeriod = 0.005; // 5 ms
     private Notifier m_simNotifier = null;
     private double m_lastSimTime;
@@ -86,7 +68,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     public LimelightHelpers.PoseEstimate[] cameraPoses = new LimelightHelpers.PoseEstimate[2];
 
     public Pigeon2 gyro;
-    public SwerveDriveOdometry swerveOdometry;
+   // public SwerveDriveOdometry swerveOdometry;
     public PoseEstimate cameraPose;
     //public Pose2d botPose = new Pose2d();
     public Pose2d botPose2d = new Pose2d();
@@ -129,9 +111,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         getModule(2).getDriveMotor().setPosition(0);
         getModule(3).getDriveMotor().setPosition(0);
 
-
-        swerveOdometry = new SwerveDriveOdometry(getKinematics(), getGyroRotation2D(),
-        getModulePositions());
         botPose2d = new Pose2d();
         
         //swerveOdometry = new SwerveDriveOdometry(getKinematics(), kBlueAlliancePerspectiveRotation,              getModulePositions());
@@ -139,9 +118,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         //    startSimThread();
        // }
 
-        m_poseEstimator = new SwerveDrivePoseEstimator(Constants.swerveKinematics, getGyroRotation2D(),
-                getModulePositions(), getPose());
-
+        m_poseEstimator = new SwerveDrivePoseEstimator(Constants.swerveKinematics, getGyroRotation2D(), getModulePositions(), getPose(),VecBuilder.fill(0.1, 0.1, Units.degreesToRadians(0.5)),VecBuilder.fill(0.5, 0.5, Units.degreesToRadians(1.0)));
+        
         configureAutoBuilder();
        // mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-left");
     }
@@ -233,7 +211,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
      
 
-    public void updateOdometry() {
+    public void updateCameraPose() {
         boolean doRejectUpdate = false;
         cameraPoses[0] = grabPose("limelight-left");
         cameraPoses[1] = grabPose("limelight-right");
@@ -264,8 +242,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 m_poseEstimator.addVisionMeasurement(
                         cameraPoses[i].pose,
                         cameraPoses[i].timestampSeconds);
-                swerveOdometry.resetPosition(getGyroRotation2D(), getModulePositions(),
-                        m_poseEstimator.getEstimatedPosition());
+                resetOdometry(m_poseEstimator.getEstimatedPosition());
+                //swerveOdometry.resetPosition(getGyroRotation2D(), getModulePositions(),
+                 //       m_poseEstimator.getEstimatedPosition());
             }
 
         }
@@ -274,14 +253,11 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     @Override
     public void periodic() {
-       
-        botPose2d = swerveOdometry.update(getGyroRotation2D(), getModulePositions());
-         m_poseEstimator.update(
-            gyro.getRotation2d(),
-            getModulePositions());
-      
+
+        m_poseEstimator.update(getGyroRotation2D(), getModulePositions());
         botPose2d = m_poseEstimator.getEstimatedPosition();
-        updateOdometry();
+       
+        updateCameraPose();
        
         SmartDashboard.putNumberArray("BotPose",
        new double[] { botPose2d.getTranslation().getX(), botPose2d.getTranslation().getY(),
@@ -310,25 +286,14 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     
 
     public void resetOdometry(Pose2d pose) {
-        swerveOdometry.resetPosition(getGyroRotation2D(),
+        m_poseEstimator.resetPosition(getGyroRotation2D(),
         getModulePositions(),pose);
     }
     public Rotation2d getGyroscopeRotation() {
         return Rotation2d.fromDegrees(gyro.getYaw().getValueAsDouble());
     }
 
-    public void resetPose(Pose2d pose) {
-        // ************ Major CHANGE */
-        mt2 = grabPose("limelight-left");
-        if (mt2.tagCount > 0) {
-            pose = mt2.pose;
-        }
-        // ************************************* */
-        swerveOdometry.resetPosition(getGyroRotation2D(), getModulePositions(), pose);
-
-        // differentialDriveOdometry.resetPosition(getGyroYaw(), m_distance, m_distance,
-        // pose);
-    }
+   
     public void resetGyro(){
         gyro.setYaw(0);
     }
@@ -346,9 +311,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         return new Pose3d(getPose());
     }
 
-    public void setPose(Pose2d pose) {
-        swerveOdometry.resetPosition(getGyroRotation2D(), getModulePositions(), pose);
-    }
+   
 
     public Rotation2d getHeading() {
         return getPose().getRotation();
@@ -357,7 +320,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     public void setHeading(Rotation2d heading) {
 
         getCompassHeading();
-        swerveOdometry.resetPosition(getGyroRotation2D(), getModulePositions(),
+        m_poseEstimator.resetPosition(getGyroRotation2D(), getModulePositions(),
                 new Pose2d(getPose().getTranslation(), heading));
     }
 

@@ -142,8 +142,10 @@ public class Robot extends TimedRobot {
 
   @Override
   public void disabledPeriodic() {
-    RobotContainer.drivetrain.updateOdometry();
-    RobotContainer.drivetrain.setHeading(new Rotation2d(0));
+    RobotContainer.drivetrain.updateCameraPose();
+    
+    // why keep reseting heading to 0 in disabled  what happens when you rotate the robot
+    //RobotContainer.drivetrain.setHeading(new Rotation2d(0));
   }
 
   @Override

@@ -184,47 +184,7 @@ public class Utilitys {
 
     }
 
-    public void updateOdometry() {
-        boolean doRejectUpdate = false;
-        Pigeon2 gyro = RobotContainer.drivetrain.gyro;
-        cameraPoses[0] = grabPose("limelight-left");
-        cameraPoses[1] = grabPose("limelight-right");
-        for (int i = 0; i < 2; i++) {
-
-            doRejectUpdate = false;
-            if (cameraPoses[i] != null) {
-                if (cameraPoses[i].tagCount == 0) {
-                    doRejectUpdate = true;
-                }
-                if (cameraPoses[i].pose.getX() < 0) {
-                    doRejectUpdate = true;
-                }
-                if (cameraPoses[i].pose.getY() > 7.6) {
-                    doRejectUpdate = true;
-                }
-            } else {
-                doRejectUpdate = true;
-            }
-            /// SmartDashboard.putNumber("estimated yaw",
-            // m_poseEstimator.getEstimatedPosition().getRotation().getDegrees();
-            if (gyro.getAngularVelocityZWorld().getValueAsDouble() > 360) // if our angular velocity is greater
-            {
-                doRejectUpdate = true;
-            }
-            if (!doRejectUpdate) {
-                m_poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(.7, .7, 9999999));
-                m_poseEstimator.addVisionMeasurement(
-                        cameraPoses[i].pose,
-                        cameraPoses[i].timestampSeconds);
-                RobotContainer.drivetrain.swerveOdometry.resetPosition(getGyroYaw(gyro),
-                        RobotContainer.drivetrain.getModulePositions(),
-                        m_poseEstimator.getEstimatedPosition());
-            }
-
-        }
-
-    }
-
+  
     public Rotation2d getGyroYaw(Pigeon2 gyro) {
         SmartDashboard.putNumber("yaw", gyro.getYaw().getValueAsDouble());
         return Rotation2d.fromDegrees(gyro.getYaw().getValueAsDouble());
@@ -240,24 +200,5 @@ public class Utilitys {
 
     }
 
-    public static void addLimelightVisionMeasurements(String camera) {
-
-        // LimelightHelpers.SetRobotOrientation("limelight-left",getGyroYaw().getDegrees(),
-        // 0, 0, 0, 0, 0);
-        var driveState = RobotContainer.drivetrain.getState();
-        double headingDeg = driveState.Pose.getRotation().getDegrees();
-        double omegaRps = Units.radiansToRotations(driveState.Speeds.omegaRadiansPerSecond);
-        LimelightHelpers.SetRobotOrientation(camera, headingDeg, 0, 0, 0, 0, 0);
-        mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(camera);
-
-        if (mt2 != null && mt2.tagCount > 0 ) { // distance was 2
-            RobotContainer.drivetrain.setVisionMeasurementStdDevs(VecBuilder.fill(.7, .7, 9999999));
-            RobotContainer.drivetrain.addVisionMeasurement(mt2.pose,
-                    Utils.fpgaToCurrentTime(mt2.timestampSeconds));
-                RobotContainer.drivetrain.swerveOdometry.resetPosition(RobotContainer.drivetrain.getGyroRotation2D(),RobotContainer.drivetrain.getModulePositions(),
-                    RobotContainer.drivetrain.m_poseEstimator.getEstimatedPosition());
-                    
-
-        }
-    }
+   
 }
