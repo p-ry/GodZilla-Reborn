@@ -159,10 +159,10 @@ public class MoveArmFix extends Command {
         break;
 
       case 4:
-        myArm.lowerArm.setPos(27.2);// 28.2
-        myArm.upperArm.setPos(33.5, applyDynamic);
+       // myArm.lowerArm.setPos(27.2);// 28.2
+       // myArm.upperArm.setPos(33.5, applyDynamic);
         myArm.slider.setPos(-45.4, slow);
-        myArm.wrist.setPos(8.8);
+       // myArm.wrist.setPos(8.8);
 
         // System.out.println("Level 4");
         break;
