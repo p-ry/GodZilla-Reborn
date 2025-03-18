@@ -62,7 +62,7 @@ public class UpperArm extends SubsystemBase implements Sendable{
     
     talonFXConfigs = new TalonFXConfiguration();
     controlUpper = new MotionMagicVoltage(0);
-    UpperArmLeft = new TalonFX(33,"Canivore2");
+    UpperArmLeft = new TalonFX(33);
     UpperArmRight = new TalonFX(34);
     pidConfigs = talonFXConfigs.Slot0;
     talonFXConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;

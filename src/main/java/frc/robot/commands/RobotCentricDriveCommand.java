@@ -9,6 +9,7 @@ import frc.robot.subsystems.CommandSwerveDrivetrain;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 //import edu.wpi.first.wpilibj2.command.CommandBase;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 
 import edu.wpi.first.wpilibj2.command.Command;
 
@@ -21,12 +22,17 @@ public class RobotCentricDriveCommand extends Command {
   public RobotCentricDriveCommand(CommandSwerveDrivetrain drivetrain, SwerveRequest.RobotCentric robotCentric, CommandXboxController controller) {
       this.drivetrain = drivetrain;
       this.controller = controller;
-      this.driveRequest = robotCentric;
+      this.driveRequest = new SwerveRequest.RobotCentric()
+      .withDeadband(RobotContainer.MaxSpeed*0.1)
+      .withRotationalDeadband(RobotContainer.MaxAngularRate*0.1)
+      .withDriveRequestType(DriveRequestType.Velocity);
+      addRequirements(drivetrain);//robotCentric;
       
   }
 
   @Override
   public void execute() {
+    System.out.println("Robot");
       drivetrain.applyRequest(() -> driveRequest
           .withVelocityX(-(controller.getLeftY() * controller.getLeftY() * Math.signum(controller.getLeftY())) * RobotContainer.MaxSpeed/2)
           .withVelocityY(-(controller.getLeftX() * controller.getLeftX() * Math.signum(controller.getLeftX())) * RobotContainer.MaxSpeed/2)

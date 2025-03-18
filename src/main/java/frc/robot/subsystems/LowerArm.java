@@ -64,8 +64,8 @@ public class LowerArm extends SubsystemBase implements Sendable{
   /** Creates a new LowerArm. */
   public LowerArm() {
     // leftConfigurator
-    LowerArmLeft = new TalonFX(31,"Canivore2");
-    LowerArmRight = new TalonFX(32,"Canivore2");
+    LowerArmLeft = new TalonFX(31);
+    LowerArmRight = new TalonFX(32);
     // talonFXConfigs = new TalonFXConfiguration();
     leftRequest = new MotionMagicVoltage(0);
     rightRequest = new MotionMagicVoltage(0);
