@@ -25,7 +25,6 @@ import frc.robot.Robot;
 import frc.robot.subsystems.ArmAssembly;
 import au.grapplerobotics.ConfigurationFailedException;
 
-
 public class Ace extends SubsystemBase {
   TalonFX ace;
   MotionMagicVoltage controlace;
@@ -43,6 +42,7 @@ public class Ace extends SubsystemBase {
   double distance;
   LaserCan.Measurement measurement;
   public boolean gotIt;
+  public boolean coralPresent;
 
   /** Creates a new Ace. */
   public Ace(int level) {
@@ -61,6 +61,8 @@ public class Ace extends SubsystemBase {
     } catch (ConfigurationFailedException e) {
       e.printStackTrace();
     }
+    gotIt = false;
+    coralPresent = false;
 
   }
 
@@ -85,32 +87,30 @@ public class Ace extends SubsystemBase {
 
   @Override
   public void periodic() {
-    
-/*    if (RobotContainer.loading) {
-      measurement = laserCan.getMeasurement();
-      distance = measurement.distance_mm;
-      SmartDashboard.putNumber("distance", distance);
-      if (!gotIt) {
-        setSpeed(0.6);
-      }
+
+    if (RobotContainer.loading) {
 
       if (measurement != null && measurement.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT) {
         distance = measurement.distance_mm;
         SmartDashboard.putNumber("distance", distance);
-        if ((distance > 370 )&&(distance <800)) {
+        if ((distance < 100)) {
+          coralPresent = true;
+
+        }
+        if (coralPresent && distance > 100) {
           setSpeed(0);
           gotIt = true;
         }
       }
-        
-      // level = RobotContainer.
+    }
 
-      // if ((ace.getTorqueCurrent().getValueAsDouble()>35.0) && (level==1)){
-      // setSpeed(0);
-      // }
-      // This method will be called once per scheduler run
-    
-  }*/
-      
-}
+    // level = RobotContainer.
+
+    // if ((ace.getTorqueCurrent().getValueAsDouble()>35.0) && (level==1)){
+    // setSpeed(0);
+    // }
+    // This method will be called once per scheduler run
+
+  }
+
 }
