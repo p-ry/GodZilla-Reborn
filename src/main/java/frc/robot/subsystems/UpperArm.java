@@ -99,7 +99,7 @@ var rightMotorConfigs = new MotorOutputConfigs();
  ShuffleboardTab tab = Shuffleboard.getTab("Arms");
     tab.add("UpperArm", this);
     
-    
+   SmartDashboard.putBoolean("ApplyDynamic", applyDynamic); 
 
 
 //    UpperArmRightFollower = new Follower(33, true);

@@ -13,6 +13,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import au.grapplerobotics.LaserCan;
 
+import static edu.wpi.first.units.Units.Newton;
+
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.Slot1Configs;
@@ -22,6 +24,7 @@ import com.ctre.phoenix6.configs.TalonFXSConfigurator;
 import com.ctre.phoenix6.controls.DynamicMotionMagicVoltage;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.PositionDutyCycle;
+import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.TalonFXS;
 import com.ctre.phoenix6.signals.MotorArrangementValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -49,6 +52,8 @@ public class Slider extends SubsystemBase implements Sendable{
  public static DynamicMotionMagicVoltage dynamic1 = new DynamicMotionMagicVoltage(0, maxVel,maxAcc,kJerk);
  public static DynamicMotionMagicVoltage dynamic2 = new DynamicMotionMagicVoltage(0, 800,1600, 600);
  public static boolean dynamic = true;
+ public static  MotionMagicVoltage  mmControllerMagicVoltage  = new MotionMagicVoltage(-0.5);
+ public static PositionVoltage sController;
   
 
   /** Creates a new Slider. */
@@ -56,13 +61,21 @@ public class Slider extends SubsystemBase implements Sendable{
 
     slider = new TalonFXS(35);
     sliderController = new PositionDutyCycle(0);
+    sController = new PositionVoltage(0);
     mmController  = new MotionMagicVoltage(0);
     sliderConfigs =   new TalonFXSConfiguration();
+<<<<<<< Updated upstream
     sliderConfigs.Commutation.MotorArrangement=MotorArrangementValue.Minion_JST;
     pidConfigs = sliderConfigs.Slot0;
     pidConfigs2 = sliderConfigs.Slot1;
     pidConfigs.kP = 0.15;
     pidConfigs2.kP = 0.02;
+=======
+    //slider.getconf
+    pidConfigs = sliderConfigs.Slot0;
+    pidConfigs.kP = 0.07;
+    pidConfigs2.kP=0.01;
+>>>>>>> Stashed changes
     mmConfigs= sliderConfigs.MotionMagic;
     mmConfigs.MotionMagicCruiseVelocity = maxVel; // Target cruise velocity of 80 rps
     mmConfigs.MotionMagicAcceleration = maxAcc; // Target acceleration of 160 rps/s (0.5 seconds)
@@ -71,6 +84,7 @@ public class Slider extends SubsystemBase implements Sendable{
     slider.setNeutralMode(NeutralModeValue.Brake);
     ShuffleboardTab tab = Shuffleboard.getTab("Arms");
     tab.add("Slider", this);
+    SmartDashboard.putData(slider);
     
 
   }
@@ -81,15 +95,25 @@ public class Slider extends SubsystemBase implements Sendable{
 
 
   public void setPos(double position,boolean slow) {
+    SmartDashboard.putBoolean("Slow", slow);
    if (slow){
+<<<<<<< Updated upstream
     //    slider.setControl(dynamic1.withPosition(position));
     slider.setControl(sliderController.withPosition(position).withSlot(1));
     }else {
       slider.setControl(sliderController.withPosition(position).withSlot(0));
       //slider.se
       //slider.setControl(dynamic2.withPosition(position));
+=======
+   // slider.setControl(mmController.withPosition(position));
+    //slider.setControl(sliderControllerdynamic1.withPosition(position));
+    }else {
+      //slider.setControl(mmController.withPosition(position));
+     // slider.setControl(dynamic2.withPosition(position));
+>>>>>>> Stashed changes
     //slider.setControl(sliderController.withPosition(position));
     }
+    slider.setControl(sController.withPosition(position));
     requestedPosition = position;
    }
    
