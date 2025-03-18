@@ -38,16 +38,17 @@ public class UpperArm extends SubsystemBase implements Sendable{
   double kP = 10.0;
   double kI = 0.0;
   double kD = 0.000;
+  double kS = .25;
   public static double maxVel = 300;
   public static double maxAcc = 300;
   public static double minVel = 0;
   public static double kJerk = 800;
   boolean change = false;
   boolean updatePID = false;
-  boolean applyDynamic;
-  public static DynamicMotionMagicVoltage dynamic1 = new DynamicMotionMagicVoltage(0, maxVel,maxAcc,kJerk);
+  boolean fast;
+  public static DynamicMotionMagicVoltage dynamicSlow = new DynamicMotionMagicVoltage(0, maxVel,maxAcc,kJerk);
   
-  public static DynamicMotionMagicVoltage dynamic2 = new DynamicMotionMagicVoltage(0, 10, 60, 200);
+  public static DynamicMotionMagicVoltage dynamicFast = new DynamicMotionMagicVoltage(0, 300, 300, 800);
   private Slot0Configs pidConfigs = new Slot0Configs();
   private MotionMagicConfigs mmConfigs = new MotionMagicConfigs();
   
@@ -57,23 +58,24 @@ public class UpperArm extends SubsystemBase implements Sendable{
   /** Creates a new UpperArm. */
   public UpperArm() {
 
-    this.applyDynamic = false;
+    this.fast = false;
     
     talonFXConfigs = new TalonFXConfiguration();
     controlUpper = new MotionMagicVoltage(0);
-    UpperArmLeft = new TalonFX(33);
+    UpperArmLeft = new TalonFX(33,"Canivore2");
     UpperArmRight = new TalonFX(34);
     pidConfigs = talonFXConfigs.Slot0;
     talonFXConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     
     
     
-    pidConfigs.kS = 0.25; // Add 0.25 V output to overcome static friction
+    pidConfigs.kS = kS; // Add 0.25 V output to overcome static friction
     pidConfigs.kV = 0.12; // A velocity target of 1 rps results in 0.12 V output
     pidConfigs.kA = 0.01; // An acceleration of 1 rps/s requires 0.01 V output
     pidConfigs.kP = kP; // A position error of 2.5 rotations results in 12 V output
     pidConfigs.kI = kI; // no output for integrated error
     pidConfigs.kD = kD; // A velocity error of 1 rps results in 0.1 V output
+    
 
     // set Motion Magic settings
     mmConfigs= talonFXConfigs.MotionMagic;
@@ -99,7 +101,7 @@ var rightMotorConfigs = new MotorOutputConfigs();
  ShuffleboardTab tab = Shuffleboard.getTab("Arms");
     tab.add("UpperArm", this);
     
-   SmartDashboard.putBoolean("ApplyDynamic", applyDynamic); 
+   SmartDashboard.putBoolean("ApplyDynamic", fast); 
 
 
 //    UpperArmRightFollower = new Follower(33, true);
@@ -108,21 +110,23 @@ var rightMotorConfigs = new MotorOutputConfigs();
   }
 
   public void setPos(double position) {
-    setPos(position, true);
+    setPos(position,fast);
   }
 
-  public void setPos(double position, boolean applyDynamic) {
+  public void setPos(double position, boolean fast) {
+   DynamicMotionMagicVoltage mmControl;
    
-    this.applyDynamic = applyDynamic;
+    this.fast = fast;
     requestedPosition = position;
-    if (applyDynamic){
-      UpperArmRight.setControl(dynamic1.withPosition(position));
-      UpperArmLeft.setControl(dynamic1.withPosition(position));
-    }else{
+    if (fast){
+      mmControl = dynamicFast;
+    }else {
+      mmControl = dynamicSlow;
       
-    UpperArmLeft.setControl(controlUpper.withPosition(position));
-    UpperArmRight.setControl(controlUpper.withPosition(position));
     }
+   
+      UpperArmRight.setControl(mmControl.withPosition(position));
+      UpperArmLeft.setControl(mmControl.withPosition(position));
     // motorRequest = new PositionDutyCycle(position);
     // UpperArmLeft.setControl(motorRequest);
     
@@ -146,7 +150,13 @@ var rightMotorConfigs = new MotorOutputConfigs();
   public boolean atPos() {
     return atPosition;
   }
-
+public void updatePID(){
+  UpperArmLeft.getConfigurator().apply(pidConfigs);
+  UpperArmRight.getConfigurator().apply(pidConfigs);
+  dynamicSlow = new DynamicMotionMagicVoltage(0, maxVel, maxAcc, kJerk);
+  SmartDashboard.putNumberArray("dynamicSlow", new double[]{dynamicSlow.Velocity, dynamicSlow.Acceleration, dynamicSlow.Jerk});
+  
+}
   @Override
   public void periodic() {
     SmartDashboard.putNumber("upArm", getPos());
@@ -170,41 +180,23 @@ var rightMotorConfigs = new MotorOutputConfigs();
     // builder.addDoubleProperty("Output Voltage", () ->
     // wrist.getMotorVoltage().getValueAsDouble(), null);
     // PID Tuning
-    builder.addDoubleProperty("kP", () -> pidConfigs.kP, (val) -> {
-      pidConfigs.kP = val;
-      UpperArmLeft.getConfigurator().apply(pidConfigs);
-      UpperArmRight.getConfigurator().apply(pidConfigs);
-    });
-    builder.addDoubleProperty("kI", () -> pidConfigs.kI, (val) -> {
-      pidConfigs.kI = val;
-      UpperArmLeft.getConfigurator().apply(pidConfigs);
-      UpperArmRight.getConfigurator().apply(pidConfigs);
-    });
-    builder.addDoubleProperty("kD", () -> pidConfigs.kD, (val) -> {
-      pidConfigs.kD = val;
-      UpperArmLeft.getConfigurator().apply(pidConfigs);
-      UpperArmRight.getConfigurator().apply(pidConfigs);
-    });
-    builder.addDoubleProperty("kF", () -> pidConfigs.kV, (val) -> {
-      pidConfigs.kV = val;
-      UpperArmLeft.getConfigurator().apply(pidConfigs);
-      UpperArmRight.getConfigurator().apply(pidConfigs);
-    });
-    builder.addDoubleProperty("MMVel", () -> mmConfigs.MotionMagicCruiseVelocity, (val) -> {
-      mmConfigs.MotionMagicCruiseVelocity = val;
-      UpperArmLeft.getConfigurator().apply(mmConfigs );
-      UpperArmRight.getConfigurator().apply(mmConfigs);
-    });
+    builder.addBooleanProperty("Fast", () -> fast, (value) -> fast = value);
+
+    builder.addDoubleProperty("kP", () -> kP, (value) -> { kP = value; });
+    builder.addDoubleProperty("kI", () -> kI, (value) -> { kI = value; });
+    builder.addDoubleProperty("kD", () -> kD, (value) -> { kD = value; });
+    builder.addDoubleProperty("kS", () -> kS, (value) -> { kS= value;  });
+    builder.addDoubleProperty("MMVel", () -> mmConfigs.MotionMagicCruiseVelocity, (value) -> {
+      mmConfigs.MotionMagicCruiseVelocity = value;});
+      
     builder.addDoubleProperty("MMAccel", () -> mmConfigs.MotionMagicAcceleration, (val) -> {
-      mmConfigs.MotionMagicAcceleration = val;
-      UpperArmLeft.getConfigurator().apply(mmConfigs );
-      UpperArmRight.getConfigurator().apply(mmConfigs);
-    });
+      mmConfigs.MotionMagicAcceleration = val;});
+      
     builder.addDoubleProperty("MMJerk", () -> mmConfigs.MotionMagicJerk, (val) -> {
-      mmConfigs.MotionMagicJerk = val;
-      UpperArmLeft.getConfigurator().apply(mmConfigs );
-      UpperArmRight.getConfigurator().apply(mmConfigs);
-    });
+      mmConfigs.MotionMagicJerk = val;});
+       // Update PID dynamically
+       builder.addBooleanProperty("Update", () -> false, (pressed) -> updatePID());
+    
   }
   
 }

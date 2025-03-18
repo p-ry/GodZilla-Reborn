@@ -46,7 +46,7 @@ public class Wrist extends SubsystemBase implements Sendable {
   /** Creates a new Wrist. */
   public Wrist() {
 
-    wrist = new TalonFX(36);
+    wrist = new TalonFX(36,"Canivore2");
     wristConfigurator = wrist.getConfigurator();
 
     wristController = new PositionDutyCycle(0);
@@ -55,9 +55,8 @@ public class Wrist extends SubsystemBase implements Sendable {
     pidConfigs.kP = 0.05;
     wristConfigs.ClosedLoopGeneral.ContinuousWrap = false;
     wrist.getConfigurator().apply(wristConfigs);
-    // commutationConfigs = new CommutationConfigs();
-    // commutationConfigs.MotorArrangement = MotorArrangementValue.Minion_JST;
-    // wristConfigs.Commutation.MotorArrangement = MotorArrangementValue.Minion_JST;
+    
+    //wristConfigs.Commutation.MotorArrangement = MotorArrangementValue.Minion_JST;
     // wristConfigs.ExternalFeedback.SensorToMechanismRatio = 1.0;
     ShuffleboardTab tab = Shuffleboard.getTab("Arms");
     tab.add("Wrist", this);

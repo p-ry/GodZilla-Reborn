@@ -46,7 +46,7 @@ public class Ace extends SubsystemBase {
 
   /** Creates a new Ace. */
   public Ace(int level) {
-    ace = new TalonFX(37);
+    ace = new TalonFX(37,"Canivore2");
     aceConfigs = new TalonFXConfiguration();
     aceConfigs.CurrentLimits.SupplyCurrentLimitEnable = true;
     aceConfigs.CurrentLimits.SupplyCurrentLimit = 50;
