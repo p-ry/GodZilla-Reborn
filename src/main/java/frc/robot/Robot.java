@@ -45,6 +45,8 @@ public class Robot extends TimedRobot {
   public void robotInit() {
     FollowPathCommand.warmupCommand().schedule();
     Pathfinding.setPathfinder(new LocalADStar());
+    //RobotContainer.drivetrain.gyro.setYaw(0);
+      var alliance = DriverStation.getAlliance();
     
    // laserCan = new LaserCan(10);
     //m_robotContainer.drivetrain.gyro.setYaw(0);
@@ -116,8 +118,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void disabledInit() {
-    RobotContainer.drivetrain.gyro.setYaw(0);
-      var alliance = DriverStation.getAlliance();
+    
    
    /*
       if (alliance.isPresent()) {

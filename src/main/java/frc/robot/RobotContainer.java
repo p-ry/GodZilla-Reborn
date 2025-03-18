@@ -112,16 +112,17 @@ public static boolean loading;
                 drivetrain.setDefaultCommand(
                                 // Drivetrain will execute this command periodically
                                 drivetrain.applyRequest(() -> drive.withVelocityX(
-                                                -(controller.getLeftY() * controller.getLeftY()
-                                                                * Math.signum(controller.getLeftY()))
-                                                                * MaxSpeed) // Drive
+                                                -(controller.getLeftY() //* controller.getLeftY()
+                                                                //* Math.signum(controller.getLeftY()))
+                                                                * MaxSpeed) )// Drive
                                                 // forward
                                                 // with
                                                 // negative
                                                 // Y
                                                 // (forward)
-                                                .withVelocityY(-(controller.getLeftX() * controller.getLeftX()
-                                                                * Math.signum(controller.getLeftX()) * MaxSpeed)) // Drive
+                                                .withVelocityY(-(controller.getLeftX() //* controller.getLeftX()
+                                                                //* Math.signum(controller.getLeftX())
+                                                                 * MaxSpeed)) // Drive
                                                                                                                   // left
                                                                                                                   // with
                                                 // negative X (left)
@@ -239,13 +240,13 @@ public static boolean loading;
                 controller.leftBumper().onTrue(new InstantCommand(() -> 
                         drivetrain.resetGyroToAlliance()));
 
-controller.leftBumper().onTrue(new InstantCommand(() -> drivetrain.setHeading(new Rotation2d(0))));
+ controller.leftBumper().onTrue(new InstantCommand(() -> drivetrain.setHeading(new Rotation2d(0))));
 
                 
 
-                controller
-                                .start()
-                                .onTrue(new InstantCommand(() -> drivetrain.gyro.reset()));
+//                 controller
+//                                 .start()
+//                                 .onTrue(new InstantCommand(() -> drivetrain.gyro.reset()));
 
             
                 controller.b().whileTrue(drivetrain.applyRequest(
@@ -283,9 +284,9 @@ controller.leftBumper().onTrue(new InstantCommand(() -> drivetrain.setHeading(ne
                 // drivetrain.registerTelemetry(logger::telemeterize);
         }
 
-        public void resetGyro() {
-                drivetrain.resetGyroToAlliance();
-        }
+     //   public void resetGyro() {
+      //          drivetrain.resetGyroToAlliance();
+       // }
 
         public Command getAutonomousCommand() {
                 /* Run the path selected from the auto chooser */
