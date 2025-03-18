@@ -89,6 +89,7 @@ public class Ace extends SubsystemBase {
   public void periodic() {
 
     if (RobotContainer.loading) {
+     
 
       if (measurement != null && measurement.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT) {
         distance = measurement.distance_mm;

@@ -33,6 +33,7 @@ import frc.robot.commands.MoveArm;
 import frc.robot.commands.MoveArmFix;
 //import frc.robot.commands.MoveArmFix;
 import frc.robot.commands.Retract;
+import frc.robot.commands.RobotCentricDriveCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Ace;
 import frc.robot.subsystems.ArmAssembly;
@@ -41,9 +42,9 @@ import frc.robot.subsystems.Wrist;
 
 public class RobotContainer {
         // public static Pigeon2 gyro;
-        private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top
+        public static double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top
                                                                                       // speed
-        private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per
+        public static double  MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per
                                                                                           // second
                                                                                           // max angular velocity
 
@@ -77,6 +78,11 @@ public class RobotContainer {
         public static int prevLevel = 0;
         private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
                         .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1)
+                        .withDriveRequestType(DriveRequestType.Velocity);
+
+        private final SwerveRequest.RobotCentric robotCentricDrive = new SwerveRequest.RobotCentric()
+                        .withDeadband(MaxSpeed * 0.1)
+                        .withRotationalDeadband(MaxAngularRate * 0.1)
                         .withDriveRequestType(DriveRequestType.Velocity);
 
         final JoystickButton Dump = new JoystickButton(copilot, 1);
@@ -197,8 +203,10 @@ public class RobotContainer {
                 Lv3R
                                 .onFalse(new Retract(mArm, 3).andThen(new MoveArmFix(mArm, 0, 0)));
                 Lv4L.onTrue(new MoveArmFix(mArm, 4, -1));
+                Lv4L.whileTrue(new RobotCentricDriveCommand(drivetrain, robotCentricDrive, controller));
                 Lv4L.onFalse(new MoveArmFix(mArm, 44, -1));
                 Lv4R.onTrue(new MoveArmFix(mArm, 4, 1));
+                Lv4R.whileTrue(new RobotCentricDriveCommand(drivetrain, robotCentricDrive, controller));
                 Lv4R.onFalse(new MoveArmFix(mArm, 44, 1));
 
                 // Lv4L
