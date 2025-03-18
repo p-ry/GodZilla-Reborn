@@ -64,18 +64,13 @@ public class Slider extends SubsystemBase implements Sendable{
     sController = new PositionVoltage(0);
     mmController  = new MotionMagicVoltage(0);
     sliderConfigs =   new TalonFXSConfiguration();
-<<<<<<< Updated upstream
+
     sliderConfigs.Commutation.MotorArrangement=MotorArrangementValue.Minion_JST;
     pidConfigs = sliderConfigs.Slot0;
     pidConfigs2 = sliderConfigs.Slot1;
     pidConfigs.kP = 0.15;
     pidConfigs2.kP = 0.02;
-=======
-    //slider.getconf
-    pidConfigs = sliderConfigs.Slot0;
-    pidConfigs.kP = 0.07;
-    pidConfigs2.kP=0.01;
->>>>>>> Stashed changes
+
     mmConfigs= sliderConfigs.MotionMagic;
     mmConfigs.MotionMagicCruiseVelocity = maxVel; // Target cruise velocity of 80 rps
     mmConfigs.MotionMagicAcceleration = maxAcc; // Target acceleration of 160 rps/s (0.5 seconds)
@@ -97,20 +92,14 @@ public class Slider extends SubsystemBase implements Sendable{
   public void setPos(double position,boolean slow) {
     SmartDashboard.putBoolean("Slow", slow);
    if (slow){
-<<<<<<< Updated upstream
+
     //    slider.setControl(dynamic1.withPosition(position));
     slider.setControl(sliderController.withPosition(position).withSlot(1));
     }else {
       slider.setControl(sliderController.withPosition(position).withSlot(0));
       //slider.se
       //slider.setControl(dynamic2.withPosition(position));
-=======
-   // slider.setControl(mmController.withPosition(position));
-    //slider.setControl(sliderControllerdynamic1.withPosition(position));
-    }else {
-      //slider.setControl(mmController.withPosition(position));
-     // slider.setControl(dynamic2.withPosition(position));
->>>>>>> Stashed changes
+
     //slider.setControl(sliderController.withPosition(position));
     }
     slider.setControl(sController.withPosition(position));
@@ -124,6 +113,11 @@ public class Slider extends SubsystemBase implements Sendable{
 
   public boolean atPos() {
     return atPosition;
+  }
+  public void updatePID(){
+    pidConfigs.kP = kP;
+    slider.getConfigurator().apply(pidConfigs);
+    
   }
 
   @Override
@@ -147,11 +141,10 @@ public class Slider extends SubsystemBase implements Sendable{
     // builder.addDoubleProperty("Output Voltage", () ->
     // wrist.getMotorVoltage().getValueAsDouble(), null);
     // PID Tuning
-    builder.addDoubleProperty("kP", () -> pidConfigs.kP, (val) -> {
-      pidConfigs.kP = val;
-      slider.getConfigurator().apply(pidConfigs);
+    builder.addDoubleProperty("kP", () -> kP, (value) ->kP = value);
+    //  slider.getConfigurator().apply(pidConfigs);
     
-    });
+    
     builder.addDoubleProperty("kI", () -> pidConfigs.kI, (val) -> {
       pidConfigs.kI = val;
       slider.getConfigurator().apply(pidConfigs);
@@ -182,5 +175,7 @@ public class Slider extends SubsystemBase implements Sendable{
       slider.getConfigurator().apply(mmConfigs );
      
     });
+    builder.addBooleanProperty("ApplyPID",()-> false,(pressed) ->updatePID());
+    
   }
 }
