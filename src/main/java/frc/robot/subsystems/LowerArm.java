@@ -117,6 +117,25 @@ public class LowerArm extends SubsystemBase implements Sendable{
     LowerArmRight.setControl(rightRequest.withPosition(position));
     
   }
+public void setPos(double position, boolean fast){
+  SmartDashboard.putBoolean("Fast", fast);
+  DynamicMotionMagicVoltage mmControl;
+ 
+
+  this.fast = fast;
+  requestedPosition = position;
+  if (fast){
+    mmControl = dynamicFast;
+  }else {
+    mmControl = dynamicSlow;
+    
+  }
+
+ LowerArmLeft.setControl(mmControl.withPosition(position));
+ LowerArmRight.setControl(mmControl.withPosition(position));;
+ 
+ }
+
 
   public void setSpeed(double speed) {
     

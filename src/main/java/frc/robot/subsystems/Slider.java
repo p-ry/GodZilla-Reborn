@@ -49,11 +49,15 @@ public class Slider extends SubsystemBase implements Sendable{
   public static double maxAcc = 40;
  
   public static double kJerk = 400;
- public static DynamicMotionMagicVoltage dynamic1 = new DynamicMotionMagicVoltage(0, maxVel,maxAcc,kJerk);
- public static DynamicMotionMagicVoltage dynamic2 = new DynamicMotionMagicVoltage(0, 800,1600, 600);
+// public static DynamicMotionMagicVoltage dynamic1 = new DynamicMotionMagicVoltage(0, maxVel,maxAcc,kJerk);
+// public static DynamicMotionMagicVoltage dynamic2 = new DynamicMotionMagicVoltage(0, 800,1600, 600);
+ public static DynamicMotionMagicVoltage dynamicSlow = new DynamicMotionMagicVoltage(0, maxVel,maxAcc,kJerk);
+  
+ public static DynamicMotionMagicVoltage dynamicFast = new DynamicMotionMagicVoltage(0, 300, 300, 800);
  public static boolean dynamic = true;
  public static  MotionMagicVoltage  mmControllerMagicVoltage  = new MotionMagicVoltage(-0.5);
  public static PositionVoltage sController;
+ public static boolean fast = true;
   
 
   /** Creates a new Slider. */
@@ -89,21 +93,22 @@ public class Slider extends SubsystemBase implements Sendable{
   }
 
 
-  public void setPos(double position,boolean slow) {
-    SmartDashboard.putBoolean("Slow", slow);
-   if (slow){
+  public void setPos(double position,boolean fast) {
+    SmartDashboard.putBoolean("Fast", fast);
+    DynamicMotionMagicVoltage mmControl;
+   
 
-    //    slider.setControl(dynamic1.withPosition(position));
-    slider.setControl(sliderController.withPosition(position).withSlot(1));
-    }else {
-      slider.setControl(sliderController.withPosition(position).withSlot(0));
-      //slider.se
-      //slider.setControl(dynamic2.withPosition(position));
-
-    //slider.setControl(sliderController.withPosition(position));
-    }
-    slider.setControl(sController.withPosition(position));
+    this.fast = fast;
     requestedPosition = position;
+    if (fast){
+      mmControl = dynamicFast;
+    }else {
+      mmControl = dynamicSlow;
+      
+    }
+
+   slider.setControl(mmControl.withPosition(position));
+   
    }
    
   public double getPos() {
