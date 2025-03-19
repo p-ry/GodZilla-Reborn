@@ -59,7 +59,7 @@ public class Slider extends SubsystemBase implements Sendable{
   /** Creates a new Slider. */
   public Slider() {
 
-    slider = new TalonFXS(35);
+    slider = new TalonFXS(35,"Canivore2");
     sliderController = new PositionDutyCycle(0);
     sController = new PositionVoltage(0);
     mmController  = new MotionMagicVoltage(0);

@@ -336,6 +336,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     public void resetGyro(){
         gyro.setYaw(0);
     }
+    public void resetGyro(double newHeading){
+        gyro.setYaw(newHeading);
+    }
 
     public void resetGyroToAlliance() {
         gyro.setYaw(DriverStation.getAlliance().get() == Alliance.Red ? 0 : 180);
@@ -359,7 +362,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     public void setHeading(Rotation2d heading) {
 
-        getCompassHeading();
+        //getCompassHeading();
         swerveOdometry.resetPosition(getGyroYaw(), getModulePositions(),
                 new Pose2d(getPose().getTranslation(), heading));
     }

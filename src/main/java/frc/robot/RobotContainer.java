@@ -59,6 +59,8 @@ public class RobotContainer {
          * // motors
          * 
          */
+        private  double prevHeading=0;
+        private double slowFactor =3;
         private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
         private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
         private final SwerveRequest.RobotCentric forwardStraight = new SwerveRequest.RobotCentric()
@@ -109,6 +111,7 @@ public class RobotContainer {
 
         public RobotContainer() {
                 // gyro = new Pigeon2(0, "Canivore");
+                SmartDashboard.putNumber("prevHeading",prevHeading);
 
                 // Note that X is defined as forward according to WPILib convention,
                 // and Y is defined as to the left according to WPILib convention.
@@ -196,15 +199,29 @@ public class RobotContainer {
                                 .onFalse(new MoveArmFix(mArm, 0, 0));
                 Lv3L
                                 .onTrue(new MoveArmFix(mArm, 3, -1));
+
                 Lv3L
                                 .onFalse(new Retract(mArm, 3).andThen(new MoveArmFix(mArm, 0, 0)));
                 Lv3R
                                 .onTrue(new MoveArmFix(mArm, 3, 1));
                 Lv3R
                                 .onFalse(new Retract(mArm, 3).andThen(new MoveArmFix(mArm, 0, 0)));
-                Lv4L.onTrue(new MoveArmFix(mArm, 4, -1));
-                Lv4L.whileTrue(new RobotCentricDriveCommand(drivetrain, robotCentricDrive, controller));
-                Lv4L.onFalse(new MoveArmFix(mArm, 44, -1));
+              //  Lv4L.onTrue(new MoveArmFix(mArm, 4, -1));
+                Lv4L.onTrue(new InstantCommand(() -> prevHeading = drivetrain.getCompassHeading()).andThen(new InstantCommand(() -> drivetrain.resetGyro(0))));
+                Lv4L.onTrue(new InstantCommand(() -> MaxSpeed = MaxSpeed/slowFactor));
+                Lv4L.onTrue(new InstantCommand(() -> MaxAngularRate = MaxAngularRate/slowFactor));
+                
+
+                Lv4L.onFalse(new InstantCommand(() -> MaxSpeed = MaxSpeed*slowFactor));
+                Lv4L.onFalse(new InstantCommand(() -> MaxAngularRate = MaxAngularRate/slowFactor));
+                
+                //Lv4L.onTrue(new InstantCommand(() -> drivetrain.setHeading(new Rotation2d(0))));
+
+                Lv4L.onFalse(new InstantCommand(() -> drivetrain.setHeading(new Rotation2d(prevHeading))));
+                Lv4L.onFalse(new InstantCommand(() -> drivetrain.resetGyro(prevHeading)));
+                //Lv4L.whileTrue(new RobotCentricDriveCommand(drivetrain, robotCentricDrive, controller).alongWith(new InstantCommand(()->drivetrain.getDefaultCommand().cancel())));
+                
+             //   Lv4L.onFalse(new MoveArmFix(mArm, 44, -1));
                 Lv4R.onTrue(new MoveArmFix(mArm, 4, 1));
                 Lv4R.whileTrue(new RobotCentricDriveCommand(drivetrain, robotCentricDrive, controller));
                 Lv4R.onFalse(new MoveArmFix(mArm, 44, 1));
@@ -249,7 +266,7 @@ public class RobotContainer {
 
                 // controller.rightBumper()
                 // .onTrue(new DriveToAmpPath(1));
-                controller.leftBumper().onTrue(new InstantCommand(() -> drivetrain.resetGyroToAlliance()));
+                //controller.leftBumper().onTrue(new InstantCommand(() -> drivetrain.resetGyroToAlliance()));
 
                 controller.leftBumper().onTrue(new InstantCommand(() -> drivetrain.setHeading(new Rotation2d(0))));
 

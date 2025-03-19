@@ -46,7 +46,7 @@ public class Wrist extends SubsystemBase implements Sendable {
   /** Creates a new Wrist. */
   public Wrist() {
 
-    wrist = new TalonFX(36);
+    wrist = new TalonFX(36,"Canivore2");
     wristConfigurator = wrist.getConfigurator();
 
     wristController = new PositionDutyCycle(0);
