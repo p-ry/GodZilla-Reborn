@@ -192,20 +192,20 @@ public class RobotContainer {
                 Lv2L
                                 .whileTrue(new MoveArmFix(mArm, 2, -1));
                 Lv2L
-                                .onFalse(new MoveArmFix(mArm, 0, 0));
+                                .onFalse(new MoveArmFix(mArm, 1, 0));
                 Lv2R
                                 .whileTrue(new MoveArmFix(mArm, 2, 1));
                 Lv2R
-                                .onFalse(new MoveArmFix(mArm, 0, 0));
+                                .onFalse(new MoveArmFix(mArm, 1, 0));
                 Lv3L
                                 .onTrue(new MoveArmFix(mArm, 3, -1));
 
                 Lv3L
-                                .onFalse(new Retract(mArm, 3).andThen(new MoveArmFix(mArm, 0, 0)));
+                                .onFalse(new Retract(mArm, 3).andThen(new MoveArmFix(mArm, 1, 0)));
                 Lv3R
                                 .onTrue(new MoveArmFix(mArm, 3, 1));
                 Lv3R
-                                .onFalse(new Retract(mArm, 3).andThen(new MoveArmFix(mArm, 0, 0)));
+                                .onFalse(new Retract(mArm, 3).andThen(new MoveArmFix(mArm, 1, 0)));
               //  Lv4L.onTrue(new MoveArmFix(mArm, 4, -1));
                 Lv4L.onTrue(new InstantCommand(() -> prevHeading = drivetrain.getCompassHeading()).andThen(new InstantCommand(() -> drivetrain.resetGyro(0))));
                 Lv4L.onTrue(new InstantCommand(() -> MaxSpeed = MaxSpeed/slowFactor));
