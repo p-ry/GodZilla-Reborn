@@ -46,7 +46,7 @@ public class MoveArmFix extends Command {
 
     this.myArm = myArm;
     aprilTag = new Pose2d();
-    slow = true;
+    //slow = true;
   }
 
   /** Creates a new MoveArm. */
@@ -161,7 +161,7 @@ public class MoveArmFix extends Command {
       case 4:
         myArm.lowerArm.setPos(27.2, true);// myArm.lowerArm.setPos(27.2);// 28.2
         myArm.upperArm.setPos(33.5, true);
-        myArm.slider.setPos(28, slow);
+        myArm.slider.setPos(28,false);
 
         // myArm.wrist.setPos(8.8);
 
