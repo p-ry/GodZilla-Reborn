@@ -92,7 +92,7 @@ public class MoveArmFix extends Command {
           myArm.wrist.setPos(0.0);
         } // upperArm.UpperArmRight.setControl(upperArm.dynamic.withPosition(1.0));
         // upperArm.setPos(0.5);//0.0 load
-        myArm.slider.setPos(-0.50);
+        myArm.slider.setPos(0.50);
 
         // ace.setSpeed(0);
 
@@ -102,14 +102,14 @@ public class MoveArmFix extends Command {
         if (algae) {
           myArm.lowerArm.setPos(18.0);
           myArm.upperArm.setPos(1.0, applyDynamic);
-          myArm.slider.setPos(-2.0);
+          myArm.slider.setPos(1.5);
           myArm.wrist.setPos(0.0);
         } else {
           RobotContainer.loading = true;
           myArm.lowerArm.setPos(19.00);
           myArm.upperArm.setPos(3.7, true);// 0.0 load
           myArm.wrist.setPos(0);
-          myArm.slider.setPos(-0.5);
+          myArm.slider.setPos(0.5);
         }
         // System.out.println("Level 1");
         break;
@@ -117,7 +117,7 @@ public class MoveArmFix extends Command {
         if (algae) {
           myArm.lowerArm.setPos(1.0); // 16.10 load
           myArm.upperArm.setPos(5, applyDynamic);
-          myArm.slider.setPos(-0.50);
+          myArm.slider.setPos(0.50);
           myArm.wrist.setPos(3.0);
 
           // myArm.lowerArm.setPos(22.0);
@@ -128,7 +128,7 @@ public class MoveArmFix extends Command {
 
           myArm.lowerArm.setPos(1.0);
           myArm.upperArm.setPos(6.0, applyDynamic);
-          myArm.slider.setPos(-10.0);
+          myArm.slider.setPos(6.0);
           myArm.wrist.setPos(5.0);
           break;
           /*
@@ -146,12 +146,12 @@ public class MoveArmFix extends Command {
         if (algae) {
           myArm.lowerArm.setPos(25.0);
           myArm.upperArm.setPos(20.0, applyDynamic);
-          myArm.slider.setPos(-2.0);
+          myArm.slider.setPos(1.5);
           myArm.wrist.setPos(3.0);
         } else {
           myArm.lowerArm.setPos(22);
           myArm.upperArm.setPos(23, applyDynamic);
-          myArm.slider.setPos(-0.5);
+          myArm.slider.setPos(0.5);
           myArm.wrist.setPos(6.5);
         }
 
@@ -161,7 +161,7 @@ public class MoveArmFix extends Command {
       case 4:
         myArm.lowerArm.setPos(27.2, true);// myArm.lowerArm.setPos(27.2);// 28.2
         myArm.upperArm.setPos(33.5, true);
-        myArm.slider.setPos(-45.4, slow);
+        myArm.slider.setPos(28, slow);
 
         // myArm.wrist.setPos(8.8);
 
@@ -172,7 +172,7 @@ public class MoveArmFix extends Command {
 
         myArm.lowerArm.setPos(30.0);
         myArm.upperArm.setPos(4.0, applyDynamic);
-        myArm.slider.setPos(-0.50);
+        myArm.slider.setPos(0.50);
         myArm.wrist.setPos(3.0);
 
         // System.out.println("Level 2");
@@ -182,7 +182,7 @@ public class MoveArmFix extends Command {
 
         myArm.lowerArm.setPos(27.30);
         myArm.upperArm.setPos(8.9, applyDynamic);
-        myArm.slider.setPos(-0.50);
+        myArm.slider.setPos(0.50);
         myArm.wrist.setPos(0.0);
         break;
 
@@ -193,7 +193,7 @@ public class MoveArmFix extends Command {
         myArm.upperArm.setPos(position, applyDynamic);
 
         // upperArm.setPos(0.5);//0.0 load
-        myArm.slider.setPos(-0.50);
+        myArm.slider.setPos(0.50);
         myArm.wrist.setPos(0.0);
 
         // ace.setSpeed(0);
@@ -211,7 +211,7 @@ public class MoveArmFix extends Command {
         myArm.lowerArm.setPos(19.00);
         myArm.upperArm.setPos(3.7, false);// 0.0 load
         myArm.wrist.setPos(0);
-        myArm.slider.setPos(-0.5, true);
+        myArm.slider.setPos(0.5, true);
         break;
 
       case 50: // chomp
@@ -226,7 +226,7 @@ public class MoveArmFix extends Command {
         if (algae) {
           myArm.lowerArm.setPos(1.0);
           myArm.upperArm.setPos(1.0, applyDynamic);
-          myArm.slider.setPos(-2.0);
+          myArm.slider.setPos(1.50);
           myArm.wrist.setPos(3.0);
         } else {
 
@@ -239,7 +239,7 @@ public class MoveArmFix extends Command {
           // myArm.upperArm.myArm.upperArmLeft.setControl(myArm.upperArm.dynamic.withPosition(1.0));
           // myArm.upperArm.myArm.upperArmRight.setControl(myArm.upperArm.dynamic.withPosition(1.0));
           // myArm.upperArm.setPos(0.5);//0.0 load
-          myArm.slider.setPos(-0.50, false);
+          myArm.slider.setPos(0.50, false);
           myArm.wrist.setPos(0.0);
         }
 

@@ -26,8 +26,10 @@ import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.PositionDutyCycle;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.TalonFXS;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorArrangementValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.signals.ReverseLimitValue;
 
 public class Slider extends SubsystemBase implements Sendable{
   TalonFXS slider;
@@ -58,11 +60,11 @@ public class Slider extends SubsystemBase implements Sendable{
  boolean updatePID = false;
 
  public static double fastVel = 300;
- public static double fastAcc = 300;
- public static double fastJerk = 800;
- public static double slowVel = 150;
- public static double slowAcc = 150;
- public static double slowJerk = 300;
+ public static double fastAcc = 900;
+ public static double fastJerk = 4000;
+ public static double slowVel = 20;
+ public static double slowAcc = 600;
+ public static double slowJerk = 800;
   
 
   /** Creates a new Slider. */
@@ -75,9 +77,11 @@ public class Slider extends SubsystemBase implements Sendable{
     sliderConfigs =   new TalonFXSConfiguration();
 
     sliderConfigs.Commutation.MotorArrangement=MotorArrangementValue.Minion_JST;
+    sliderConfigs.MotorOutput.Inverted =InvertedValue.Clockwise_Positive;
+    //sliderConfigs.SoftwareLimitSwitch.ReverseSoftLimitEnable = ReverseLimitValue
     pidConfigs = sliderConfigs.Slot0;
     pidConfigs2 = sliderConfigs.Slot1;
-    pidConfigs.kP = 0.15;
+    pidConfigs.kP = 4.0;
     pidConfigs2.kP = 0.02;
 
     mmConfigs= sliderConfigs.MotionMagic;
@@ -89,6 +93,7 @@ public class Slider extends SubsystemBase implements Sendable{
     ShuffleboardTab tab = Shuffleboard.getTab("Arms");
     tab.add("Slider", this);
     SmartDashboard.putData(slider);
+    
     
 
   }
@@ -127,11 +132,14 @@ public class Slider extends SubsystemBase implements Sendable{
 
   @Override
   public void periodic() {
+    SmartDashboard.putNumber("SliderV",slider.getVelocity().getValueAsDouble());
     if (Math.abs(getPos() - requestedPosition) < 0.8) {
       atPosition = true;
     } else {
       atPosition = false;
     }
+    
+    
     // This method will be called once per scheduler run
   }
   

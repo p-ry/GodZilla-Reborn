@@ -10,6 +10,9 @@ import static edu.wpi.first.units.Units.*;
 import java.io.Console;
 
 import com.ctre.phoenix6.hardware.Pigeon2;
+import com.ctre.phoenix.led.CANdle;
+
+
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
@@ -45,10 +48,12 @@ public class RobotContainer {
         public static double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired
                                                                                             // top
                                                                                             // speed
+
         public static double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per
                                                                                                 // second
                                                                                                 // max angular velocity
-
+public static double driveDeadband = 0.473;
+public static double turnDeadband= 0.47;
         /* Setting up bindings for necessary control of the swerve drive platform */
         /*
          * private final SwerveRequest.FieldCentric drive = new
@@ -62,6 +67,8 @@ public class RobotContainer {
          */
         private double prevHeading = 0;
         private double slowFactor = 3;
+        public static CANdle candle = new CANdle(37);
+
         private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
         private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
         private final SwerveRequest.RobotCentric forwardStraight = new SwerveRequest.RobotCentric()
@@ -80,7 +87,7 @@ public class RobotContainer {
         public final Ace ace = new Ace(0);
         public static int prevLevel = 0;
         private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-                        .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1)
+                        .withDeadband(driveDeadband).withRotationalDeadband(turnDeadband)
                         .withDriveRequestType(DriveRequestType.Velocity);
 
         private final SwerveRequest.RobotCentric robotCentricDrive = new SwerveRequest.RobotCentric()
@@ -106,30 +113,37 @@ public class RobotContainer {
         final JoystickButton Chomp = new JoystickButton(copilot, 9);
         private final CommandXboxController controller = new CommandXboxController(0);
         public static boolean loading;
-
+        public static int BlueAlliance =1;
         /* Path follower */
         private final SendableChooser<Command> AutoChooser;
 
         public RobotContainer() {
                 // gyro = new Pigeon2(0, "Canivore");
                 SmartDashboard.putNumber("prevHeading", prevHeading);
+                
+                
 
                 // Note that X is defined as forward according to WPILib convention,
                 // and Y is defined as to the left according to WPILib convention.
                 drivetrain.setDefaultCommand(
                                 // Drivetrain will execute this command periodically
                                 drivetrain.applyRequest(() -> drive.withVelocityX(
-                                                -(controller.getLeftY() * controller.getLeftY()
-                                                                * Math.signum(controller.getLeftY()))
-                                                                * MaxSpeed) // Drive
-                                                // forward
+                                        -(controller.getLeftY() )
+                                        * MaxSpeed) // Drive
+                      
+                                                // -(controller.getLeftY() * controller.getLeftY()
+                                                //                 * Math.signum(controller.getLeftY()))
+                                                //                 * MaxSpeed) // Drive
+                                                // // forward
                                                 // with
                                                 // negative
                                                 // Y
                                                 // (forward)
-                                                .withVelocityY(-(controller.getLeftX() * controller.getLeftX()
-                                                                * Math.signum(controller.getLeftX()) * MaxSpeed)) // Drive
-                                                                                                                  // left
+                                                 .withVelocityY(-(controller.getLeftX() ) * MaxSpeed) // Drive
+                                                                                                                 
+                                                // .withVelocityY(-(controller.getLeftX() * controller.getLeftX()
+                                                //                 * Math.signum(controller.getLeftX()) * MaxSpeed)) // Drive
+                                                //                                                                   // left
                                                                                                                   // with
                                                 // negative X (left)
                                                 .withRotationalRate(-controller.getRightX() * MaxAngularRate) // Drive
