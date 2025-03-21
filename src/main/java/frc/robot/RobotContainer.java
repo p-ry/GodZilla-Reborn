@@ -157,6 +157,13 @@ public static double turnDeadband= 0.47;
 
                 NamedCommands.registerCommand("raiseArm", new MoveArmFix(mArm, 42, -1));
                 NamedCommands.registerCommand("level3", new MoveArmFix(mArm, 3, 1));
+                NamedCommands.registerCommand("Load", new MoveArmFix(mArm, 1, 0));
+                NamedCommands.registerCommand("L1", new MoveArmFix(mArm, 6, 0));
+                NamedCommands.registerCommand("L2", new MoveArmFix(mArm, 2, 0));
+                NamedCommands.registerCommand("L3", new MoveArmFix(mArm, 3, 0));
+                NamedCommands.registerCommand("L4", new MoveArmFix(mArm, 4, 0));
+                NamedCommands.registerCommand("Intake", new InstantCommand(() -> ace.setSpeed(1)));
+              
 
                 AutoChooser = AutoBuilder.buildAutoChooser("none");
                 SmartDashboard.putData("AutoChooser", AutoChooser);
@@ -329,6 +336,9 @@ public static double turnDeadband= 0.47;
                 // .onTrue(new DriveToAmpPath(1));
                 // controller.leftBumper().onTrue(new InstantCommand(() ->
                 // drivetrain.resetGyroToAlliance()));
+
+   
+                
 
                 controller.leftBumper().onTrue(new InstantCommand(() -> drivetrain.setHeading(new Rotation2d(0))));
 

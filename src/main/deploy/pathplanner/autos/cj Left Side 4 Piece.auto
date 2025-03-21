@@ -13,18 +13,17 @@
                 "data": {
                   "pathName": "New Path"
                 }
-              }
-            ]
-          }
-        },
-        {
-          "type": "sequential",
-          "data": {
-            "commands": [
+              },
               {
-                "type": "path",
+                "type": "named",
                 "data": {
-                  "pathName": "Copy of New Path"
+                  "name": "L4"
+                }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 0.5
                 }
               }
             ]
@@ -37,7 +36,19 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Copy of Copy of New Path"
+                  "pathName": "Reef5"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Intake"
+                }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 1.0
                 }
               }
             ]
@@ -50,46 +61,13 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Copy of Copy of Copy of New Path"
+                  "pathName": "Backup"
                 }
-              }
-            ]
-          }
-        },
-        {
-          "type": "sequential",
-          "data": {
-            "commands": [
+              },
               {
-                "type": "path",
+                "type": "named",
                 "data": {
-                  "pathName": "Copy of Copy of Copy of Copy of New Path"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "type": "sequential",
-          "data": {
-            "commands": [
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "Copy of Copy of Copy of Copy of Copy of New Path"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "type": "sequential",
-          "data": {
-            "commands": [
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "Copy of Copy of Copy of Copy of Copy of Copy of New Path"
+                  "name": "Load"
                 }
               }
             ]

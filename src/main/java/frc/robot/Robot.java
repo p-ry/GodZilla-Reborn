@@ -142,7 +142,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void disabledInit() {
-    RobotContainer.drivetrain.gyro.setYaw(0);
+    //RobotContainer.drivetrain.gyro.setYaw(0);
     var alliance = DriverStation.getAlliance();
 
     if (alliance.isPresent()) {
@@ -168,8 +168,8 @@ public class Robot extends TimedRobot {
 
   @Override
   public void disabledPeriodic() {
-    RobotContainer.drivetrain.updateOdometry();
-    RobotContainer.drivetrain.setHeading(new Rotation2d(0));
+    RobotContainer.drivetrain.updateCameraPose();
+   
   }
 
   @Override

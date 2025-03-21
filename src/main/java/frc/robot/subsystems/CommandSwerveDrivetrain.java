@@ -230,56 +230,79 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
      
 
-    public void updateOdometry() {
+     public void updateCameraPose() {
         boolean doRejectUpdate = false;
+        int bestCamera;
+        double leftAmbiguity = 0;
+        double rightAmbiguity = 0;
         cameraPoses[0] = grabPose("limelight-left");
-        cameraPoses[1] = grabPose("limelight-right");
-        for (int i = 0; i < 2; i++) {
+       cameraPoses[1] = grabPose("limelight-right");
 
-            doRejectUpdate = false;
-            if (cameraPoses[i] != null) {
-                if (cameraPoses[i].tagCount == 0) {
-                    doRejectUpdate = true;
-                }
-                if (cameraPoses[i].pose.getX() < 0) {
-                    doRejectUpdate = true;
-                }
-                if (cameraPoses[i].pose.getY() > 7.6) {
-                    doRejectUpdate = true;
-                }
+        if (cameraPoses[0] == null && cameraPoses[1] == null) {
+            bestCamera = -1;
+        } else if (cameraPoses[0] == null) {
+            bestCamera = 1;
+        } else if (cameraPoses[1] == null) {
+            bestCamera = 0;
+        } else {
+            if (cameraPoses[0].tagCount > 0) {
+                leftAmbiguity = cameraPoses[0].rawFiducials[0].ambiguity;
+            }
+            if (cameraPoses[1].tagCount > 0) {
+                rightAmbiguity = cameraPoses[1].rawFiducials[0].ambiguity;
+            }
+            if (leftAmbiguity < rightAmbiguity) {
+                bestCamera = 0;
             } else {
-                doRejectUpdate = true;
+                bestCamera = 1;
             }
-           /// SmartDashboard.putNumber("estimated yaw",
-                    //m_poseEstimator.getEstimatedPosition().getRotation().getDegrees();
-            if (gyro.getAngularVelocityZWorld().getValueAsDouble() > 360) // if our angular velocity is greater
-            {
-                doRejectUpdate = true;
-            }
-            if (!doRejectUpdate) {
-                m_poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(.7, .7, 9999999));
-                m_poseEstimator.addVisionMeasurement(
-                        cameraPoses[i].pose,
-                        cameraPoses[i].timestampSeconds);
-                swerveOdometry.resetPosition(getGyroYaw(), getModulePositions(),
-                        m_poseEstimator.getEstimatedPosition());
-            }
-
         }
-        /*
-         * LimelightHelpers.PoseEstimate limelightMeasurement =
-         * LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight");
-         * if (limelightMeasurement.tagCount >= 2) {
-         * m_poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(.7, .7,
-         * .9999999));
-         * m_poseEstimator.addVisionMeasurement(
-         * limelightMeasurement.pose,
-         * limelightMeasurement.timestampSeconds);
-         * }
-         * 
-         */
+        if (bestCamera == -1) {
+            doRejectUpdate = true;
+        }else {
+            if(cameraPoses[bestCamera].tagCount<1){
+                doRejectUpdate=true;
+            }
+        }
+        
+        // for (int i = 0; i < 2; i++) {
+
+        // doRejectUpdate = false;
+        // if (cameraPoses[i] != null) {
+        // if (cameraPoses[i].tagCount == 0) {
+        // doRejectUpdate = true;
+        // }
+        // if (cameraPoses[i].pose.getX() < 0) {
+        // doRejectUpdate = true;
+        // }
+        // if (cameraPoses[i].pose.getY() > 7.6) {
+        // doRejectUpdate = true;
+        // }
+        // } else {
+        // doRejectUpdate = true;
+        // }
+        /// SmartDashboard.putNumber("estimated yaw",
+        // m_poseEstimator.getEstimatedPosition().getRotation().getDegrees();
+        if (gyro.getAngularVelocityZWorld().getValueAsDouble() > 360) // if our angular velocity is greater
+        {
+            doRejectUpdate = true;
+        }
+        SmartDashboard.putBoolean("RejectUpdate", doRejectUpdate);
+        if (!doRejectUpdate) {
+            SmartDashboard.putNumber("bestcamera",bestCamera);
+            SmartDashboard.putNumberArray("CameraPose", new double[] { cameraPoses[bestCamera].pose.getTranslation().getX(), cameraPoses[bestCamera].pose.getTranslation().getY(),
+                cameraPoses[bestCamera].pose.getRotation().getRadians() });
+            m_poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(.7, .7, 9999));
+            m_poseEstimator.addVisionMeasurement(
+                    cameraPoses[bestCamera].pose,
+                    cameraPoses[bestCamera].timestampSeconds);
+            // resetOdometry(m_poseEstimator.getEstimatedPosition());
+            // swerveOdometry.resetPosition(getGyroRotation2D(), getModulePositions(),
+            // m_poseEstimator.getEstimatedPosition());
+        }
 
     }
+
 
     @Override
     public void periodic() {
@@ -290,7 +313,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             getModulePositions());
       
         botPose2d = m_poseEstimator.getEstimatedPosition();
-        updateOdometry();
+        updateCameraPose();
        
         SmartDashboard.putNumberArray("BotPose",
        new double[] { botPose2d.getTranslation().getX(), botPose2d.getTranslation().getY(),
