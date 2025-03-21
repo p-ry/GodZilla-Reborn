@@ -52,12 +52,17 @@ public class LowerArm extends SubsystemBase implements Sendable{
   static double kJerk = 1000;
   boolean change = false;
   boolean updatePID = false;
+  public static double fastVel = 200;
+  public static double fastAcc = 600;
+  public static double fastJerk = 1000;
+  public static double slowVel = 150;
+  public static double slowAcc = 600;
+  public static double slowJerk = 600;
   
   boolean fast;
   
-  public static DynamicMotionMagicVoltage dynamicSlow = new DynamicMotionMagicVoltage(0, maxVel,maxAcc,kJerk);
+  public static DynamicMotionMagicVoltage dynamic = new DynamicMotionMagicVoltage(0, fastVel,fastAcc,fastJerk);
   
-  public static DynamicMotionMagicVoltage dynamicFast = new DynamicMotionMagicVoltage(0, 300, 300, 800);
   private Slot0Configs pidConfigs = new Slot0Configs();
   private MotionMagicConfigs mmConfigs = new MotionMagicConfigs();
 
@@ -119,20 +124,20 @@ public class LowerArm extends SubsystemBase implements Sendable{
   }
 public void setPos(double position, boolean fast){
   SmartDashboard.putBoolean("Fast", fast);
-  DynamicMotionMagicVoltage mmControl;
- 
+  
 
   this.fast = fast;
   requestedPosition = position;
   if (fast){
-    mmControl = dynamicFast;
-  }else {
-    mmControl = dynamicSlow;
     
+ LowerArmLeft.setControl(dynamic.withVelocity(fastVel).withAcceleration(fastAcc).withJerk(fastJerk).withPosition(position));
+ LowerArmRight.setControl(dynamic.withVelocity(fastVel).withAcceleration(fastAcc).withJerk(fastJerk).withPosition(position));
+   
+  }else {
+    LowerArmLeft.setControl(dynamic.withVelocity(slowVel).withAcceleration(slowAcc).withJerk(slowJerk).withPosition(position));
+    LowerArmRight.setControl(dynamic.withVelocity(slowVel).withAcceleration(slowAcc).withJerk(slowJerk).withPosition(position));
   }
 
- LowerArmLeft.setControl(mmControl.withPosition(position));
- LowerArmRight.setControl(mmControl.withPosition(position));;
  
  }
 
@@ -159,8 +164,8 @@ public void setPos(double position, boolean fast){
 public void updatePID(){
   LowerArmLeft.getConfigurator().apply(pidConfigs);
   LowerArmRight.getConfigurator().apply(pidConfigs);
-  dynamicSlow = new DynamicMotionMagicVoltage(0, maxVel, maxAcc, kJerk);
-  SmartDashboard.putNumberArray("dynamicSlow", new double[]{dynamicSlow.Velocity, dynamicSlow.Acceleration, dynamicSlow.Jerk});
+  
+ 
   
 }
 
@@ -189,20 +194,22 @@ public void updatePID(){
     // builder.addDoubleProperty("Output Voltage", () ->
     // wrist.getMotorVoltage().getValueAsDouble(), null);
     // PID Tuning
-    builder.addBooleanProperty("Fast", () -> fast, (value) -> fast = value);
+    builder.publishConstBoolean("Fast",fast);
+    builder.publishConstBoolean("AtPosition",atPosition);
+  
 
     builder.addDoubleProperty("kP", () -> kP, (value) -> { kP = value; });
     builder.addDoubleProperty("kI", () -> kI, (value) -> { kI = value; });
     builder.addDoubleProperty("kD", () -> kD, (value) -> { kD = value; });
     builder.addDoubleProperty("kS", () -> kS, (value) -> { kS= value;  });
-    builder.addDoubleProperty("MMVel", () -> mmConfigs.MotionMagicCruiseVelocity, (value) -> {
-      mmConfigs.MotionMagicCruiseVelocity = value;});
+    builder.addDoubleProperty("MMVel", () -> slowVel, (value) -> {
+      slowVel= value;});
       
-    builder.addDoubleProperty("MMAccel", () -> mmConfigs.MotionMagicAcceleration, (val) -> {
-      mmConfigs.MotionMagicAcceleration = val;});
+    builder.addDoubleProperty("MMAccel", () -> slowAcc, (val) -> {
+     slowAcc = val;});
       
-    builder.addDoubleProperty("MMJerk", () -> mmConfigs.MotionMagicJerk, (val) -> {
-      mmConfigs.MotionMagicJerk = val;});
+    builder.addDoubleProperty("MMJerk", () -> slowJerk, (val) -> {
+      slowJerk = val;});
        // Update PID dynamically
        builder.addBooleanProperty("Update", () -> false, (pressed) -> updatePID());
   }

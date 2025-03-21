@@ -52,7 +52,7 @@ public class Slider extends SubsystemBase implements Sendable{
   
  public static DynamicMotionMagicVoltage dynamic = new DynamicMotionMagicVoltage(0, 300, 300, 800);
  
- public static  MotionMagicVoltage  mmControllerMagicVoltage  = new MotionMagicVoltage(-0.5);
+ public static  MotionMagicVoltage  mmControllerMagicVoltage  = new MotionMagicVoltage(-1.0);
  public static PositionVoltage sController;
  public static boolean fast = true;
  boolean updatePID = false;
@@ -145,6 +145,8 @@ public class Slider extends SubsystemBase implements Sendable{
     builder.addDoubleProperty("Setpoint", () -> requestedPosition, this::setPos);
     builder.publishConstBoolean("AtPosition",atPosition);
     builder.publishConstBoolean("Fast", fast);
+    builder.publishConstDouble("Velocity", slowVel);
+    builder.publishConstDouble("RPS", slider.getVelocity().getValueAsDouble());
     // builder.addDoubleProperty("Output Voltage", () ->
     // wrist.getMotorVoltage().getValueAsDouble(), null);
     // PID Tuning

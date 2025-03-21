@@ -107,7 +107,7 @@ public class MoveArmFix extends Command {
         } else {
           RobotContainer.loading = true;
           myArm.lowerArm.setPos(19.00);
-          myArm.upperArm.setPos(3.7, applyDynamic);// 0.0 load
+          myArm.upperArm.setPos(3.7, true);// 0.0 load
           myArm.wrist.setPos(0);
           myArm.slider.setPos(-0.5);
         }
@@ -208,15 +208,10 @@ public class MoveArmFix extends Command {
         break;
 
       case 44: // lower from position 4 MOVE THAT SLIDER FAST
-        applyDynamic = true;
-        myArm.lowerArm.setPos(1.0); // 16.10 load
-        myArm.upperArm.setPos(1, false);
-
-        // upperArm.setPos(0.5);//0.0 load
-        myArm.slider.setPos(-0.50, !slow);
-        myArm.wrist.setPos(0.0);
-
-        // System.out.println("Level 4");
+        myArm.lowerArm.setPos(19.00);
+        myArm.upperArm.setPos(3.7, false);// 0.0 load
+        myArm.wrist.setPos(0);
+        myArm.slider.setPos(-0.5, true);
         break;
 
       case 50: // chomp

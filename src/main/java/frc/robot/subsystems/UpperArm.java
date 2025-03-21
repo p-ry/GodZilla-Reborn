@@ -172,6 +172,8 @@ public void updatePID(){
     builder.addDoubleProperty("Position - Left", () -> UpperArmLeft.getPosition().getValueAsDouble(), null);
     builder.addDoubleProperty("Position - Right",()-> UpperArmRight.getPosition().getValueAsDouble(), null);
     builder.addDoubleProperty("Setpoint", () -> requestedPosition, this::setPos);
+    builder.publishConstDouble("Velocity", slowVel);
+    
     // builder.addDoubleProperty("Output Voltage", () ->
     // wrist.getMotorVoltage().getValueAsDouble(), null);
     // PID Tuning

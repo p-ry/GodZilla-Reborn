@@ -42,11 +42,12 @@ import frc.robot.subsystems.Wrist;
 
 public class RobotContainer {
         // public static Pigeon2 gyro;
-        public static double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top
-                                                                                      // speed
-        public static double  MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per
-                                                                                          // second
-                                                                                          // max angular velocity
+        public static double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired
+                                                                                            // top
+                                                                                            // speed
+        public static double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per
+                                                                                                // second
+                                                                                                // max angular velocity
 
         /* Setting up bindings for necessary control of the swerve drive platform */
         /*
@@ -59,8 +60,8 @@ public class RobotContainer {
          * // motors
          * 
          */
-        private  double prevHeading=0;
-        private double slowFactor =3;
+        private double prevHeading = 0;
+        private double slowFactor = 3;
         private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
         private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
         private final SwerveRequest.RobotCentric forwardStraight = new SwerveRequest.RobotCentric()
@@ -111,7 +112,7 @@ public class RobotContainer {
 
         public RobotContainer() {
                 // gyro = new Pigeon2(0, "Canivore");
-                SmartDashboard.putNumber("prevHeading",prevHeading);
+                SmartDashboard.putNumber("prevHeading", prevHeading);
 
                 // Note that X is defined as forward according to WPILib convention,
                 // and Y is defined as to the left according to WPILib convention.
@@ -189,42 +190,85 @@ public class RobotContainer {
                                 .whileTrue(new MoveArmFix(mArm, 6, 0));
                 Dump
                                 .onFalse(new MoveArmFix(mArm, 0, 0));
-                Lv2L
-                                .whileTrue(new MoveArmFix(mArm, 2, -1));
-                Lv2L
-                                .onFalse(new MoveArmFix(mArm, 1, 0));
-                Lv2R
-                                .whileTrue(new MoveArmFix(mArm, 2, 1));
-                Lv2R
-                                .onFalse(new MoveArmFix(mArm, 1, 0));
-                Lv3L
-                                .onTrue(new MoveArmFix(mArm, 3, -1));
 
-                Lv3L
-                                .onFalse(new Retract(mArm, 3).andThen(new MoveArmFix(mArm, 1, 0)));
-                Lv3R
-                                .onTrue(new MoveArmFix(mArm, 3, 1));
-                Lv3R
-                                .onFalse(new Retract(mArm, 3).andThen(new MoveArmFix(mArm, 1, 0)));
-              //  Lv4L.onTrue(new MoveArmFix(mArm, 4, -1));
-                Lv4L.onTrue(new InstantCommand(() -> prevHeading = drivetrain.getCompassHeading()).andThen(new InstantCommand(() -> drivetrain.resetGyro(0))));
-                Lv4L.onTrue(new InstantCommand(() -> MaxSpeed = MaxSpeed/slowFactor));
-                Lv4L.onTrue(new InstantCommand(() -> MaxAngularRate = MaxAngularRate/slowFactor));
-                
+                // **************TRUE ******** */
+                Lv2L.whileTrue(new MoveArmFix(mArm, 2, -1));
+                Lv2L.onTrue(new InstantCommand(() -> MaxSpeed = MaxSpeed / 2));
+                Lv2L.onTrue(new InstantCommand(() -> MaxAngularRate = MaxAngularRate / 2));
+                Lv2R.whileTrue(new MoveArmFix(mArm, 2, 1));
+                Lv2R.onTrue(new InstantCommand(() -> MaxSpeed = MaxSpeed / 2));
+                Lv2R.onTrue(new InstantCommand(() -> MaxAngularRate = MaxAngularRate / 2));
 
-                Lv4L.onFalse(new InstantCommand(() -> MaxSpeed = MaxSpeed*slowFactor));
-                Lv4L.onFalse(new InstantCommand(() -> MaxAngularRate = MaxAngularRate/slowFactor));
-                
-                //Lv4L.onTrue(new InstantCommand(() -> drivetrain.setHeading(new Rotation2d(0))));
+                // ********FALSE ******** */
+                Lv2L.onFalse(new MoveArmFix(mArm, 44, 0));
+                Lv2L.onFalse(new InstantCommand(() -> MaxSpeed = MaxSpeed * 2));
+                Lv2L.onFalse(new InstantCommand(() -> MaxAngularRate = MaxAngularRate * 2));
+                Lv2R.onFalse(new MoveArmFix(mArm, 44, 0));
+                Lv2R.onFalse(new InstantCommand(() -> MaxSpeed = MaxSpeed * 2));
+                Lv2R.onFalse(new InstantCommand(() -> MaxAngularRate = MaxAngularRate * 2));
 
-                Lv4L.onFalse(new InstantCommand(() -> drivetrain.setHeading(new Rotation2d(prevHeading))));
-                Lv4L.onFalse(new InstantCommand(() -> drivetrain.resetGyro(prevHeading)));
-                //Lv4L.whileTrue(new RobotCentricDriveCommand(drivetrain, robotCentricDrive, controller).alongWith(new InstantCommand(()->drivetrain.getDefaultCommand().cancel())));
-                
-             //   Lv4L.onFalse(new MoveArmFix(mArm, 44, -1));
+
+                // ******** True ****** */
+                Lv3L.whileTrue(new MoveArmFix(mArm, 3, -1));
+                Lv3L.onTrue(new InstantCommand(() -> MaxSpeed = MaxSpeed / 3));
+                Lv3L.onTrue(new InstantCommand(() -> MaxAngularRate = MaxAngularRate / 3));
+
+                Lv3R.whileTrue(new MoveArmFix(mArm, 3, 1));
+                Lv3R.onTrue(new InstantCommand(() -> MaxSpeed = MaxSpeed / 3));
+                Lv3R.onTrue(new InstantCommand(() -> MaxAngularRate = MaxAngularRate / 3));
+                // ******** FALSE *** *****************************************/
+                // Lv3L.onFalse(new Retract(mArm, 3).andThen(new MoveArmFix(mArm, 1, 0)));
+                Lv3L.onFalse(new MoveArmFix(mArm, 44, -1));
+                Lv3L.onFalse(new InstantCommand(() -> MaxSpeed = MaxSpeed * 3));
+                Lv3L.onFalse(new InstantCommand(() -> MaxAngularRate = MaxAngularRate * 3));
+
+                // Lv3R.onFalse(new Retract(mArm, 3).andThen(new MoveArmFix(mArm, 1, 0)));
+                Lv3R.onFalse(new MoveArmFix(mArm, 44, -1));
+                Lv3R.onFalse(new InstantCommand(() -> MaxSpeed = MaxSpeed * 3));
+                Lv3R.onFalse(new InstantCommand(() -> MaxAngularRate = MaxAngularRate * 3));
+                // *********TRUE *************************************** */
+                Lv4L.onTrue(new MoveArmFix(mArm, 4, -1));
+                Lv4L.onTrue(new InstantCommand(() -> MaxSpeed = MaxSpeed / 4));
+                Lv4L.onTrue(new InstantCommand(() -> MaxAngularRate = MaxAngularRate / 4));
+
                 Lv4R.onTrue(new MoveArmFix(mArm, 4, 1));
-               // Lv4R.whileTrue(new RobotCentricDriveCommand(drivetrain, robotCentricDrive, controller));
+                Lv4R.onTrue(new InstantCommand(() -> MaxSpeed = MaxSpeed / 4));
+                Lv4R.onTrue(new InstantCommand(() -> MaxAngularRate = MaxAngularRate / 4));
+                // *********FALSE **************************************************/
+                Lv4L.onFalse(new MoveArmFix(mArm, 44, -1));
+                Lv4L.onFalse(new InstantCommand(() -> MaxSpeed = MaxSpeed * 4));
+                Lv4L.onFalse(new InstantCommand(() -> MaxAngularRate = MaxAngularRate * 4));
+
                 Lv4R.onFalse(new MoveArmFix(mArm, 44, 1));
+                Lv4R.onFalse(new InstantCommand(() -> MaxSpeed = MaxSpeed * 4));
+                Lv4R.onFalse(new InstantCommand(() -> MaxAngularRate = MaxAngularRate * 4));
+
+                // **************** DRIVE ROBOTCENTRIC ********* */
+                // Lv4L.onTrue(new InstantCommand(() -> prevHeading =
+                // drivetrain.getCompassHeading()).andThen(new InstantCommand(() ->
+                // drivetrain.resetGyro(0))));
+                // Lv4L.onTrue(new InstantCommand(() -> MaxSpeed = MaxSpeed/slowFactor));
+                // Lv4L.onTrue(new InstantCommand(() -> MaxAngularRate =
+                // MaxAngularRate/slowFactor));
+
+                // Lv4L.onFalse(new InstantCommand(() -> MaxSpeed = MaxSpeed*slowFactor));
+                // Lv4L.onFalse(new InstantCommand(() -> MaxAngularRate =
+                // MaxAngularRate/slowFactor));
+
+                // //Lv4L.onTrue(new InstantCommand(() -> drivetrain.setHeading(new
+                // Rotation2d(0))));
+
+                // Lv4L.onFalse(new InstantCommand(() -> drivetrain.setHeading(new
+                // Rotation2d(prevHeading))));
+                // Lv4L.onFalse(new InstantCommand(() -> drivetrain.resetGyro(prevHeading)));
+                // Lv4L.whileTrue(new RobotCentricDriveCommand(drivetrain, robotCentricDrive,
+                // controller).alongWith(new
+                // InstantCommand(()->drivetrain.getDefaultCommand().cancel())));
+
+                // Lv4L.onFalse(new MoveArmFix(mArm, 44, -1));
+
+                // Lv4R.whileTrue(new RobotCentricDriveCommand(drivetrain, robotCentricDrive,
+                // controller));
 
                 // Lv4L
                 // .onTrue(new MoveArmFix(mArm, 4, -1).alongWith(new
@@ -266,7 +310,8 @@ public class RobotContainer {
 
                 // controller.rightBumper()
                 // .onTrue(new DriveToAmpPath(1));
-                //controller.leftBumper().onTrue(new InstantCommand(() -> drivetrain.resetGyroToAlliance()));
+                // controller.leftBumper().onTrue(new InstantCommand(() ->
+                // drivetrain.resetGyroToAlliance()));
 
                 controller.leftBumper().onTrue(new InstantCommand(() -> drivetrain.setHeading(new Rotation2d(0))));
 
