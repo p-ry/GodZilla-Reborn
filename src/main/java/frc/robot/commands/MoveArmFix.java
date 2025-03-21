@@ -159,10 +159,11 @@ public class MoveArmFix extends Command {
         break;
 
       case 4:
-       // myArm.lowerArm.setPos(27.2);// 28.2
-       // myArm.upperArm.setPos(33.5, applyDynamic);
+        myArm.lowerArm.setPos(27.2, true);// myArm.lowerArm.setPos(27.2);// 28.2
+        myArm.upperArm.setPos(33.5, true);
         myArm.slider.setPos(-45.4, slow);
-       // myArm.wrist.setPos(8.8);
+
+        // myArm.wrist.setPos(8.8);
 
         // System.out.println("Level 4");
         break;
@@ -197,7 +198,7 @@ public class MoveArmFix extends Command {
 
         // ace.setSpeed(0);
 
-         System.out.println("WARNING!!!!  OLD MOVE!!!!!!!");
+        System.out.println("WARNING!!!!  OLD MOVE!!!!!!!");
         break;
       case 12:
         myArm.wrist.setPos(myArm.wrist.getPos() + 1.0);
@@ -206,10 +207,10 @@ public class MoveArmFix extends Command {
         myArm.upperArm.setPos(16, applyDynamic);
         break;
 
-      case 44: // lower from position 4   MOVE THAT SLIDER FAST
+      case 44: // lower from position 4 MOVE THAT SLIDER FAST
         applyDynamic = true;
         myArm.lowerArm.setPos(1.0); // 16.10 load
-        myArm.upperArm.setPos(position, applyDynamic);
+        myArm.upperArm.setPos(1, false);
 
         // upperArm.setPos(0.5);//0.0 load
         myArm.slider.setPos(-0.50, !slow);

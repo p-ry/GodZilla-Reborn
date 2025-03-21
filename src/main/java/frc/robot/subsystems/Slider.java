@@ -45,26 +45,31 @@ public class Slider extends SubsystemBase implements Sendable{
   private Slot0Configs pidConfigs = new Slot0Configs();
   private Slot1Configs pidConfigs2 = new Slot1Configs();
    private MotionMagicConfigs mmConfigs = new MotionMagicConfigs();
-   public static double maxVel = 40;
-  public static double maxAcc = 40;
  
   public static double kJerk = 400;
 // public static DynamicMotionMagicVoltage dynamic1 = new DynamicMotionMagicVoltage(0, maxVel,maxAcc,kJerk);
 // public static DynamicMotionMagicVoltage dynamic2 = new DynamicMotionMagicVoltage(0, 800,1600, 600);
- public static DynamicMotionMagicVoltage dynamicSlow = new DynamicMotionMagicVoltage(0, maxVel,maxAcc,kJerk);
   
- public static DynamicMotionMagicVoltage dynamicFast = new DynamicMotionMagicVoltage(0, 300, 300, 800);
- public static boolean dynamic = true;
+ public static DynamicMotionMagicVoltage dynamic = new DynamicMotionMagicVoltage(0, 300, 300, 800);
+ 
  public static  MotionMagicVoltage  mmControllerMagicVoltage  = new MotionMagicVoltage(-0.5);
  public static PositionVoltage sController;
  public static boolean fast = true;
+ boolean updatePID = false;
+
+ public static double fastVel = 300;
+ public static double fastAcc = 300;
+ public static double fastJerk = 800;
+ public static double slowVel = 150;
+ public static double slowAcc = 150;
+ public static double slowJerk = 300;
   
 
   /** Creates a new Slider. */
   public Slider() {
 
     slider = new TalonFXS(35,"Canivore2");
-    sliderController = new PositionDutyCycle(0);
+    //sliderController = new PositionDutyCycle(0);
     sController = new PositionVoltage(0);
     mmController  = new MotionMagicVoltage(0);
     sliderConfigs =   new TalonFXSConfiguration();
@@ -76,9 +81,9 @@ public class Slider extends SubsystemBase implements Sendable{
     pidConfigs2.kP = 0.02;
 
     mmConfigs= sliderConfigs.MotionMagic;
-    mmConfigs.MotionMagicCruiseVelocity = maxVel; // Target cruise velocity of 80 rps
-    mmConfigs.MotionMagicAcceleration = maxAcc; // Target acceleration of 160 rps/s (0.5 seconds)
-    mmConfigs.MotionMagicJerk = kJerk; // Target jerk of 1600 rps/s/s (0.1 seconds)
+    mmConfigs.MotionMagicCruiseVelocity = fastVel; // Target cruise velocity of 80 rps
+    mmConfigs.MotionMagicAcceleration = fastAcc; // Target acceleration of 160 rps/s (0.5 seconds)
+    mmConfigs.MotionMagicJerk = fastJerk; // Target jerk of 1600 rps/s/s (0.1 seconds)
     slider.getConfigurator().apply(sliderConfigs);
     slider.setNeutralMode(NeutralModeValue.Brake);
     ShuffleboardTab tab = Shuffleboard.getTab("Arms");
@@ -94,22 +99,17 @@ public class Slider extends SubsystemBase implements Sendable{
 
 
   public void setPos(double position,boolean fast) {
-    SmartDashboard.putBoolean("Fast", fast);
-    DynamicMotionMagicVoltage mmControl;
-   
-
-    this.fast = fast;
-    requestedPosition = position;
-    if (fast){
-      mmControl = dynamicFast;
-    }else {
-      mmControl = dynamicSlow;
-      
+    
+      this.fast = fast;
+      requestedPosition = position;
+      if (fast){
+        slider.setControl(dynamic.withVelocity(fastVel).withAcceleration(fastAcc).withJerk(fastJerk).withPosition(position));
+     }else {
+      slider.setControl(dynamic.withVelocity(slowVel).withAcceleration(slowAcc).withJerk(slowJerk).withPosition(position));
+      }
+  
     }
-
-   slider.setControl(mmControl.withPosition(position));
    
-   }
    
   public double getPos() {
     return slider.getPosition().getValueAsDouble();
@@ -143,6 +143,8 @@ public class Slider extends SubsystemBase implements Sendable{
     builder.addDoubleProperty("Position", () -> slider.getPosition().getValueAsDouble(), null);
 
     builder.addDoubleProperty("Setpoint", () -> requestedPosition, this::setPos);
+    builder.publishConstBoolean("AtPosition",atPosition);
+    builder.publishConstBoolean("Fast", fast);
     // builder.addDoubleProperty("Output Voltage", () ->
     // wrist.getMotorVoltage().getValueAsDouble(), null);
     // PID Tuning
@@ -162,22 +164,22 @@ public class Slider extends SubsystemBase implements Sendable{
     });
     builder.addDoubleProperty("kF", () -> pidConfigs.kV, (val) -> {
       pidConfigs.kV = val;
-      slider.getConfigurator().apply(pidConfigs);
+      //slider.getConfigurator().apply(pidConfigs);
      
     });
-    builder.addDoubleProperty("MMVel", () -> mmConfigs.MotionMagicCruiseVelocity, (val) -> {
-      mmConfigs.MotionMagicCruiseVelocity = val;
-      slider.getConfigurator().apply(mmConfigs );
+    builder.addDoubleProperty("MMVel", () -> slowVel, (val) -> {
+      slowVel = val;
+      //slider.getConfigurator().apply(mmConfigs );
      
     });
-    builder.addDoubleProperty("MMAccel", () -> mmConfigs.MotionMagicAcceleration, (val) -> {
-      mmConfigs.MotionMagicAcceleration = val;
-      slider.getConfigurator().apply(mmConfigs );
+    builder.addDoubleProperty("MMAccel", () -> slowAcc, (val) -> {
+      slowAcc= val;
+      //slider.getConfigurator().apply(mmConfigs );
       
     });
-    builder.addDoubleProperty("MMJerk", () -> mmConfigs.MotionMagicJerk, (val) -> {
-      mmConfigs.MotionMagicJerk = val;
-      slider.getConfigurator().apply(mmConfigs );
+    builder.addDoubleProperty("MMJerk", () -> slowJerk, (val) -> {
+      slowJerk = val;
+     // slider.getConfigurator().apply(mmConfigs );
      
     });
     builder.addBooleanProperty("ApplyPID",()-> false,(pressed) ->updatePID());

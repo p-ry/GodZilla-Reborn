@@ -36,19 +36,26 @@ public class UpperArm extends SubsystemBase implements Sendable{
   // MotionMagicVoltage controlUpperRight;
   // PID coefficients
   double kP = 10.0;
+
   double kI = 0.0;
   double kD = 0.000;
   double kS = .25;
-  public static double maxVel = 300;
-  public static double maxAcc = 300;
+  public static double maxVel = 30;
+  public static double maxAcc = 30;
   public static double minVel = 0;
-  public static double kJerk = 800;
+  public static double kJerk = 400;
   boolean change = false;
   boolean updatePID = false;
   boolean fast;
-  public static DynamicMotionMagicVoltage dynamicSlow = new DynamicMotionMagicVoltage(0, maxVel,maxAcc,kJerk);
+  public static double fastVel = 300;
+  public static double fastAcc = 300;
+  public static double fastJerk = 800;
+  public static double slowVel = 150;
+  public static double slowAcc = 150;
+  public static double slowJerk = 300;
   
-  public static DynamicMotionMagicVoltage dynamicFast = new DynamicMotionMagicVoltage(0, 300, 300, 800);
+  
+  public static DynamicMotionMagicVoltage dynamic = new DynamicMotionMagicVoltage(0, 80, 300, 800);
   private Slot0Configs pidConfigs = new Slot0Configs();
   private MotionMagicConfigs mmConfigs = new MotionMagicConfigs();
   
@@ -100,13 +107,7 @@ var rightMotorConfigs = new MotorOutputConfigs();
 
  ShuffleboardTab tab = Shuffleboard.getTab("Arms");
     tab.add("UpperArm", this);
-    
-   SmartDashboard.putBoolean("ApplyDynamic", fast); 
 
-
-//    UpperArmRightFollower = new Follower(33, true);
-//    UpperArmRight.setControl(UpperArmRightFollower);
-    //requestedPosition = getPos();
   }
 
   public void setPos(double position) {
@@ -114,24 +115,17 @@ var rightMotorConfigs = new MotorOutputConfigs();
   }
 
   public void setPos(double position, boolean fast) {
-   DynamicMotionMagicVoltage mmControl;
+   
    
     this.fast = fast;
     requestedPosition = position;
     if (fast){
-      mmControl = dynamicFast;
+      UpperArmLeft.setControl(dynamic.withVelocity(fastVel).withAcceleration(fastAcc).withJerk(fastJerk).withPosition(position));
+      UpperArmRight.setControl(dynamic.withVelocity(fastVel).withAcceleration(fastAcc).withJerk(fastJerk).withPosition(position));
     }else {
-      mmControl = dynamicSlow;
-      
+    UpperArmLeft.setControl(dynamic.withVelocity(slowVel).withAcceleration(slowAcc).withJerk(slowJerk).withPosition(position));
+      UpperArmRight.setControl(dynamic.withVelocity(slowVel).withAcceleration(slowAcc).withJerk(slowJerk).withPosition(position));
     }
-   
-      UpperArmRight.setControl(mmControl.withPosition(position));
-      UpperArmLeft.setControl(mmControl.withPosition(position));
-    // motorRequest = new PositionDutyCycle(position);
-    // UpperArmLeft.setControl(motorRequest);
-    
-
-   
 
   }
   public void setSpeed(double speed) {
@@ -151,16 +145,17 @@ var rightMotorConfigs = new MotorOutputConfigs();
     return atPosition;
   }
 public void updatePID(){
-  UpperArmLeft.getConfigurator().apply(pidConfigs);
-  UpperArmRight.getConfigurator().apply(pidConfigs);
-  dynamicSlow = new DynamicMotionMagicVoltage(0, maxVel, maxAcc, kJerk);
-  SmartDashboard.putNumberArray("dynamicSlow", new double[]{dynamicSlow.Velocity, dynamicSlow.Acceleration, dynamicSlow.Jerk});
+ // UpperArmLeft.getConfigurator().apply(pidConfigs);
+ // UpperArmRight.getConfigurator().apply(pidConfigs);
+  
   
 }
   @Override
   public void periodic() {
     SmartDashboard.putNumber("upArm", getPos());
-   
+   SmartDashboard.putNumber("VVV", slowVel);
+   SmartDashboard.putNumber("LeftV",UpperArmLeft.getVelocity().getValueAsDouble());
+    
     if(atPos(UpperArmLeft) && atPos(UpperArmRight)){
       atPosition = true;  
      } else {
@@ -180,20 +175,22 @@ public void updatePID(){
     // builder.addDoubleProperty("Output Voltage", () ->
     // wrist.getMotorVoltage().getValueAsDouble(), null);
     // PID Tuning
-    builder.addBooleanProperty("Fast", () -> fast, (value) -> fast = value);
-
+    builder.publishConstBoolean("Fast", fast);
+    builder.publishConstBoolean("AtPosition", atPosition);
+    
+    
     builder.addDoubleProperty("kP", () -> kP, (value) -> { kP = value; });
     builder.addDoubleProperty("kI", () -> kI, (value) -> { kI = value; });
     builder.addDoubleProperty("kD", () -> kD, (value) -> { kD = value; });
     builder.addDoubleProperty("kS", () -> kS, (value) -> { kS= value;  });
-    builder.addDoubleProperty("MMVel", () -> mmConfigs.MotionMagicCruiseVelocity, (value) -> {
-      mmConfigs.MotionMagicCruiseVelocity = value;});
+    builder.addDoubleProperty("MMVel", () -> slowVel, (value) -> {
+      slowVel = value;});
       
-    builder.addDoubleProperty("MMAccel", () -> mmConfigs.MotionMagicAcceleration, (val) -> {
-      mmConfigs.MotionMagicAcceleration = val;});
-      
-    builder.addDoubleProperty("MMJerk", () -> mmConfigs.MotionMagicJerk, (val) -> {
-      mmConfigs.MotionMagicJerk = val;});
+    builder.addDoubleProperty("MMAccel", () -> slowAcc, (val) -> {
+      slowAcc= val;});
+
+    builder.addDoubleProperty("MMJerk", () -> slowJerk, (val) -> {
+      slowJerk = val;});
        // Update PID dynamically
        builder.addBooleanProperty("Update", () -> false, (pressed) -> updatePID());
     
