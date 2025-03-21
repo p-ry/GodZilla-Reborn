@@ -112,7 +112,7 @@ public static double turnDeadband= 0.47;
         final JoystickButton Barge = new JoystickButton(copilot2, 2);
         final JoystickButton Chomp = new JoystickButton(copilot, 9);
         private final CommandXboxController controller = new CommandXboxController(0);
-        public static boolean loading;
+        public static boolean loading=false;
         public static int BlueAlliance =1;
         /* Path follower */
         private final SendableChooser<Command> AutoChooser;
@@ -179,13 +179,16 @@ public static double turnDeadband= 0.47;
 
                 Load
                                 .whileTrue(new MoveArmFix(mArm, 1, 0));
+                                Load.onTrue(new InstantCommand(() -> ace.setSpeed(1)));
                 Load
                                 .onTrue(new InstantCommand(() -> ace.gotIt = false));
                 Load
                                 .onTrue(new InstantCommand(() -> ace.coralPresent = false));
+                                Load.onTrue(new InstantCommand(() -> loading = true));
 
                 Load
                                 .onFalse(new MoveArmFix(mArm, 0, 0));
+                                Load.onFalse(new InstantCommand(() -> loading = false));
                 Process
                                 .onTrue(new MoveArmFix(mArm, 5, 0));
                 // Process.whileTrue(new InstantCommand(() -> ace.setSpeed(0.1)));
@@ -225,37 +228,37 @@ public static double turnDeadband= 0.47;
                 // ******** True ****** */
                 Lv3L.whileTrue(new MoveArmFix(mArm, 3, -1));
                 Lv3L.onTrue(new InstantCommand(() -> MaxSpeed = MaxSpeed / 3));
-                Lv3L.onTrue(new InstantCommand(() -> MaxAngularRate = MaxAngularRate / 3));
+                Lv3L.onTrue(new InstantCommand(() -> MaxAngularRate = MaxAngularRate / 2));
 
                 Lv3R.whileTrue(new MoveArmFix(mArm, 3, 1));
                 Lv3R.onTrue(new InstantCommand(() -> MaxSpeed = MaxSpeed / 3));
-                Lv3R.onTrue(new InstantCommand(() -> MaxAngularRate = MaxAngularRate / 3));
+                Lv3R.onTrue(new InstantCommand(() -> MaxAngularRate = MaxAngularRate / 2));
                 // ******** FALSE *** *****************************************/
                 // Lv3L.onFalse(new Retract(mArm, 3).andThen(new MoveArmFix(mArm, 1, 0)));
                 Lv3L.onFalse(new MoveArmFix(mArm, 44, -1));
                 Lv3L.onFalse(new InstantCommand(() -> MaxSpeed = MaxSpeed * 3));
-                Lv3L.onFalse(new InstantCommand(() -> MaxAngularRate = MaxAngularRate * 3));
+                Lv3L.onFalse(new InstantCommand(() -> MaxAngularRate = MaxAngularRate * 2));
 
                 // Lv3R.onFalse(new Retract(mArm, 3).andThen(new MoveArmFix(mArm, 1, 0)));
                 Lv3R.onFalse(new MoveArmFix(mArm, 44, -1));
                 Lv3R.onFalse(new InstantCommand(() -> MaxSpeed = MaxSpeed * 3));
-                Lv3R.onFalse(new InstantCommand(() -> MaxAngularRate = MaxAngularRate * 3));
+                Lv3R.onFalse(new InstantCommand(() -> MaxAngularRate = MaxAngularRate * 2));
                 // *********TRUE *************************************** */
                 Lv4L.onTrue(new MoveArmFix(mArm, 4, -1));
                 Lv4L.onTrue(new InstantCommand(() -> MaxSpeed = MaxSpeed / 4));
-                Lv4L.onTrue(new InstantCommand(() -> MaxAngularRate = MaxAngularRate / 4));
+                Lv4L.onTrue(new InstantCommand(() -> MaxAngularRate = MaxAngularRate / 2));
 
                 Lv4R.onTrue(new MoveArmFix(mArm, 4, 1));
                 Lv4R.onTrue(new InstantCommand(() -> MaxSpeed = MaxSpeed / 4));
-                Lv4R.onTrue(new InstantCommand(() -> MaxAngularRate = MaxAngularRate / 4));
+                Lv4R.onTrue(new InstantCommand(() -> MaxAngularRate = MaxAngularRate / 2));
                 // *********FALSE **************************************************/
                 Lv4L.onFalse(new MoveArmFix(mArm, 44, -1));
                 Lv4L.onFalse(new InstantCommand(() -> MaxSpeed = MaxSpeed * 4));
-                Lv4L.onFalse(new InstantCommand(() -> MaxAngularRate = MaxAngularRate * 4));
+                Lv4L.onFalse(new InstantCommand(() -> MaxAngularRate = MaxAngularRate * 2));
 
                 Lv4R.onFalse(new MoveArmFix(mArm, 44, 1));
                 Lv4R.onFalse(new InstantCommand(() -> MaxSpeed = MaxSpeed * 4));
-                Lv4R.onFalse(new InstantCommand(() -> MaxAngularRate = MaxAngularRate * 4));
+                Lv4R.onFalse(new InstantCommand(() -> MaxAngularRate = MaxAngularRate * 2));
 
                 // **************** DRIVE ROBOTCENTRIC ********* */
                 // Lv4L.onTrue(new InstantCommand(() -> prevHeading =

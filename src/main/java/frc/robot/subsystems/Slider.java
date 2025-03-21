@@ -62,9 +62,9 @@ public class Slider extends SubsystemBase implements Sendable{
  public static double fastVel = 300;
  public static double fastAcc = 900;
  public static double fastJerk = 4000;
- public static double slowVel = 20;
- public static double slowAcc = 600;
- public static double slowJerk = 800;
+ public static double slowVel = 60;
+ public static double slowAcc = 900;
+ public static double slowJerk = 1800;
   
 
   /** Creates a new Slider. */

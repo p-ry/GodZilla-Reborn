@@ -145,12 +145,12 @@ public class MoveArmFix extends Command {
       case 3:
         if (algae) {
           myArm.lowerArm.setPos(25.0);
-          myArm.upperArm.setPos(20.0, applyDynamic);
+          myArm.upperArm.setPos(20.0, false);
           myArm.slider.setPos(1.5);
           myArm.wrist.setPos(3.0);
         } else {
-          myArm.lowerArm.setPos(22);
-          myArm.upperArm.setPos(23, applyDynamic);
+          myArm.lowerArm.setPos(20);
+          myArm.upperArm.setPos(21, false);
           myArm.slider.setPos(0.5);
           myArm.wrist.setPos(6.5);
         }
@@ -159,11 +159,11 @@ public class MoveArmFix extends Command {
         break;
 
       case 4:
-        myArm.lowerArm.setPos(27.2, true);// myArm.lowerArm.setPos(27.2);// 28.2
-        myArm.upperArm.setPos(33.5, true);
+        myArm.lowerArm.setPos(26.6, true);// myArm.lowerArm.setPos(27.2);// 28.2
+        myArm.upperArm.setPos(33.0, true);
         myArm.slider.setPos(28,false);
 
-        // myArm.wrist.setPos(8.8);
+         myArm.wrist.setPos(8.8);
 
         // System.out.println("Level 4");
         break;
