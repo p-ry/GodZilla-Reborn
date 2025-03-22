@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.146299342105263,
-        "y": 4.015378289473684
+        "x": 3.93,
+        "y": 5.077
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.674835526315789,
-        "y": 4.073108552631578
+        "x": 4.069016813892246,
+        "y": 4.869215675626748
       },
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "Reef6"
     },
     {
       "anchor": {
-        "x": 1.2893092105263155,
-        "y": 7.180921052631579
+        "x": 1.5927226027397259,
+        "y": 7.300599315068493
       },
       "prevControl": {
-        "x": 1.8377467105263152,
-        "y": 6.305345394736841
+        "x": 1.751032050304041,
+        "y": 7.107109990267663
       },
       "nextControl": null,
       "isLocked": false,
@@ -33,8 +33,8 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 1.0,
-    "maxAcceleration": 3.0,
+    "maxVelocity": 2.2,
+    "maxAcceleration": 5.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
@@ -42,13 +42,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -50.572197803963846
+    "rotation": -51.70983680775701
   },
   "reversed": false,
-  "folder": "Left Side 4 Piece",
+  "folder": "Cj in progress path",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -0.5070290609147925
+    "rotation": -57.72435568542236
   },
-  "useDefaultConstraints": true
+  "useDefaultConstraints": false
 }

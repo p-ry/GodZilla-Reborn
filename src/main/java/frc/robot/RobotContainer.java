@@ -18,6 +18,7 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.events.EventTrigger;
 import com.pathplanner.lib.auto.CommandUtil;
 
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -84,7 +85,7 @@ public static double turnDeadband= 0.47;
 
         public static final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
         public static final ArmAssembly mArm = new ArmAssembly(false, 99);
-        public final Ace ace = new Ace(0);
+        public static final Ace ace = new Ace(0);
         public static int prevLevel = 0;
         private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
                         .withDeadband(driveDeadband).withRotationalDeadband(turnDeadband)
@@ -157,12 +158,13 @@ public static double turnDeadband= 0.47;
 
                 NamedCommands.registerCommand("raiseArm", new MoveArmFix(mArm, 42, -1));
                 NamedCommands.registerCommand("level3", new MoveArmFix(mArm, 3, 1));
-                NamedCommands.registerCommand("Load", new MoveArmFix(mArm, 1, 0));
+                NamedCommands.registerCommand("Load", new MoveArmFix(mArm, 1, 0).alongWith(new InstantCommand(() -> ace.setSpeed(1))));
                 NamedCommands.registerCommand("L1", new MoveArmFix(mArm, 6, 0));
                 NamedCommands.registerCommand("L2", new MoveArmFix(mArm, 2, 0));
                 NamedCommands.registerCommand("L3", new MoveArmFix(mArm, 3, 0));
                 NamedCommands.registerCommand("L4", new MoveArmFix(mArm, 4, 0));
-                NamedCommands.registerCommand("Intake", new InstantCommand(() -> ace.setSpeed(1)));
+                NamedCommands.registerCommand("Intake", new InstantCommand(() -> ace.setSpeed(1)).alongWith(new InstantCommand(() -> ace.gotIt = false)).alongWith(new InstantCommand(() -> ace.coralPresent = false)));
+                new EventTrigger("L400").onTrue(new MoveArmFix(mArm, 4, 0));
               
 
                 AutoChooser = AutoBuilder.buildAutoChooser("none");

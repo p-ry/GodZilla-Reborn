@@ -3,29 +3,45 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.146299342105263,
-        "y": 4.015378289473684
+        "x": 1.5476455479452054,
+        "y": 7.405779109589041
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.674835526315789,
-        "y": 4.073108552631578
+        "x": 2.6445205479452056,
+        "y": 6.203724315068493
+      },
+      "isLocked": false,
+      "linkedName": "LoadStation"
+    },
+    {
+      "anchor": {
+        "x": 2.9300085616438354,
+        "y": 6.023416095890411
+      },
+      "prevControl": {
+        "x": 2.742217337031366,
+        "y": 6.18844474782258
+      },
+      "nextControl": {
+        "x": 3.1177997862563047,
+        "y": 5.858387443958242
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 1.2893092105263155,
-        "y": 7.180921052631579
+        "x": 3.93,
+        "y": 5.077
       },
       "prevControl": {
-        "x": 1.8377467105263152,
-        "y": 6.305345394736841
+        "x": 3.1636900684931506,
+        "y": 5.798232876712329
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "Reef6"
     }
   ],
   "rotationTargets": [],
@@ -42,13 +58,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -50.572197803963846
+    "rotation": -57.72435568542236
   },
   "reversed": false,
-  "folder": "Left Side 4 Piece",
+  "folder": "Cj in progress path",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -0.5070290609147925
+    "rotation": -56.309932474020215
   },
   "useDefaultConstraints": true
 }

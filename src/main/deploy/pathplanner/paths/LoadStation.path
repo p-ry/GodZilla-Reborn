@@ -3,35 +3,42 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.146299342105263,
-        "y": 4.015378289473684
+        "x": 5.108732876712329,
+        "y": 5.15
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.674835526315789,
-        "y": 4.073108552631578
+        "x": 4.402525684931507,
+        "y": 6.624443493150685
       },
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "Reef5"
     },
     {
       "anchor": {
-        "x": 1.2893092105263155,
-        "y": 7.180921052631579
+        "x": 1.5476455479452054,
+        "y": 7.405779109589041
       },
       "prevControl": {
-        "x": 1.8377467105263152,
-        "y": 6.305345394736841
+        "x": 3.9217037671232875,
+        "y": 6.3840325342465745
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "LoadStation"
     }
   ],
   "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "Load",
+      "waypointRelativePos": 0.15593220338983052,
+      "endWaypointRelativePos": 0.3118644067796611,
+      "command": null
+    }
+  ],
   "globalConstraints": {
     "maxVelocity": 1.0,
     "maxAcceleration": 3.0,
@@ -42,13 +49,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -50.572197803963846
+    "rotation": -56.309932474020215
   },
   "reversed": false,
-  "folder": "Left Side 4 Piece",
+  "folder": "Cj in progress path",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -0.5070290609147925
+    "rotation": -120.25643716352921
   },
   "useDefaultConstraints": true
 }

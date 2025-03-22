@@ -37,12 +37,12 @@ public class Ace extends SubsystemBase {
   SparkMaxConfig config;
   public double kP, kI, kD, kIz, kFF, kMaxOutput, kMinOutput, maxRPM, maxVel, minVel, maxAcc, allowedErr;
   public double i, d, ff, aFF;
-  LaserCan laserCan;
+  public LaserCan laserCan;
   int level;
   double distance;
   LaserCan.Measurement measurement;
-  public boolean gotIt;
-  public boolean coralPresent;
+  public static boolean gotIt;
+  public static boolean coralPresent;
 
   /** Creates a new Ace. */
   public Ace(int level) {
@@ -88,14 +88,14 @@ public class Ace extends SubsystemBase {
   @Override
   public void periodic() {
     LaserCan.Measurement measurement = laserCan.getMeasurement();
-    SmartDashboard.putNumber("LaserDistance", distance);
+   // SmartDashboard.putNumber("LaserDistance", distance);
 
     if (RobotContainer.loading) {
      
 
       if (measurement != null && measurement.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT) {
         distance = measurement.distance_mm;
-        SmartDashboard.putNumber("distance", distance);
+       // SmartDashboard.putNumber("distance", distance);
         
         if ((distance < 100)) {
           coralPresent = true;

@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.LimelightHelpers;
 import frc.robot.LimelightHelpers.PoseEstimate;
 import au.grapplerobotics.LaserCan;
+import au.grapplerobotics.interfaces.LaserCanInterface.RegionOfInterest;
 import au.grapplerobotics.ConfigurationFailedException;
 
 import com.ctre.phoenix.led.FireAnimation;
@@ -24,7 +25,7 @@ import com.pathplanner.lib.pathfinding.Pathfinding;
 import au.grapplerobotics.CanBridge;
 
 public class Robot extends TimedRobot {
-  private LaserCan laserCan;
+  //private LaserCan laserCan;
   private Command m_autonomousCommand;
 
   public final RobotContainer m_robotContainer;
@@ -199,6 +200,13 @@ public class Robot extends TimedRobot {
   public void teleopInit() {
     if (m_autonomousCommand != null) {
       m_autonomousCommand.cancel();
+    }
+    try {
+      RobotContainer.ace.laserCan.setRangingMode(LaserCan.RangingMode.SHORT);
+      RobotContainer.ace.laserCan.setRegionOfInterest(new LaserCan.RegionOfInterest(4,6,1,3));     // LaserCan.RegionOfInterest(4, 6, 9, 7));
+      RobotContainer.ace.laserCan.setTimingBudget(LaserCan.TimingBudget.TIMING_BUDGET_33MS);
+    } catch (ConfigurationFailedException e) {
+      e.printStackTrace();
     }
   }
 
