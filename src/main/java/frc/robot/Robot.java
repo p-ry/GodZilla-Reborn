@@ -184,7 +184,7 @@ public class Robot extends TimedRobot {
       m_autonomousCommand.schedule();
     }
 
-    m_robotContainer.resetGyro();
+   // m_robotContainer.resetGyro();
   }
 
   @Override

@@ -4,24 +4,24 @@
     {
       "anchor": {
         "x": 5.157,
-        "y": 5.249
+        "y": 5.4
       },
       "prevControl": null,
       "nextControl": {
-        "x": 5.0082767664422505,
-        "y": 5.048048762631012
+        "x": 4.936566392970626,
+        "y": 5.282063470917534
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 4.940364049295104,
-        "y": 5.127124833907334
+        "x": 4.84,
+        "y": 5.17
       },
       "prevControl": {
-        "x": 5.089087282852853,
-        "y": 5.328076071276321
+        "x": 5.0315111107797446,
+        "y": 5.330696902421635
       },
       "nextControl": null,
       "isLocked": false,
@@ -33,8 +33,8 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 0.5,
-    "maxAcceleration": 0.53,
+    "maxVelocity": 1.0,
+    "maxAcceleration": 2.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
@@ -42,13 +42,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -120.25643716352921
+    "rotation": -124.88648626095336
   },
   "reversed": false,
   "folder": "Cj in progress path",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -133.72696997994325
+    "rotation": -126.41228769892385
   },
-  "useDefaultConstraints": true
+  "useDefaultConstraints": false
 }
