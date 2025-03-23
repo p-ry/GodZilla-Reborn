@@ -126,6 +126,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 getModulePositions(), getPose(), VecBuilder.fill(0.1, 0.1, Units.degreesToRadians(0.5)),
                 VecBuilder.fill(0.5, 0.5, Units.degreesToRadians(1.0)));
 
+               
+
         configureAutoBuilder();
        
         // mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-left");
@@ -174,11 +176,11 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * @param modules                   Constants for each specific module
      */
 
-    private void configureAutoBuilder() {
+    public void configureAutoBuilder() {
         try {
             var config = RobotConfig.fromGUISettings();
             AutoBuilder.configure(
-                    () -> getState().Pose, // Supplier of current robot pose
+                    () ->  getPose(),/// getState().Pose, // Supplier of current robot pose
                     this::resetPose, // Consumer for seeding pose against auto
                     () -> getState().Speeds, // Supplier of current robot speeds
                     // Consumer of ChassisSpeeds and feedforwards to drive the robot
@@ -351,6 +353,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
 
     public Pose2d getPose() {
+        //m_poseEstimator.getEstimatedPosition();
         // return swerveOdometry.getPoseMeters();
         return botPose2d;
     }

@@ -55,6 +55,7 @@ public class RobotContainer {
                                                                                                 // max angular velocity
 public static double driveDeadband = 0.473;
 public static double turnDeadband= 0.47;
+public static double garbage =0;
         /* Setting up bindings for necessary control of the swerve drive platform */
         /*
          * private final SwerveRequest.FieldCentric drive = new
@@ -115,6 +116,7 @@ public static double turnDeadband= 0.47;
         private final CommandXboxController controller = new CommandXboxController(0);
         public static boolean loading=false;
         public static int BlueAlliance =1;
+        public static  Command driveIt;
         /* Path follower */
         private final SendableChooser<Command> AutoChooser;
 
@@ -335,12 +337,36 @@ public static double turnDeadband= 0.47;
                  * .onTrue(new MoveArm(mArm, 2));
                  */
 
-                // controller.rightBumper()
-                // .onTrue(new DriveToAmpPath(1));
-                // controller.leftBumper().onTrue(new InstantCommand(() ->
+                controller.rightBumper()
+                .onTrue(new InstantCommand(() -> {
+                        
+                        driveIt = Utilitys.driveToIt(true);
+                        if(!driveIt.equals(null)){
+                                driveIt.schedule();
+                        }
+                }));
+                controller.rightBumper()
+                .onFalse(new InstantCommand(() -> {
+                                             
+                        if(!driveIt.equals(null)){
+                                driveIt.cancel();
+                        }
+                }));
+
+
+                //  (new DriveToAmpPath(1));
+                // []\]
                 // drivetrain.resetGyroToAlliance()));
 
-   
+                // controller.rightBumper().whileTrue(drivetrain.applyRequest(() -> drive.withVelocityX(
+                //         -(controller.getLeftY() )                        * MaxSpeed) // Drive
+                //                  .withVelocityY(-(controller.getLeftX() ) * MaxSpeed) // Drive
+                                                                                                 
+                //                 .withRotationalRate(-controller.getRightX() * MaxAngularRate))); // Drive
+                //                                                                               // counterclockwise
+                //                                                                               // with
+                //                                                                               // negative
+                // controller.rightBumper().onFalse()                                          
                 
 
                 controller.leftBumper().onTrue(new InstantCommand(() -> drivetrain.setHeading(new Rotation2d(0))));
@@ -359,6 +385,11 @@ public static double turnDeadband= 0.47;
                                 .whileTrue(drivetrain.applyRequest(
                                                 () -> forwardStraight.withVelocityX(-0.5).withVelocityY(0)));
 
+
+
+
+
+                                                
                 // Run SysId routines when holding back/start and X/Y.
                 // Note that each routine should be run exactly once in a single log.
 

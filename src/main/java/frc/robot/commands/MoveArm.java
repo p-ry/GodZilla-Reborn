@@ -13,7 +13,7 @@ import frc.robot.subsystems.Slider;
 import frc.robot.subsystems.UpperArm;
 import frc.robot.subsystems.Wrist;
 import frc.robot.subsystems.ArmAssembly;
-import frc.robot.commands.DriveToAmpPath;
+import frc.robot.commands.FindTag;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class MoveArm extends Command {

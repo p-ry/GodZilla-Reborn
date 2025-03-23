@@ -24,7 +24,7 @@ import frc.robot.Utilitys;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.BranchPose;
 
-public class DriveToAmpPath extends Command {
+public class FindTag extends Command {
   private CommandSwerveDrivetrain drivetrain;
   Pose2d where,botPose2d;
   // int tadId;
@@ -52,7 +52,7 @@ public class DriveToAmpPath extends Command {
   PathConstraints constraints;
   Command driveit;
   boolean whereSet;
-  public DriveToAmpPath(double shiftDirection) {
+  public FindTag(double shiftDirection) {
 
     // this.drivetrain = drivetrain;
     this.shiftDirection = shiftDirection;
