@@ -226,16 +226,16 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopInit() {
-    if (m_autonomousCommand != null) {
-      m_autonomousCommand.cancel();
-    }
-    try {
-      RobotContainer.ace.laserCan.setRangingMode(LaserCan.RangingMode.SHORT);
-      RobotContainer.ace.laserCan.setRegionOfInterest(new LaserCan.RegionOfInterest(4,6,1,3));     // LaserCan.RegionOfInterest(4, 6, 9, 7));
-      RobotContainer.ace.laserCan.setTimingBudget(LaserCan.TimingBudget.TIMING_BUDGET_33MS);
-    } catch (ConfigurationFailedException e) {
-      e.printStackTrace();
-    }
+    // if (m_autonomousCommand != null) {
+    //   m_autonomousCommand.cancel();
+    // }
+    // try {
+    //   RobotContainer.ace.laserCan.setRangingMode(LaserCan.RangingMode.SHORT);
+    //   RobotContainer.ace.laserCan.setRegionOfInterest(new LaserCan.RegionOfInterest(4,6,1,3));     // LaserCan.RegionOfInterest(4, 6, 9, 7));
+    //   RobotContainer.ace.laserCan.setTimingBudget(LaserCan.TimingBudget.TIMING_BUDGET_33MS);
+    // } catch (ConfigurationFailedException e) {
+    //   e.printStackTrace();
+    // }
   }
 
   @Override
