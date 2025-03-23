@@ -152,9 +152,7 @@ public void updatePID(){
 }
   @Override
   public void periodic() {
-    SmartDashboard.putNumber("upArm", getPos());
-   SmartDashboard.putNumber("VVV", slowVel);
-   SmartDashboard.putNumber("LeftV",UpperArmLeft.getVelocity().getValueAsDouble());
+    
     
     if(atPos(UpperArmLeft) && atPos(UpperArmRight)){
       atPosition = true;  

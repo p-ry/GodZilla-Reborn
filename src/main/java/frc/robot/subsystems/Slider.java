@@ -132,7 +132,7 @@ public class Slider extends SubsystemBase implements Sendable{
 
   @Override
   public void periodic() {
-    SmartDashboard.putNumber("SliderV",slider.getVelocity().getValueAsDouble());
+   
     if (Math.abs(getPos() - requestedPosition) < 0.8) {
       atPosition = true;
     } else {

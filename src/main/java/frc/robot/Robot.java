@@ -44,9 +44,11 @@ public class Robot extends TimedRobot {
   @Override
   public void robotInit() {
   
+
     FollowPathCommand.warmupCommand().schedule();
     //Pathfinding.setPathfinder(null);
     Pathfinding.setPathfinder(new LocalADStar());
+    RobotContainer.candle.setLEDs(236,0,140);
 
     // laserCan = new LaserCan(10);
     // m_robotContainer.drivetrain.gyro.setYaw(0);
@@ -152,13 +154,13 @@ public class Robot extends TimedRobot {
       allianceSet = true;
       if (alliance.get() == DriverStation.Alliance.Red) {
         RobotContainer.BlueAlliance = -1;
-        RobotContainer.candle.setLEDs(255, 127, 102);
+        RobotContainer.candle.setLEDs(255, 27, 12);
 
         // m_robotContainer.s_Candle.setColourProperties(255, 0, 0, 0.75);
         // m_robotContainer.s_Candle.colorLEDs();
       } else if (alliance.get() == DriverStation.Alliance.Blue) {
         RobotContainer.BlueAlliance = 1;
-        RobotContainer.candle.setLEDs(255, 127, 102);
+        RobotContainer.candle.setLEDs(5, 27, 252);
         RobotContainer.candle.animate(new FireAnimation(1, 0.2, 1, 1, 1, false, 0));
         // RobotContainer.candle.fireLEDs(); // Method not defined in CANdle class
 
@@ -171,6 +173,30 @@ public class Robot extends TimedRobot {
 
   @Override
   public void disabledPeriodic() {
+
+    if(!allianceSet){
+    var alliance = DriverStation.getAlliance();
+
+    if (alliance.isPresent()) {
+      allianceSet = true;
+      if (alliance.get() == DriverStation.Alliance.Red) {
+        RobotContainer.BlueAlliance = -1;
+        RobotContainer.candle.setLEDs(255, 27, 12);
+
+        // m_robotContainer.s_Candle.setColourProperties(255, 0, 0, 0.75);
+        // m_robotContainer.s_Candle.colorLEDs();
+      } else if (alliance.get() == DriverStation.Alliance.Blue) {
+        RobotContainer.BlueAlliance = 1;
+        RobotContainer.candle.setLEDs(5, 27, 252);
+        RobotContainer.candle.animate(new FireAnimation(1, 0.2, 1, 1, 1, false, 0));
+        // RobotContainer.candle.fireLEDs(); // Method not defined in CANdle class
+
+        // m_robotContainer.s_Candle.setColourProperties(0, 0, 255, 0.75);
+        // m_robotContainer.s_Candle.colorLEDs();
+
+      }
+    }
+  }
     RobotContainer.drivetrain.updateCameraPose();
    
   }

@@ -72,10 +72,13 @@ public class LowerArm extends SubsystemBase implements Sendable{
     LowerArmLeft = new TalonFX(31,"Canivore2");
     LowerArmRight = new TalonFX(32,"Canivore2");
     // talonFXConfigs = new TalonFXConfiguration();
+  LowerArmLeft.setNeutralMode(NeutralModeValue.Brake);
+  LowerArmRight.setNeutralMode(NeutralModeValue.Brake);
     leftRequest = new MotionMagicVoltage(0);
     rightRequest = new MotionMagicVoltage(0);
 
     talonFXConfigs = new TalonFXConfiguration();
+  
    //talonFXConfigsRight = new TalonFXConfiguration();
 
     LowerArmLeft.setNeutralMode(NeutralModeValue.Brake);

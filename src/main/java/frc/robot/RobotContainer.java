@@ -133,7 +133,7 @@ public static double garbage =0;
                                 // Drivetrain will execute this command periodically
                                 drivetrain.applyRequest(() -> drive.withVelocityX(
                                         -(controller.getLeftY() )
-                                        * MaxSpeed) // Drive
+                                        * MaxSpeed*BlueAlliance) // Drive
                       
                                                 // -(controller.getLeftY() * controller.getLeftY()
                                                 //                 * Math.signum(controller.getLeftY()))
@@ -143,7 +143,7 @@ public static double garbage =0;
                                                 // negative
                                                 // Y
                                                 // (forward)
-                                                 .withVelocityY(-(controller.getLeftX() ) * MaxSpeed) // Drive
+                                                 .withVelocityY(-(controller.getLeftX() ) * MaxSpeed*BlueAlliance) // Drive
                                                                                                                  
                                                 // .withVelocityY(-(controller.getLeftX() * controller.getLeftX()
                                                 //                 * Math.signum(controller.getLeftX()) * MaxSpeed)) // Drive
@@ -249,7 +249,7 @@ public static double garbage =0;
                 Lv3R.whileTrue(new MoveArmFix(mArm, 3, 1));
                 Lv3R.onTrue(new InstantCommand(() -> MaxSpeed = MaxSpeed / 3));
                 Lv3R.onTrue(new InstantCommand(() -> MaxAngularRate = MaxAngularRate / 2));
-                Lv3L.onTrue(new InstantCommand(() -> rightTree = true));
+                Lv3R.onTrue(new InstantCommand(() -> rightTree = true));
                 // ******** FALSE *** *****************************************/
                 // Lv3L.onFalse(new Retract(mArm, 3).andThen(new MoveArmFix(mArm, 1, 0)));
                 Lv3L.onFalse(new MoveArmFix(mArm, 44, -1));
@@ -269,7 +269,7 @@ public static double garbage =0;
                 Lv4R.onTrue(new MoveArmFix(mArm, 4, 1));
                 Lv4R.onTrue(new InstantCommand(() -> MaxSpeed = MaxSpeed / 4));
                 Lv4R.onTrue(new InstantCommand(() -> MaxAngularRate = MaxAngularRate / 2));
-                Lv4L.onTrue(new InstantCommand(() -> rightTree = true));
+                Lv4R.onTrue(new InstantCommand(() -> rightTree = true));
                 // *********FALSE **************************************************/
                 Lv4L.onFalse(new MoveArmFix(mArm, 44, -1));
                 Lv4L.onFalse(new InstantCommand(() -> MaxSpeed = MaxSpeed * 4));
