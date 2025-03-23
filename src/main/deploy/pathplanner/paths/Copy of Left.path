@@ -4,28 +4,44 @@
     {
       "anchor": {
         "x": 7.557919520547944,
-        "y": 1.6960188356164383
+        "y": 5.15
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.476070205479452,
-        "y": 2.041609589041096
+        "x": 6.762777907069827,
+        "y": 5.978477682847667
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 5.168835616438356,
-        "y": 2.9130993150684934
+        "x": 6.040325342465753,
+        "y": 5.993364726027397
       },
       "prevControl": {
-        "x": 6.29576198630137,
-        "y": 2.2669948630136982
+        "x": 6.2898577233931645,
+        "y": 6.0086484058427185
+      },
+      "nextControl": {
+        "x": 5.75709857891739,
+        "y": 5.976017289381641
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 4.85,
+        "y": 5.31
+      },
+      "prevControl": {
+        "x": 5.4059535996623325,
+        "y": 5.897925002138868
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "Reef5"
     }
   ],
   "rotationTargets": [],
@@ -33,7 +49,7 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 2.0,
+    "maxVelocity": 1.0,
     "maxAcceleration": 3.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
@@ -42,13 +58,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 124.82448915695677
+    "rotation": -120.25643716352921
   },
   "reversed": false,
-  "folder": "Right 3.5 piece",
+  "folder": "Cj in progress path",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 134.99999999999994
+    "rotation": 180.0
   },
-  "useDefaultConstraints": true
+  "useDefaultConstraints": false
 }

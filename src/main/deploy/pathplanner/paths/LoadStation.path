@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 5.108732876712329,
-        "y": 5.15
+        "x": 4.85,
+        "y": 5.3
       },
       "prevControl": null,
       "nextControl": {
-        "x": 4.402525684931507,
-        "y": 6.624443493150685
+        "x": 4.143792808219177,
+        "y": 6.7744434931506845
       },
       "isLocked": false,
       "linkedName": "Reef5"
@@ -17,11 +17,11 @@
     {
       "anchor": {
         "x": 1.5476455479452054,
-        "y": 7.405779109589041
+        "y": 7.75
       },
       "prevControl": {
         "x": 3.9217037671232875,
-        "y": 6.3840325342465745
+        "y": 6.728253424657534
       },
       "nextControl": null,
       "isLocked": false,
@@ -31,16 +31,9 @@
   "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [
-    {
-      "name": "Load",
-      "waypointRelativePos": 0.15593220338983052,
-      "endWaypointRelativePos": 0.3118644067796611,
-      "command": null
-    }
-  ],
+  "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 1.0,
+    "maxVelocity": 2.0,
     "maxAcceleration": 3.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
@@ -49,7 +42,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -56.309932474020215
+    "rotation": -52.39313858226301
   },
   "reversed": false,
   "folder": "Cj in progress path",

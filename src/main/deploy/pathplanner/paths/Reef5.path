@@ -4,12 +4,12 @@
     {
       "anchor": {
         "x": 1.5476455479452054,
-        "y": 7.405779109589041
+        "y": 7.75
       },
       "prevControl": null,
       "nextControl": {
         "x": 1.327211940915831,
-        "y": 7.287842580506575
+        "y": 7.632063470917534
       },
       "isLocked": false,
       "linkedName": "LoadStation"
@@ -33,7 +33,7 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 1.0,
+    "maxVelocity": 2.0,
     "maxAcceleration": 3.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
@@ -48,7 +48,7 @@
   "folder": "Cj in progress path",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -56.309932474020215
+    "rotation": -52.39313858226301
   },
   "useDefaultConstraints": true
 }

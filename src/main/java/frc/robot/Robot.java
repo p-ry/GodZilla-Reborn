@@ -43,7 +43,9 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotInit() {
+  
     FollowPathCommand.warmupCommand().schedule();
+    //Pathfinding.setPathfinder(null);
     Pathfinding.setPathfinder(new LocalADStar());
 
     // laserCan = new LaserCan(10);

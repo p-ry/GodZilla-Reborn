@@ -158,14 +158,15 @@ public static double turnDeadband= 0.47;
 
                 NamedCommands.registerCommand("raiseArm", new MoveArmFix(mArm, 42, -1));
                 NamedCommands.registerCommand("level3", new MoveArmFix(mArm, 3, 1));
-                NamedCommands.registerCommand("Load", new MoveArmFix(mArm, 1, 0).alongWith(new InstantCommand(() -> ace.setSpeed(1))));
+                NamedCommands.registerCommand("Load", new WaitCommand(0.7).andThen(new MoveArmFix(mArm, 1, 0).alongWith(new InstantCommand(() -> ace.setSpeed(1)))));
                 NamedCommands.registerCommand("L1", new MoveArmFix(mArm, 6, 0));
                 NamedCommands.registerCommand("L2", new MoveArmFix(mArm, 2, 0));
                 NamedCommands.registerCommand("L3", new MoveArmFix(mArm, 3, 0));
                 NamedCommands.registerCommand("L4", new MoveArmFix(mArm, 4, 0));
                 NamedCommands.registerCommand("Intake", new InstantCommand(() -> ace.setSpeed(1)).alongWith(new InstantCommand(() -> ace.gotIt = false)).alongWith(new InstantCommand(() -> ace.coralPresent = false)));
                 new EventTrigger("L400").onTrue(new MoveArmFix(mArm, 4, 0));
-              
+                new EventTrigger("LoadIt").onTrue(new MoveArmFix(mArm, 1, 0).alongWith(new InstantCommand(() -> System.out.println("loadit")) .alongWith(new InstantCommand(() -> ace.setSpeed(1)))));
+                
 
                 AutoChooser = AutoBuilder.buildAutoChooser("none");
                 SmartDashboard.putData("AutoChooser", AutoChooser);

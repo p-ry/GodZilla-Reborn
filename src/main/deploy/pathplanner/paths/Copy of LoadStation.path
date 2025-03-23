@@ -3,35 +3,42 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 5.18610197368421,
-        "y": 5.179605263157893
+        "x": 4.85,
+        "y": 5.3
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.1861019736842096,
-        "y": 5.179605263157893
+        "x": 4.143792808219177,
+        "y": 6.7744434931506845
       },
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "Reef5"
     },
     {
       "anchor": {
-        "x": 4.9022,
-        "y": 4.7244
+        "x": 1.5476455479452054,
+        "y": 7.75
       },
       "prevControl": {
-        "x": 4.4022,
-        "y": 3.858374596215562
+        "x": 3.9217037671232875,
+        "y": 6.728253424657534
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "LoadStation"
     }
   ],
   "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "Load",
+      "waypointRelativePos": 0.15593220338983052,
+      "endWaypointRelativePos": 0.3118644067796611,
+      "command": null
+    }
+  ],
   "globalConstraints": {
     "maxVelocity": 2.0,
     "maxAcceleration": 3.0,
@@ -42,13 +49,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": -52.39313858226301
   },
   "reversed": false,
-  "folder": "April Tags",
+  "folder": "Cj in progress path",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": -120.25643716352921
   },
   "useDefaultConstraints": true
 }
