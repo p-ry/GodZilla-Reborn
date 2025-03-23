@@ -44,7 +44,7 @@ public class Utilitys {
         double forwardMeters = Units.inchesToMeters(forwardInches);
         double rightMeters = Units.inchesToMeters(rightInches);
 
-        // Calculate new position
+        // Calculate new position  shift target to it's right
         double xNew = x + forwardMeters * Math.cos(theta.getRadians()) + rightMeters * Math.sin(theta.getRadians());
         double yNew = y + forwardMeters * Math.sin(theta.getRadians()) - rightMeters * Math.cos(theta.getRadians());
 
@@ -55,6 +55,7 @@ public class Utilitys {
     public static Pose2d shiftPoseRight(Pose2d originalPose, double forwardInches, double leftInches) {
         // Get current pose components
 
+
         double x = originalPose.getX();
         double y = originalPose.getY();
         Rotation2d theta = originalPose.getRotation(); // Rotation2d object
@@ -62,7 +63,7 @@ public class Utilitys {
         double rightMeters = Units.inchesToMeters(leftInches);
         Rotation2d invTheta = theta.fromRadians(theta.getRadians() + Math.PI);
 
-        // Compute new coordinates (shift left)
+        // Compute new coordinates (shift left)  shift target to it's left
         double xNew = x + forwardMeters * Math.cos(theta.getRadians()) - rightMeters * Math.sin(theta.getRadians());
         double yNew = y + forwardMeters * Math.sin(theta.getRadians()) + rightMeters * Math.cos(theta.getRadians());
 
@@ -72,7 +73,7 @@ public class Utilitys {
 
     public static Command driveToIt(boolean right) {
         PathConstraints constraints = new PathConstraints(
-      1.0, 4.0,
+      1.5, 4.0,
       Units.degreesToRadians(540), Units.degreesToRadians(720));
         double leftDist = 0;
         Pose2d where;

@@ -117,6 +117,7 @@ public static double garbage =0;
         public static boolean loading=false;
         public static int BlueAlliance =1;
         public static  Command driveIt;
+        public static boolean rightTree =true;
         /* Path follower */
         private final SendableChooser<Command> AutoChooser;
 
@@ -224,9 +225,11 @@ public static double garbage =0;
                 Lv2L.whileTrue(new MoveArmFix(mArm, 2, -1));
                 Lv2L.onTrue(new InstantCommand(() -> MaxSpeed = MaxSpeed / 2));
                 Lv2L.onTrue(new InstantCommand(() -> MaxAngularRate = MaxAngularRate / 2));
+                Lv2L.onTrue(new InstantCommand(() -> rightTree = false));
                 Lv2R.whileTrue(new MoveArmFix(mArm, 2, 1));
                 Lv2R.onTrue(new InstantCommand(() -> MaxSpeed = MaxSpeed / 2));
                 Lv2R.onTrue(new InstantCommand(() -> MaxAngularRate = MaxAngularRate / 2));
+                Lv2R.onTrue(new InstantCommand(() -> rightTree = true));
 
                 // ********FALSE ******** */
                 Lv2L.onFalse(new MoveArmFix(mArm, 44, 0));
@@ -241,10 +244,12 @@ public static double garbage =0;
                 Lv3L.whileTrue(new MoveArmFix(mArm, 3, -1));
                 Lv3L.onTrue(new InstantCommand(() -> MaxSpeed = MaxSpeed / 3));
                 Lv3L.onTrue(new InstantCommand(() -> MaxAngularRate = MaxAngularRate / 2));
+                Lv3L.onTrue(new InstantCommand(() -> rightTree = false));
 
                 Lv3R.whileTrue(new MoveArmFix(mArm, 3, 1));
                 Lv3R.onTrue(new InstantCommand(() -> MaxSpeed = MaxSpeed / 3));
                 Lv3R.onTrue(new InstantCommand(() -> MaxAngularRate = MaxAngularRate / 2));
+                Lv3L.onTrue(new InstantCommand(() -> rightTree = true));
                 // ******** FALSE *** *****************************************/
                 // Lv3L.onFalse(new Retract(mArm, 3).andThen(new MoveArmFix(mArm, 1, 0)));
                 Lv3L.onFalse(new MoveArmFix(mArm, 44, -1));
@@ -259,10 +264,12 @@ public static double garbage =0;
                 Lv4L.onTrue(new MoveArmFix(mArm, 4, -1));
                 Lv4L.onTrue(new InstantCommand(() -> MaxSpeed = MaxSpeed / 4));
                 Lv4L.onTrue(new InstantCommand(() -> MaxAngularRate = MaxAngularRate / 2));
+                Lv4L.onTrue(new InstantCommand(() -> rightTree = false));
 
                 Lv4R.onTrue(new MoveArmFix(mArm, 4, 1));
                 Lv4R.onTrue(new InstantCommand(() -> MaxSpeed = MaxSpeed / 4));
                 Lv4R.onTrue(new InstantCommand(() -> MaxAngularRate = MaxAngularRate / 2));
+                Lv4L.onTrue(new InstantCommand(() -> rightTree = true));
                 // *********FALSE **************************************************/
                 Lv4L.onFalse(new MoveArmFix(mArm, 44, -1));
                 Lv4L.onFalse(new InstantCommand(() -> MaxSpeed = MaxSpeed * 4));
@@ -340,15 +347,15 @@ public static double garbage =0;
                 controller.rightBumper()
                 .onTrue(new InstantCommand(() -> {
                         
-                        driveIt = Utilitys.driveToIt(true);
-                        if(!driveIt.equals(null)){
+                        driveIt = Utilitys.driveToIt(rightTree);
+                        if(driveIt !=null){
                                 driveIt.schedule();
                         }
                 }));
                 controller.rightBumper()
                 .onFalse(new InstantCommand(() -> {
                                              
-                        if(!driveIt.equals(null)){
+                        if(driveIt!=null){
                                 driveIt.cancel();
                         }
                 }));
