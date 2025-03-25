@@ -190,10 +190,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                                     .withWheelForceFeedforwardsY(feedforwards.robotRelativeForcesYNewtons())),
                     new PPHolonomicDriveController(
                             // PID constants for translation
-                            new PIDConstants(0.7, 0, 0),// was 0.5
+                            new PIDConstants(2., 0, 0),// was 0.5  //was 0.7
                             // kP10
                             // PID constants for rotation
-                            new PIDConstants(2, 0, 0)),
+                            new PIDConstants(2, 0, 0)),// was 2.0
                     config,
                     // Assume the path needs to be flipped for Red vs Blue, this is normally the
                     // case
@@ -346,6 +346,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     public void resetGyro() {
         gyro.setYaw(0);
+    }
+    public void resetGyro(double heading) {
+        gyro.setYaw(heading);
     }
 
     public void resetGyroToAlliance() {

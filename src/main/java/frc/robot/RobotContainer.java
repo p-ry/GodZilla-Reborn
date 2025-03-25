@@ -31,7 +31,7 @@ import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-import frc.robot.commands.DriveToAmpPath;
+import frc.robot.commands.DriveItCommand;
 import frc.robot.commands.Extend;
 import frc.robot.commands.MoveArm;
 import frc.robot.commands.MoveArmFix;
@@ -223,20 +223,23 @@ public static double garbage =0;
 
                 // **************TRUE ******** */
                 Lv2L.whileTrue(new MoveArmFix(mArm, 2, -1));
-                Lv2L.onTrue(new InstantCommand(() -> MaxSpeed = MaxSpeed / 2));
+                Lv2L.onTrue(new InstantCommand(() -> MaxSpeed = MaxSpeed / 1));
                 Lv2L.onTrue(new InstantCommand(() -> MaxAngularRate = MaxAngularRate / 2));
                 Lv2L.onTrue(new InstantCommand(() -> rightTree = false));
                 Lv2R.whileTrue(new MoveArmFix(mArm, 2, 1));
-                Lv2R.onTrue(new InstantCommand(() -> MaxSpeed = MaxSpeed / 2));
+                Lv2R.onTrue(new InstantCommand(() -> MaxSpeed = MaxSpeed / 1));
                 Lv2R.onTrue(new InstantCommand(() -> MaxAngularRate = MaxAngularRate / 2));
                 Lv2R.onTrue(new InstantCommand(() -> rightTree = true));
 
                 // ********FALSE ******** */
                 Lv2L.onFalse(new MoveArmFix(mArm, 44, 0));
-                Lv2L.onFalse(new InstantCommand(() -> MaxSpeed = MaxSpeed * 2));
+                //.andThen(new InstantCommand(() -> ace.setSpeed(1))));
+               
+                Lv2L.onFalse(new InstantCommand(() -> MaxSpeed = MaxSpeed * 1));
                 Lv2L.onFalse(new InstantCommand(() -> MaxAngularRate = MaxAngularRate * 2));
                 Lv2R.onFalse(new MoveArmFix(mArm, 44, 0));
-                Lv2R.onFalse(new InstantCommand(() -> MaxSpeed = MaxSpeed * 2));
+                //.andThen(new InstantCommand(() -> ace.setSpeed(1))));
+                Lv2R.onFalse(new InstantCommand(() -> MaxSpeed = MaxSpeed * 1));
                 Lv2R.onFalse(new InstantCommand(() -> MaxAngularRate = MaxAngularRate * 2));
 
 
@@ -252,12 +255,14 @@ public static double garbage =0;
                 Lv3R.onTrue(new InstantCommand(() -> rightTree = true));
                 // ******** FALSE *** *****************************************/
                 // Lv3L.onFalse(new Retract(mArm, 3).andThen(new MoveArmFix(mArm, 1, 0)));
-                Lv3L.onFalse(new MoveArmFix(mArm, 44, -1));
+                Lv3L.onFalse(new MoveArmFix(mArm, 44, 0));
+                //.andThen(new InstantCommand(() -> ace.setSpeed(1))));
                 Lv3L.onFalse(new InstantCommand(() -> MaxSpeed = MaxSpeed * 3));
                 Lv3L.onFalse(new InstantCommand(() -> MaxAngularRate = MaxAngularRate * 2));
 
                 // Lv3R.onFalse(new Retract(mArm, 3).andThen(new MoveArmFix(mArm, 1, 0)));
-                Lv3R.onFalse(new MoveArmFix(mArm, 44, -1));
+                Lv3R.onFalse(new MoveArmFix(mArm, 44, 0));
+                //.andThen(new InstantCommand(() -> ace.setSpeed(1))));
                 Lv3R.onFalse(new InstantCommand(() -> MaxSpeed = MaxSpeed * 3));
                 Lv3R.onFalse(new InstantCommand(() -> MaxAngularRate = MaxAngularRate * 2));
                 // *********TRUE *************************************** */
@@ -271,13 +276,23 @@ public static double garbage =0;
                 Lv4R.onTrue(new InstantCommand(() -> MaxAngularRate = MaxAngularRate / 2));
                 Lv4R.onTrue(new InstantCommand(() -> rightTree = true));
                 // *********FALSE **************************************************/
-                Lv4L.onFalse(new MoveArmFix(mArm, 44, -1));
-                Lv4L.onFalse(new InstantCommand(() -> MaxSpeed = MaxSpeed * 4));
-                Lv4L.onFalse(new InstantCommand(() -> MaxAngularRate = MaxAngularRate * 2));
+                Lv4L.onFalse(new MoveArmFix(mArm, 44, 0).andThen(new WaitCommand(0.5)).andThen(new InstantCommand(()->{
 
-                Lv4R.onFalse(new MoveArmFix(mArm, 44, 1));
-                Lv4R.onFalse(new InstantCommand(() -> MaxSpeed = MaxSpeed * 4));
-                Lv4R.onFalse(new InstantCommand(() -> MaxAngularRate = MaxAngularRate * 2));
+                MaxSpeed = MaxSpeed * 4;
+
+                MaxAngularRate = MaxAngularRate * 2;
+                       })));
+
+                //.andThen(new InstantCommand(() -> ace.setSpeed(1))));
+                // Lv4L.onFalse(new InstantCommand(() -> MaxSpeed = MaxSpeed * 4));
+                // Lv4L.onFalse(new InstantCommand(() -> MaxAngularRate = MaxAngularRate * 2));
+                Lv4R.onFalse(new MoveArmFix(mArm, 44, 0).andThen(new WaitCommand(0.5)).andThen(new InstantCommand(()->{
+                MaxSpeed = MaxSpeed * 4;
+                  MaxAngularRate = MaxAngularRate * 2;
+                         })));
+                //.andThen(new InstantCommand(() -> ace.setSpeed(1))));
+                // Lv4R.onFalse(new InstantCommand(() -> MaxSpeed = MaxSpeed * 4));
+                // Lv4R.onFalse(new InstantCommand(() -> MaxAngularRate = MaxAngularRate * 2));
 
                 // **************** DRIVE ROBOTCENTRIC ********* */
                 // Lv4L.onTrue(new InstantCommand(() -> prevHeading =
@@ -345,13 +360,21 @@ public static double garbage =0;
                  */
 
                 controller.rightBumper()
+               // .onTrue(new DriveItCommand(true));//
+                // .andThen(new InstantCommand(()->prevHeading =
+                // drivetrain.getCompassHeading()).andThen(new InstantCommand(() ->
+                // drivetrain.resetGyro(0))))) ;
+         
                 .onTrue(new InstantCommand(() -> {
                         
-                        driveIt = Utilitys.driveToIt(rightTree);
-                        if(driveIt !=null){
+                        driveIt = Utilitys.driveToIt(true);//rightTree
+                      
+                         if(driveIt !=null){
                                 driveIt.schedule();
+                         
                         }
-                }));
+
+                 }));
                 controller.rightBumper()
                 .onFalse(new InstantCommand(() -> {
                                              
@@ -360,6 +383,28 @@ public static double garbage =0;
                         }
                 }));
 
+
+             
+           
+       
+
+          controller.leftBumper().onTrue(
+                   
+                new InstantCommand(() -> {
+                        
+                        driveIt = Utilitys.driveToIt(false);
+                        if(driveIt !=null){
+                                driveIt.schedule();
+                        }
+               }));
+                controller.leftBumper()
+                .onFalse(new InstantCommand(() -> {
+                                             
+                        if(driveIt!=null){
+                                driveIt.cancel();
+                        }
+                }));
+                //.andThen(new InstantCommand(() -> drivetrain.resetGyro(prevHeading))));
 
                 //  (new DriveToAmpPath(1));
                 // []\]
@@ -376,11 +421,13 @@ public static double garbage =0;
                 // controller.rightBumper().onFalse()                                          
                 
 
-                controller.leftBumper().onTrue(new InstantCommand(() -> drivetrain.setHeading(new Rotation2d(0))));
+              //  controller.leftBumper().onTrue(new InstantCommand(() -> drivetrain.setHeading(new Rotation2d(0))));
 
                 controller
                                 .start()
                                 .onTrue(new InstantCommand(() -> drivetrain.gyro.reset()));
+                                controller.start()
+                                .onTrue(new InstantCommand(() -> drivetrain.setHeading(new Rotation2d(0))));
 
                 controller.b().whileTrue(drivetrain.applyRequest(
                                 () -> point.withModuleDirection(

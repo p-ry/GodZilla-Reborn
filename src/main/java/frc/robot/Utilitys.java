@@ -73,7 +73,7 @@ public class Utilitys {
 
     public static Command driveToIt(boolean right) {
         PathConstraints constraints = new PathConstraints(
-      1.5, 4.0,
+      2.0, 3.0,
       Units.degreesToRadians(540), Units.degreesToRadians(720));
         double leftDist = 0;
         Pose2d where;
@@ -113,9 +113,9 @@ public class Utilitys {
             }
 
             if (right) {
-                where = Utilitys.shiftPoseRight(Utilitys.getAprilTagPose(tagId), 20, 15);//6.5); // 0.164285833);
+                where = Utilitys.shiftPoseRight(Utilitys.getAprilTagPose(tagId), 20, 12);//6.5); // 0.164285833);
             } else {
-                where = Utilitys.shiftPoseLeft(Utilitys.getAprilTagPose(tagId), 20, 15);//);// 0.164285833);
+                where = Utilitys.shiftPoseLeft(Utilitys.getAprilTagPose(tagId), 20, 2);//);// 0.164285833);
             }
             SmartDashboard.putNumberArray("Where",new double[]{where.getX(),where.getY(),where.getRotation().getRadians()});
             Command driveit = AutoBuilder.pathfindToPose(where, constraints, 0.0);
