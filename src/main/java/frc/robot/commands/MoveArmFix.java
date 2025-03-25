@@ -85,10 +85,10 @@ public class MoveArmFix extends Command {
         if (algae) { // upperArm.dynamic.Velocity = 1;
                      // upperArm.dynamic.Acceleration = 1;
                      // upperArm.dynamic.Jerk = 50;
-          myArm.upperArm.setPos(5, applyDynamic);
+          myArm.upperArm.setPos(5, true);
           myArm.wrist.setPos(3.0);
         } else {
-          myArm.upperArm.setPos(0, applyDynamic);
+          myArm.upperArm.setPos(0, true);
           myArm.wrist.setPos(0.0);
         } // upperArm.UpperArmRight.setControl(upperArm.dynamic.withPosition(1.0));
         // upperArm.setPos(0.5);//0.0 load
@@ -101,7 +101,7 @@ public class MoveArmFix extends Command {
       case 1:
         if (algae) {
           myArm.lowerArm.setPos(18.0);
-          myArm.upperArm.setPos(1.0, applyDynamic);
+          myArm.upperArm.setPos(1.0, true);
           myArm.slider.setPos(1.5);
           myArm.wrist.setPos(0.0);
         } else {
@@ -116,7 +116,7 @@ public class MoveArmFix extends Command {
       case 2:
         if (algae) {
           myArm.lowerArm.setPos(1.0); // 16.10 load
-          myArm.upperArm.setPos(5, applyDynamic);
+          myArm.upperArm.setPos(5, true);
           myArm.slider.setPos(0.50);
           myArm.wrist.setPos(3.0);
 
@@ -127,7 +127,7 @@ public class MoveArmFix extends Command {
         } else {
 
           myArm.lowerArm.setPos(1.0);
-          myArm.upperArm.setPos(6.0, applyDynamic);
+          myArm.upperArm.setPos(6.0, true);
           myArm.slider.setPos(6.0);
           myArm.wrist.setPos(5.0);
           break;
@@ -150,7 +150,7 @@ public class MoveArmFix extends Command {
           myArm.wrist.setPos(3.0);
         } else {
           myArm.lowerArm.setPos(20);
-          myArm.upperArm.setPos(21, false);
+          myArm.upperArm.setPos(21, true);
           myArm.slider.setPos(0.5);
           myArm.wrist.setPos(6.5);
         }
