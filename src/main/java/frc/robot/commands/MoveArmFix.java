@@ -98,7 +98,7 @@ public class MoveArmFix extends Command {
 
         // System.out.println("home");
         break;
-      case 1:
+      case 1:  //Load
         if (algae) {
           myArm.lowerArm.setPos(18.0);
           myArm.upperArm.setPos(1.0, true);
@@ -106,8 +106,8 @@ public class MoveArmFix extends Command {
           myArm.wrist.setPos(0.0);
         } else {
           RobotContainer.loading = true;
-          myArm.lowerArm.setPos(19.00);
-          myArm.upperArm.setPos(3.7, true);// 0.0 load
+          myArm.lowerArm.setPos(18.00); //19
+          myArm.upperArm.setPos(3.5, true);// 0.0 load  //3.7
           myArm.wrist.setPos(0);
           myArm.slider.setPos(0.5);
         }
@@ -208,8 +208,8 @@ public class MoveArmFix extends Command {
         break;
 
       case 44: // lower from position 4 MOVE THAT SLIDER FAST
-        myArm.lowerArm.setPos(19.00);
-        myArm.upperArm.setPos(3.7, false);// 0.0 load
+        myArm.lowerArm.setPos(18.00);  //19
+        myArm.upperArm.setPos(3.5, false);// 0.0 load  //3.7
         myArm.wrist.setPos(0);
         myArm.slider.setPos(0.5, true);
         break;
