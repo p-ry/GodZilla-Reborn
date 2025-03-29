@@ -64,7 +64,7 @@ public class Slider extends SubsystemBase implements Sendable{
  public static double fastJerk = 4000;
  public static double slowVel = 60;
  public static double slowAcc = 900;
- public static double slowJerk = 1800;
+ public static double slowJerk = 1800;//1800
   
 
   /** Creates a new Slider. */
@@ -81,8 +81,10 @@ public class Slider extends SubsystemBase implements Sendable{
     //sliderConfigs.SoftwareLimitSwitch.ReverseSoftLimitEnable = ReverseLimitValue
     pidConfigs = sliderConfigs.Slot0;
     pidConfigs2 = sliderConfigs.Slot1;
-    pidConfigs.kP = 5.0;
+    pidConfigs.kP = 3.0;
     pidConfigs2.kP = 0.02;
+    pidConfigs.kS=0.5;
+    pidConfigs.kV=0.1;
 
     mmConfigs= sliderConfigs.MotionMagic;
     mmConfigs.MotionMagicCruiseVelocity = fastVel; // Target cruise velocity of 80 rps

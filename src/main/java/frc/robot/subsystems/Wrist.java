@@ -52,7 +52,7 @@ public class Wrist extends SubsystemBase implements Sendable {
     wristController = new PositionDutyCycle(0);
     wristConfigs = new TalonFXConfiguration();
     pidConfigs = wristConfigs.Slot0;
-    pidConfigs.kP = 0.05;
+    pidConfigs.kP = 0.1;
     wristConfigs.ClosedLoopGeneral.ContinuousWrap = false;
     wrist.getConfigurator().apply(wristConfigs);
     

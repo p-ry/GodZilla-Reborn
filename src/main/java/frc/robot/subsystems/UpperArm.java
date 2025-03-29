@@ -51,7 +51,7 @@ public class UpperArm extends SubsystemBase implements Sendable{
   public static double fastAcc = 300;
   public static double fastJerk = 800;
   public static double slowVel = 150;
-  public static double slowAcc = 150;
+  public static double slowAcc = 300;
   public static double slowJerk = 300;
   
   
