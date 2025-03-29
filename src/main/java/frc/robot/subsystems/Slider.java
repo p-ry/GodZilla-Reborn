@@ -81,7 +81,7 @@ public class Slider extends SubsystemBase implements Sendable{
     //sliderConfigs.SoftwareLimitSwitch.ReverseSoftLimitEnable = ReverseLimitValue
     pidConfigs = sliderConfigs.Slot0;
     pidConfigs2 = sliderConfigs.Slot1;
-    pidConfigs.kP = 4.0;
+    pidConfigs.kP = 5.0;
     pidConfigs2.kP = 0.02;
 
     mmConfigs= sliderConfigs.MotionMagic;

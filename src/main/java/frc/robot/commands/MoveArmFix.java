@@ -108,7 +108,7 @@ public class MoveArmFix extends Command {
           RobotContainer.loading = true;
           myArm.lowerArm.setPos(18.00); //19
           myArm.upperArm.setPos(3.5, true);// 0.0 load  //3.7
-          myArm.wrist.setPos(0);
+          myArm.wrist.setPos(0 );
           myArm.slider.setPos(0.5);
         }
         // System.out.println("Level 1");
@@ -161,9 +161,9 @@ public class MoveArmFix extends Command {
       case 4:
         myArm.lowerArm.setPos(26.6, true);// myArm.lowerArm.setPos(27.2);// 28.2
         myArm.upperArm.setPos(33.0, true);
-        myArm.slider.setPos(28,false);
+        myArm.slider.setPos(30,false);
 
-         myArm.wrist.setPos(8.8);
+         myArm.wrist.setPos(9.4);
 
         // System.out.println("Level 4");
         break;
