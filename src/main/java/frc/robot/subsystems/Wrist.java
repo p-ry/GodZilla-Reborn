@@ -15,6 +15,7 @@ import org.opencv.core.Mat;
 
 import com.ctre.phoenix6.configs.CommutationConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfigurator;
@@ -54,6 +55,10 @@ public class Wrist extends SubsystemBase implements Sendable {
     pidConfigs = wristConfigs.Slot0;
     pidConfigs.kP = 0.1;
     wristConfigs.ClosedLoopGeneral.ContinuousWrap = false;
+    wristConfigs.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+    wristConfigs.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+    wristConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 10.0;
+    wristConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold= 0.1;
     wrist.getConfigurator().apply(wristConfigs);
     
     //wristConfigs.Commutation.MotorArrangement = MotorArrangementValue.Minion_JST;
