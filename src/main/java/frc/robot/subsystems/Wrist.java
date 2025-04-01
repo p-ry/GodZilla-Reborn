@@ -53,7 +53,7 @@ public class Wrist extends SubsystemBase implements Sendable {
     wristController = new PositionDutyCycle(0);
     wristConfigs = new TalonFXConfiguration();
     pidConfigs = wristConfigs.Slot0;
-    pidConfigs.kP = 0.1;
+    pidConfigs.kP = 0.05;
     wristConfigs.ClosedLoopGeneral.ContinuousWrap = false;
     wristConfigs.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
     wristConfigs.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
