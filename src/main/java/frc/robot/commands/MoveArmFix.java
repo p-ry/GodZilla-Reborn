@@ -10,6 +10,8 @@ import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.RobotContainer;
 import frc.robot.Utilitys;
 import frc.robot.subsystems.Ace;
@@ -212,6 +214,10 @@ public class MoveArmFix extends Command {
         myArm.upperArm.setPos(3.5, false);// 0.0 load  //3.7
         myArm.wrist.setPos(0.7);
         myArm.slider.setPos(0.5, true);
+        // new WaitCommand(0.2).andThen(new InstantCommand(()->{
+        //   RobotContainer.MaxSpeed = RobotContainer.maxSpeedConstant;
+
+        //         RobotContainer.MaxAngularRate = RobotContainer.maxAngularRateConstant;}));
         break;
 
       case 50: // chomp
@@ -260,7 +266,7 @@ public class MoveArmFix extends Command {
     double elaspedTime = Timer.getTimestamp() - startTime;
     SmartDashboard.putBoolean("AtLevel", myArm.isAtLevel());
     return (myArm.isAtLevel()
-        || (elaspedTime > 3.0));
+        || (elaspedTime > 1.0));
 
   }
 }

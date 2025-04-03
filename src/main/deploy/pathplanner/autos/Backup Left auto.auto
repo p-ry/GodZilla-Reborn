@@ -11,26 +11,13 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Right Side Score 1"
+                  "pathName": "Copy of Left"
                 }
               },
               {
-                "type": "sequential",
+                "type": "named",
                 "data": {
-                  "commands": [
-                    {
-                      "type": "wait",
-                      "data": {
-                        "waitTime": 0.25
-                      }
-                    },
-                    {
-                      "type": "named",
-                      "data": {
-                        "name": "L4"
-                      }
-                    }
-                  ]
+                  "name": "L4"
                 }
               }
             ]
@@ -68,7 +55,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Right Side Load 1"
+                  "pathName": "LoadStation"
                 }
               },
               {
@@ -93,7 +80,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Right Side Score 2"
+                  "pathName": "Copy of Reef6"
                 }
               },
               {
@@ -131,7 +118,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Right Side Load 2"
+                  "pathName": "Reef6 Back"
                 }
               },
               {

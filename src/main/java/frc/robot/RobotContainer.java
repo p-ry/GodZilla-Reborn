@@ -289,7 +289,7 @@ public static double garbage =0;
                 Lv4R.onTrue(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant / 2));
                 Lv4R.onTrue(new InstantCommand(() -> rightTree = true));
                 // *********FALSE **************************************************/
-                Lv4L.onFalse(new MoveArmFix(mArm, 44, 0).andThen(new WaitCommand(0.5)).andThen(new InstantCommand(()->{
+                Lv4L.onFalse(new MoveArmFix(mArm, 44, 0).andThen(new WaitCommand(0.1)).andThen(new InstantCommand(()->{
 
                 MaxSpeed = maxSpeedConstant;
 
@@ -299,7 +299,7 @@ public static double garbage =0;
                 //.andThen(new InstantCommand(() -> ace.setSpeed(1))));
                 // Lv4L.onFalse(new InstantCommand(() -> MaxSpeed = MaxSpeed * 4));
                 // Lv4L.onFalse(new InstantCommand(() -> MaxAngularRate = MaxAngularRate * 2));
-                Lv4R.onFalse(new MoveArmFix(mArm, 44, 0).andThen(new WaitCommand(0.5)).andThen(new InstantCommand(()->{
+                Lv4R.onFalse(new MoveArmFix(mArm, 44, 0).andThen(new WaitCommand(0.1)).andThen(new InstantCommand(()->{
                 MaxSpeed = maxSpeedConstant;
                   MaxAngularRate = maxAngularRateConstant;
                          })));

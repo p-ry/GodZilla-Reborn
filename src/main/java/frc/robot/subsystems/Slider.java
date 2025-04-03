@@ -84,7 +84,7 @@ public class Slider extends SubsystemBase implements Sendable{
     pidConfigs.kP = 3.0;
     pidConfigs2.kP = 0.02;
     pidConfigs.kS=0.5;
-    pidConfigs.kV=0.1;
+    pidConfigs.kV=0.15;
 
     mmConfigs= sliderConfigs.MotionMagic;
     mmConfigs.MotionMagicCruiseVelocity = fastVel; // Target cruise velocity of 80 rps
@@ -135,7 +135,7 @@ public class Slider extends SubsystemBase implements Sendable{
   @Override
   public void periodic() {
    
-    if (Math.abs(getPos() - requestedPosition) < 0.8) {
+    if (Math.abs(getPos() - requestedPosition) < 1.0) {
       atPosition = true;
     } else {
       atPosition = false;

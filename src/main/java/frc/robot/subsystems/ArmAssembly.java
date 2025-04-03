@@ -78,8 +78,8 @@ SmartDashboard.putNumber("LowerArm", lowerArm.getPos());
   }
 
   public boolean isAtLevel() {
-    SmartDashboard.putBoolean("Godzilla Be Ready", (lowerArm.atPos() && upperArm.atPos() && slider.atPos() && wrist.atPos()));
-    return lowerArm.atPos() && upperArm.atPos() && slider.atPos() && wrist.atPos();
+    SmartDashboard.putBoolean("Godzilla Be Ready", (lowerArm.atPos() && upperArm.atPos() && slider.atPos() ));
+    return lowerArm.atPos() && upperArm.atPos() && slider.atPos() ;
 
   }
 }

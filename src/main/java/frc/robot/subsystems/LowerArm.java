@@ -159,7 +159,7 @@ public void setPos(double position, boolean fast){
     return LowerArmRight.getPosition().getValueAsDouble();
   }
  public boolean atPos(TalonFX talon) {
-    return Math.abs(talon.getPosition().getValueAsDouble() - requestedPosition) < 0.8;
+    return Math.abs(talon.getPosition().getValueAsDouble() - requestedPosition) < 1.0;
   }
   public boolean atPos() {
     return atPosition;

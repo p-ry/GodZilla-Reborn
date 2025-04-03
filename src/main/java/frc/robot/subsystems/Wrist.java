@@ -91,7 +91,7 @@ public class Wrist extends SubsystemBase implements Sendable {
   @Override
   public void periodic() {
 
-    if (Math.abs(Math.abs(getPos()) - Math.abs(requestedPosition)) < 0.5) {
+    if (Math.abs(Math.abs(getPos()) - Math.abs(requestedPosition)) < 0.8) {
       atPosition = true;
     } else {
       atPosition = false;
