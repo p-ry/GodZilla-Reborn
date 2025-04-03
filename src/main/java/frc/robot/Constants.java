@@ -65,6 +65,10 @@ public final class Constants {
   public Pose3d tag20 = fieldLayout.getTagPose(20).get();
   public Pose3d tag21 = fieldLayout.getTagPose(21).get();
   public Pose3d tag22 = fieldLayout.getTagPose(22).get();
+
+  public static double leftOffset =2;
+  public static double rightOffset =10;
+  public static double forwardOffset = 19;
   
   public static final double trackWidth = Units.inchesToMeters(21.75); // TODO: This must be tuned to
   // specific

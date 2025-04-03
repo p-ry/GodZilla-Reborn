@@ -113,9 +113,9 @@ public class Utilitys {
             }
 
             if (right) {
-                where = Utilitys.shiftPoseRight(Utilitys.getAprilTagPose(tagId), 20, 12);//6.5); // 0.164285833);
+                where = Utilitys.shiftPoseRight(Utilitys.getAprilTagPose(tagId), Constants.forwardOffset, Constants.rightOffset);//12//6.5); // 0.164285833);
             } else {
-                where = Utilitys.shiftPoseLeft(Utilitys.getAprilTagPose(tagId), 20, 2);//);// 0.164285833);
+                where = Utilitys.shiftPoseLeft(Utilitys.getAprilTagPose(tagId), Constants.forwardOffset, Constants.leftOffset);//2);// 0.164285833);
             }
             SmartDashboard.putNumberArray("Where",new double[]{where.getX(),where.getY(),where.getRotation().getRadians()});
             Command driveit = AutoBuilder.pathfindToPose(where, constraints, 0.0);

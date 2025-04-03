@@ -10,7 +10,7 @@ import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-
+import frc.robot.Constants;
 import au.grapplerobotics.LaserCan;
 
 import static edu.wpi.first.units.Units.Newton;
@@ -152,12 +152,16 @@ public class Slider extends SubsystemBase implements Sendable{
     // wrist.getVelocity().getValueAsDouble() * 60, null);
     builder.addDoubleProperty("Position", () -> slider.getPosition().getValueAsDouble(), null);
 
+
     builder.addDoubleProperty("Setpoint", () -> requestedPosition, this::setPos);
     builder.publishConstBoolean("AtPosition",atPosition);
     builder.publishConstBoolean("Fast", fast);
     builder.publishConstDouble("Velocity", slowVel);
     builder.publishConstDouble("RPS", slider.getVelocity().getValueAsDouble());
-    // builder.addDoubleProperty("Output Voltage", () ->
+    
+    builder.addDoubleProperty("LeftOffset", () -> Constants.leftOffset,(value) ->Constants.leftOffset = value);// builder.addDoubleProperty("Output Voltage", () ->
+    builder.addDoubleProperty("RightOffset", () -> Constants.rightOffset,(value) ->Constants.rightOffset = value);// builder.addDoubleProperty("Output Voltage", () ->
+    builder.addDoubleProperty("ForwardOffset", () -> Constants.forwardOffset,(value) ->Constants.forwardOffset = value);// builder.addDoubleProperty("Output Voltage", () ->
     // wrist.getMotorVoltage().getValueAsDouble(), null);
     // PID Tuning
     builder.addDoubleProperty("kP", () -> kP, (value) ->kP = value);
