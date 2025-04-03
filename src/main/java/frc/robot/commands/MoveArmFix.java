@@ -266,7 +266,7 @@ public class MoveArmFix extends Command {
     double elaspedTime = Timer.getTimestamp() - startTime;
     SmartDashboard.putBoolean("AtLevel", myArm.isAtLevel());
     return (myArm.isAtLevel()
-        || (elaspedTime > 1.0));
+        || (elaspedTime > 0.7));
 
   }
 }
