@@ -363,21 +363,20 @@ public class RobotContainer {
                                 .whileTrue(new InstantCommand(() -> ace.setSpeed(1)));
                 Intake
                                 .onFalse(new InstantCommand(() -> ace.setSpeed(0)));
-                Outtake
-                .whileTrue(new InstantCommand(() -> ace.setSpeed(-0.5)));
-               // Outtake.onTrue(new InstantCommand(() -> {
-                //         prevWristPos = mArm.wrist.getPos();
-                //         if (prevWristPos < 3) {
-                //                 mArm.wrist.setPos(3);
-                //                 ace.setSpeed(-0.5);
-                //         }
+                // Outtake
+                //                 .whileTrue(new InstantCommand(() -> ace.setSpeed(-1.0)));
+                Outtake.onTrue(new InstantCommand(() -> {
+                        prevWristPos = mArm.wrist.getPos();
+                        if (prevWristPos < 3) {
+                                mArm.wrist.setPos(3);
+                                ace.setSpeed(-0.5);
+                        }
 
-                // }));
-
+                }));
                 Outtake
                                 .onFalse(new InstantCommand(() -> {
                                         ace.setSpeed(0);
-                                      //  mArm.wrist.setPos(prevWristPos);
+                                        mArm.wrist.setPos(prevWristPos);
                                 }));
                 /*
                  * Process need to find corect Position
