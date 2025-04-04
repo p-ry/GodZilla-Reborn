@@ -3,16 +3,16 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 5.2,
-        "y": 2.8
+        "x": 5.145977393617021,
+        "y": 2.8347739361702122
       },
       "prevControl": null,
       "nextControl": {
-        "x": 5.317289077296237,
-        "y": 2.243498295687769
+        "x": 5.2632664709132575,
+        "y": 2.2782722318579816
       },
       "isLocked": false,
-      "linkedName": "Right Auto 1"
+      "linkedName": "Score1"
     },
     {
       "anchor": {
@@ -32,16 +32,16 @@
     },
     {
       "anchor": {
-        "x": 1.1720034246575342,
-        "y": 0.9297089041095887
+        "x": 1.0735372340425533,
+        "y": 0.8510638297872333
       },
       "prevControl": {
-        "x": 2.2688784246575344,
-        "y": 1.140068493150685
+        "x": 2.1704122340425536,
+        "y": 1.0614234188283298
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Right Auto 2"
+      "linkedName": "Load1"
     }
   ],
   "rotationTargets": [],

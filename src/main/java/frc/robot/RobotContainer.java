@@ -167,7 +167,7 @@ public static double garbage =0;
                 NamedCommands.registerCommand("L1", new MoveArmFix(mArm, 6, 0));
                 NamedCommands.registerCommand("L2", new MoveArmFix(mArm, 2, 0));
                 NamedCommands.registerCommand("L3", new MoveArmFix(mArm, 3, 0));
-                NamedCommands.registerCommand("L4", new MoveArmFix(mArm, 4, 0));
+                NamedCommands.registerCommand("L4", new MoveArmFix(mArm, 4, 0).withTimeout(0.4));
                 NamedCommands.registerCommand("Intake", new InstantCommand(() -> ace.setSpeed(1)).alongWith(new InstantCommand(() -> ace.gotIt = false)).alongWith(new InstantCommand(() -> ace.coralPresent = false)));
                 new EventTrigger("L400").onTrue(new MoveArmFix(mArm, 4, 0));
                 new EventTrigger("LoadIt").onTrue(new MoveArmFix(mArm, 1, 0).alongWith(new InstantCommand(() -> System.out.println("loadit")) .alongWith(new InstantCommand(() -> ace.setSpeed(1)))));
@@ -224,16 +224,16 @@ public static double garbage =0;
                                 .onFalse(new MoveArmFix(mArm, 0, 0));
 
 
-                                // Chomp.onTrue(new InstantCommand(() -> {
-                                //         // ace.setSpeed(1);
-                                //         mArm.wrist.setSpeed(.3);
-                                //         System.out.println("Chomp is on");
-                                // })); // Chomp is on
-                                // Chomp.onFalse(new InstantCommand(() -> {
-                                //         // ace.setSpeed(0);
-                                //         mArm.wrist.setSpeed(0);
-                                //         System.out.println("Chomp is off");
-                                // })); // Chomp is off
+                                Chomp.onTrue(new InstantCommand(() -> {
+                                        // ace.setSpeed(1);
+                                        mArm.wrist.setSpeed(.3);
+                                        System.out.println("Chomp is on");
+                                })); // Chomp is on
+                                Chomp.onFalse(new InstantCommand(() -> {
+                                        // ace.setSpeed(0);
+                                        mArm.wrist.setSpeed(0);
+                                        System.out.println("Chomp is off");
+                                })); // Chomp is off
                 // **************TRUE ******** */
                 Lv2L.whileTrue(new MoveArmFix(mArm, 2, -1));
                 Lv2L.onTrue(new InstantCommand(() -> MaxSpeed = maxSpeedConstant));
@@ -281,12 +281,12 @@ public static double garbage =0;
                 // *********TRUE *************************************** */
                 Lv4L.onTrue(new MoveArmFix(mArm, 4, -1));
                 Lv4L.onTrue(new InstantCommand(() -> MaxSpeed = maxSpeedConstant / 4));
-                Lv4L.onTrue(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant / 2));
+                Lv4L.onTrue(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant / 2.5));
                 Lv4L.onTrue(new InstantCommand(() -> rightTree = false));
 
                 Lv4R.onTrue(new MoveArmFix(mArm, 4, 1));
                 Lv4R.onTrue(new InstantCommand(() -> MaxSpeed = maxSpeedConstant / 4));
-                Lv4R.onTrue(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant / 2));
+                Lv4R.onTrue(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant / 2.5));
                 Lv4R.onTrue(new InstantCommand(() -> rightTree = true));
                 // *********FALSE **************************************************/
                 Lv4L.onFalse(new MoveArmFix(mArm, 44, 0).andThen(new WaitCommand(0.1)).andThen(new InstantCommand(()->{
@@ -360,7 +360,7 @@ public static double garbage =0;
                 Intake
                                 .onFalse(new InstantCommand(() -> ace.setSpeed(0)));
                 Outtake
-                                .whileTrue(new InstantCommand(() -> ace.setSpeed(-1.0)));
+                                .whileTrue(new InstantCommand(() -> ace.setSpeed(-0.5)));
                 Outtake
                                 .onFalse(new InstantCommand(() -> ace.setSpeed(0)));
                 /*

@@ -16,16 +16,16 @@
     },
     {
       "anchor": {
-        "x": 5.2,
-        "y": 2.8
+        "x": 6.236,
+        "y": 1.997
       },
       "prevControl": {
-        "x": 5.506134012033189,
-        "y": 1.932077649473308
+        "x": 6.536757838167205,
+        "y": 1.9067740459679752
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Right Auto 1"
+      "linkedName": "partone"
     }
   ],
   "rotationTargets": [],
@@ -41,8 +41,8 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0,
-    "rotation": 119.99999999999999
+    "velocity": 1.0,
+    "rotation": 150.52400000000003
   },
   "reversed": false,
   "folder": "Right Auto",
