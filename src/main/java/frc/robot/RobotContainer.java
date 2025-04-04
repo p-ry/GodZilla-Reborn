@@ -167,7 +167,7 @@ public class RobotContainer {
                 NamedCommands.registerCommand("L1", new MoveArmFix(mArm, 6, 0));
                 NamedCommands.registerCommand("L2", new MoveArmFix(mArm, 2, 0));
                 NamedCommands.registerCommand("L3", new MoveArmFix(mArm, 3, 0));
-                NamedCommands.registerCommand("L4", new MoveArmFix(mArm, 4, 0).withTimeout(0.4));
+                NamedCommands.registerCommand("L4", new MoveArmFix(mArm, 4, 0));
                 NamedCommands.registerCommand("Intake",
                                 new InstantCommand(() -> ace.setSpeed(1))
                                                 .alongWith(new InstantCommand(() -> ace.gotIt = false))
