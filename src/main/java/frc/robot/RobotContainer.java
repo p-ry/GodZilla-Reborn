@@ -69,7 +69,7 @@ public static double garbage =0;
          */
         private double prevHeading = 0;
         private double slowFactor = 3;
-        public static CANdle candle = new CANdle(37);
+       // public static CANdle candle = new CANdle(37);
 
         private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
         private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
@@ -281,12 +281,12 @@ public static double garbage =0;
                 // *********TRUE *************************************** */
                 Lv4L.onTrue(new MoveArmFix(mArm, 4, -1));
                 Lv4L.onTrue(new InstantCommand(() -> MaxSpeed = maxSpeedConstant / 4));
-                Lv4L.onTrue(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant / 2));
+                Lv4L.onTrue(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant / 2.5));
                 Lv4L.onTrue(new InstantCommand(() -> rightTree = false));
 
                 Lv4R.onTrue(new MoveArmFix(mArm, 4, 1));
                 Lv4R.onTrue(new InstantCommand(() -> MaxSpeed = maxSpeedConstant / 4));
-                Lv4R.onTrue(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant / 2));
+                Lv4R.onTrue(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant / 2.5));
                 Lv4R.onTrue(new InstantCommand(() -> rightTree = true));
                 // *********FALSE **************************************************/
                 Lv4L.onFalse(new MoveArmFix(mArm, 44, 0).andThen(new WaitCommand(0.1)).andThen(new InstantCommand(()->{
@@ -360,7 +360,7 @@ public static double garbage =0;
                 Intake
                                 .onFalse(new InstantCommand(() -> ace.setSpeed(0)));
                 Outtake
-                                .whileTrue(new InstantCommand(() -> ace.setSpeed(-1.0)));
+                                .whileTrue(new InstantCommand(() -> ace.setSpeed(-0.5)));
                 Outtake
                                 .onFalse(new InstantCommand(() -> ace.setSpeed(0)));
                 /*
