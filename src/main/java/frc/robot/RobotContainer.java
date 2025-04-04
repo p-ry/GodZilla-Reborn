@@ -224,16 +224,16 @@ public static double garbage =0;
                                 .onFalse(new MoveArmFix(mArm, 0, 0));
 
 
-                                Chomp.onTrue(new InstantCommand(() -> {
-                                        // ace.setSpeed(1);
-                                        mArm.wrist.setSpeed(.3);
-                                        System.out.println("Chomp is on");
-                                })); // Chomp is on
-                                Chomp.onFalse(new InstantCommand(() -> {
-                                        // ace.setSpeed(0);
-                                        mArm.wrist.setSpeed(0);
-                                        System.out.println("Chomp is off");
-                                })); // Chomp is off
+                                // Chomp.onTrue(new InstantCommand(() -> {
+                                //         // ace.setSpeed(1);
+                                //         mArm.wrist.setSpeed(.3);
+                                //         System.out.println("Chomp is on");
+                                // })); // Chomp is on
+                                // Chomp.onFalse(new InstantCommand(() -> {
+                                //         // ace.setSpeed(0);
+                                //         mArm.wrist.setSpeed(0);
+                                //         System.out.println("Chomp is off");
+                                // })); // Chomp is off
                 // **************TRUE ******** */
                 Lv2L.whileTrue(new MoveArmFix(mArm, 2, -1));
                 Lv2L.onTrue(new InstantCommand(() -> MaxSpeed = maxSpeedConstant));
