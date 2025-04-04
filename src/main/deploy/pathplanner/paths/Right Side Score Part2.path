@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 5.935242161832795,
-        "y": 2.087225954032025
+        "x": 5.940936517073225,
+        "y": 2.10439432500426
       },
       "isLocked": false,
       "linkedName": "partone"
@@ -48,7 +48,7 @@
   "folder": "Right Auto",
   "idealStartingState": {
     "velocity": 1.0,
-    "rotation": 150.52400000000003
+    "rotation": 119.99999999999999
   },
   "useDefaultConstraints": false
 }

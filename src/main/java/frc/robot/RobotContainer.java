@@ -69,7 +69,7 @@ public static double garbage =0;
          */
         private double prevHeading = 0;
         private double slowFactor = 3;
-        public static CANdle candle = new CANdle(37);
+        //public static CANdle candle = new CANdle(37);
 
         private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
         private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();

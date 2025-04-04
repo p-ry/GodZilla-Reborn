@@ -55,8 +55,8 @@ public class Wrist extends SubsystemBase implements Sendable {
     pidConfigs = wristConfigs.Slot0;
     pidConfigs.kP = 0.05;
     wristConfigs.ClosedLoopGeneral.ContinuousWrap = false;
-    wristConfigs.SoftwareLimitSwitch.ForwardSoftLimitEnable = false;
-    wristConfigs.SoftwareLimitSwitch.ReverseSoftLimitEnable = false;
+    wristConfigs.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+    wristConfigs.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
     wristConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 10.0;
     wristConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold= 0.1;
     wrist.getConfigurator().apply(wristConfigs);
