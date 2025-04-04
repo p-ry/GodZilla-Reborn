@@ -88,6 +88,7 @@ public static double garbage =0;
         public static final ArmAssembly mArm = new ArmAssembly(false, 99);
         public static final Ace ace = new Ace(0);
         public static int prevLevel = 0;
+        public static double prevWristAngle = 1.0;
         private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
                         .withDeadband(driveDeadband).withRotationalDeadband(turnDeadband)
                         .withDriveRequestType(DriveRequestType.Velocity);
@@ -281,12 +282,12 @@ public static double garbage =0;
                 // *********TRUE *************************************** */
                 Lv4L.onTrue(new MoveArmFix(mArm, 4, -1));
                 Lv4L.onTrue(new InstantCommand(() -> MaxSpeed = maxSpeedConstant / 4));
-                Lv4L.onTrue(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant / 2));
+                Lv4L.onTrue(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant / 2.5));
                 Lv4L.onTrue(new InstantCommand(() -> rightTree = false));
 
                 Lv4R.onTrue(new MoveArmFix(mArm, 4, 1));
                 Lv4R.onTrue(new InstantCommand(() -> MaxSpeed = maxSpeedConstant / 4));
-                Lv4R.onTrue(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant / 2));
+                Lv4R.onTrue(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant / 2.5));
                 Lv4R.onTrue(new InstantCommand(() -> rightTree = true));
                 // *********FALSE **************************************************/
                 Lv4L.onFalse(new MoveArmFix(mArm, 44, 0).andThen(new WaitCommand(0.1)).andThen(new InstantCommand(()->{
@@ -359,10 +360,19 @@ public static double garbage =0;
                                 .whileTrue(new InstantCommand(() -> ace.setSpeed(1)));
                 Intake
                                 .onFalse(new InstantCommand(() -> ace.setSpeed(0)));
+                // Outtake
+                //                 .whileTrue(new InstantCommand(() -> ace.setSpeed(-1.0)));
+
+                                Outtake.onTrue(  new InstantCommand(()->{
+prevWristAngle = mArm.wrist.getPos();
+if(prevWristAngle <3){ mArm.wrist.setPos(3);}
+ace.setSpeed(-0.5);
+                                }));
                 Outtake
-                                .whileTrue(new InstantCommand(() -> ace.setSpeed(-1.0)));
-                Outtake
-                                .onFalse(new InstantCommand(() -> ace.setSpeed(0)));
+                                .onFalse(new InstantCommand(() ->{
+                                        ace.setSpeed(0);
+                                        mArm.wrist.setPos(prevWristAngle);
+                                } ));
                 /*
                  * Process need to find corect Position
                  * .onTrue(new MoveArmFix(mArm, 2));
