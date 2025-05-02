@@ -22,14 +22,16 @@ public class FollowCurve extends Command {
     private Point2D p0;
     private Point2D p1;
     private Point2D p2;
-    private int numberOfPoints = 200;
+    private Point2D p3;
+    private int numberOfPoints = 500;
 
-    public FollowCurve(ArmAssembly arm, Point2D p0, Point2D p1, Point2D p2) {
+    public FollowCurve(ArmAssembly arm, Point2D p0, Point2D p1, Point2D p2,Point2D p3) {
         this.arm = arm;
         this.path = BezierCurve.generateCurve(p0, p1, p2, numberOfPoints);
         this.p0 = p0;
         this.p1 = p1;
         this.p2 = p2;
+        this.p3 = p3;
 
         // addRequirements(arm);
         System.out.println("Path size: " + path.size());
@@ -47,12 +49,13 @@ public class FollowCurve extends Command {
         if (t > 1) {
             return;
         }
-        Point2D p0 = path.get(0);
-        Point2D p1 = path.get(1);
-        Point2D p2 = path.get(2);
-        Point2D p3 = path.get(3);
+        // Point2D p0 = path.get(0);
+        // Point2D p1 = path.get(1);
+        // Point2D p2 = path.get(2);
+        // Point2D p3 = path.get(3);
+        // Point2D point = getPoint(t, p0, p1, p2, p3);
+        // // arm.moveToXY(point.getX(),point.getY());
         Point2D point = getPoint(t, p0, p1, p2, p3);
-        // arm.moveToXY(point.getX(),point.getY());
         double[] angles = solve(point.getX(), point.getY(), L1, L2);
          System.out.println("X: " + point.getX() + " Y: " + point.getY());
      System.out.print(" "+angles[0] + " " + angles[1]);

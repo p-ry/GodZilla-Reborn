@@ -122,10 +122,12 @@ public static double garbage =0;
         public static boolean rightTree =true;
         public static double maxSpeedConstant = 4.73;
         public static double maxAngularRateConstant = RotationsPerSecond.of(0.75).in(RadiansPerSecond);
-        public Point2D.Double startPoint = new Point2D.Double(0.0, 0.0); 
-        public Point2D.Double endPoint = new Point2D.Double(0.4,0.9);
+        public Point2D.Double startPoint = new Point2D.Double(0.0, 0.30); 
+        
 
-        public Point2D.Double controlPoint = new Point2D.Double(-0.1,.5);
+        public Point2D.Double controlPoint1 = new Point2D.Double(-0.1,.5);
+        public Point2D.Double controlPoint2 = new Point2D.Double(-.2,0.6);
+        public Point2D.Double endPoint = new Point2D.Double(-0.1,0.9);
         /* Path follower */
         private final SendableChooser<Command> AutoChooser;
 
@@ -229,8 +231,8 @@ public static double garbage =0;
                 Dump
                                 .onFalse(new MoveArmFix(mArm, 0, 0));
 
-  Chomp.onTrue(new FollowCurve(mArm, startPoint,controlPoint,endPoint));
-  Chomp.onFalse(new FollowCurve(mArm, endPoint, controlPoint,startPoint));
+  Chomp.onTrue(new FollowCurve(mArm, startPoint,controlPoint1,controlPoint2,endPoint));
+  Chomp.onFalse(new FollowCurve(mArm, endPoint, controlPoint2,controlPoint1,startPoint));
   
                                 // Chomp.onTrue(new InstantCommand(() -> {
                                 //         // ace.setSpeed(1);
