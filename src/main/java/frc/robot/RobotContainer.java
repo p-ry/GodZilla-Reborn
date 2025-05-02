@@ -7,6 +7,7 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
 
+import java.awt.geom.Point2D;
 import java.io.Console;
 
 import com.ctre.phoenix6.hardware.Pigeon2;
@@ -33,6 +34,7 @@ import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.DriveItCommand;
 import frc.robot.commands.Extend;
+import frc.robot.commands.FollowCurve;
 import frc.robot.commands.MoveArm;
 import frc.robot.commands.MoveArmFix;
 //import frc.robot.commands.MoveArmFix;
@@ -104,7 +106,7 @@ public static double garbage =0;
         final JoystickButton Lv3R = new JoystickButton(copilot, 5);
         final JoystickButton Lv4L = new JoystickButton(copilot, 6);
         final JoystickButton Lv4R = new JoystickButton(copilot, 7);
-        // final JoystickButton Climb = new JoystickButton(copilot, 8);
+       // final JoystickButton Climb = new JoystickButton(copilot, 8);
         // final JoystickButton Pull = new JoystickButton(copilot, 9);
         final JoystickButton Intake = new JoystickButton(copilot, 10);
         final JoystickButton Outtake = new JoystickButton(copilot, 11);
@@ -120,6 +122,10 @@ public static double garbage =0;
         public static boolean rightTree =true;
         public static double maxSpeedConstant = 4.73;
         public static double maxAngularRateConstant = RotationsPerSecond.of(0.75).in(RadiansPerSecond);
+        public Point2D.Double startPoint = new Point2D.Double(0.0, 0.0); 
+        public Point2D.Double endPoint = new Point2D.Double(0.4,0.9);
+
+        public Point2D.Double controlPoint = new Point2D.Double(-0.1,.5);
         /* Path follower */
         private final SendableChooser<Command> AutoChooser;
 
@@ -223,7 +229,9 @@ public static double garbage =0;
                 Dump
                                 .onFalse(new MoveArmFix(mArm, 0, 0));
 
-
+  Chomp.onTrue(new FollowCurve(mArm, startPoint,controlPoint,endPoint));
+  Chomp.onFalse(new FollowCurve(mArm, endPoint, controlPoint,startPoint));
+  
                                 // Chomp.onTrue(new InstantCommand(() -> {
                                 //         // ace.setSpeed(1);
                                 //         mArm.wrist.setSpeed(.3);

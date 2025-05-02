@@ -6,6 +6,8 @@ package frc.robot.subsystems;
 
 import java.util.logging.Level;
 
+import com.ctre.phoenix.motorcontrol.ControlMode;
+
 import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.util.sendable.SendableRegistry;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
@@ -34,6 +36,10 @@ public class ArmAssembly extends SubsystemBase {
   boolean algae;
   public static boolean retract;
   public int prevLevel;
+  private double L1 = 0.4962; // meters
+    private double L2 = 0.6969;
+  double lowerGearRatio = 16*8;
+  double upperGearRatio = 25*4;
 
   // public Ace ace;
 
@@ -51,6 +57,7 @@ public class ArmAssembly extends SubsystemBase {
     wrist = new Wrist();
     this.level = level;
     prevLevel = level;
+
     // this.shiftDirection = shiftDirection;
     // ace = new Ace(level);
 
@@ -67,19 +74,63 @@ public class ArmAssembly extends SubsystemBase {
 
   }
 
+public void setJointAngles(double shoulderDeg, double elbowDeg) {
+        //double currentShoulder = getShoulderAngleDeg();
+        //double currentElbow = getElbowAngleDeg();
+
+        
+
+
+  
+
+  lowerArm.setPos((shoulderDeg/360)*lowerGearRatio,false);
+  upperArm.setPos((elbowDeg/360)*upperGearRatio,false);
+  System.out.println("Lower Gear Ratio: " + (shoulderDeg / 360) * lowerGearRatio + ", Upper Gear Ratio: " + (elbowDeg / 360) * upperGearRatio);
+  SmartDashboard.putNumber("lowerARM!!!!", (shoulderDeg/360)*lowerGearRatio);
+
+}
+
+
+
+
+  public void moveToXY(double x, double y) {
+    double dx = x;
+    double dy = y;
+    double dist = Math.sqrt(dx * dx + dy * dy);
+
+    // Check if reachable
+    if (dist > L1 + L2 || dist < Math.abs(L1 - L2))
+      return;
+
+    double cosTheta2 = (dx * dx + dy * dy - L1 * L1 - L2 * L2) / (2 * L1 * L2);
+    double theta2 = Math.acos(cosTheta2);
+
+    double k1 = L1 + L2 * Math.cos(theta2);
+    double k2 = L2 * Math.sin(theta2);
+    double theta1 = Math.atan2(dy, dx) - Math.atan2(k2, k1);
+
+    lowerArm.setPos(angleToEncoderUnits(theta1)*lowerGearRatio,false);
+    upperArm.setPos(angleToEncoderUnits(theta2)*upperGearRatio,false);
+    SmartDashboard.putNumber("lowerARM!!!!", theta1*lowerGearRatio);
+  }
+
+
+  private double angleToEncoderUnits(double radians) {
+    return radians * (1 / (2 * Math.PI)); // example for 4096 CPR encoder
+  }
+
   @Override
   public void periodic() {
- SmartDashboard.putNumber("Wristpos", wrist.getPos());
-SmartDashboard.putNumber("slider",slider.getPos());
-SmartDashboard.putNumber("UpperArm",upperArm.getPos());
-SmartDashboard.putNumber("LowerArm", lowerArm.getPos());
-
+    SmartDashboard.putNumber("Wristpos", wrist.getPos());
+    SmartDashboard.putNumber("slider", slider.getPos());
+    SmartDashboard.putNumber("UpperArm", upperArm.getPos());
+    SmartDashboard.putNumber("LowerArm", lowerArm.getPos());
 
   }
 
   public boolean isAtLevel() {
-    SmartDashboard.putBoolean("Godzilla Be Ready", (lowerArm.atPos() && upperArm.atPos() && slider.atPos() ));
-    return lowerArm.atPos() && upperArm.atPos() && slider.atPos() ;
+    SmartDashboard.putBoolean("Godzilla Be Ready", (lowerArm.atPos() && upperArm.atPos() && slider.atPos()));
+    return lowerArm.atPos() && upperArm.atPos() && slider.atPos();
 
   }
 }

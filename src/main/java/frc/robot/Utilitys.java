@@ -23,6 +23,12 @@ import frc.robot.LimelightHelpers.PoseEstimate;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import java.awt.geom.Point2D;
+
+import java.util.ArrayList;
+
+import java.util.List;
+
 
 /** Add your docs here. */
 public class Utilitys {
@@ -335,4 +341,32 @@ public class Utilitys {
 
     // }
     // }
+
+    
+
+
+public class BezierCurve {
+
+    public static List<Point2D> generateCurve(Point2D p0, Point2D p1, Point2D p2, int numPoints) {
+
+        List<Point2D> curve = new ArrayList<>();
+
+        for (int i = 0; i <= numPoints; i++) {
+
+            double t = i / (double) numPoints;
+
+            double x = Math.pow(1 - t, 2) * p0.getX() + 2 * (1 - t) * t * p1.getX() + Math.pow(t, 2) * p2.getX();
+
+            double y = Math.pow(1 - t, 2) * p0.getY() + 2 * (1 - t) * t * p1.getY() + Math.pow(t, 2) * p2.getY();
+
+            curve.add(new Point2D.Double(x, y));
+
+        }
+
+        return curve;
+
+    }
+
+}
+
 }
