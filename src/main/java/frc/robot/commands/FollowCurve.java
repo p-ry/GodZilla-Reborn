@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 //import java.awt.geom.*;
 
 import frc.robot.subsystems.ArmAssembly;
+import frc.robot.BezierLogger;
 import frc.robot.Utilitys.BezierCurve;
 //import frc.robot.subsystems.ArmController;
 
@@ -23,7 +24,7 @@ public class FollowCurve extends Command {
     private Point2D p1;
     private Point2D p2;
     private Point2D p3;
-    private int numberOfPoints = 500;
+    private int numberOfPoints = 10;
 
     public FollowCurve(ArmAssembly arm, Point2D p0, Point2D p1, Point2D p2,Point2D p3) {
         this.arm = arm;
@@ -41,6 +42,15 @@ public class FollowCurve extends Command {
     public void initialize() {
         path = BezierCurve.generateCurve(p0, p1, p2, numberOfPoints);
         t=0;
+        BezierLogger logger = new BezierLogger();
+        Point2D p0 = new Point2D.Double(this.p0.getX(), this.p0.getY());
+        Point2D p1 = new Point2D.Double(this.p1.getX(), this.p1.getY());
+        Point2D p2 = new Point2D.Double(this.p2.getX(), this.p2.getY());
+        Point2D p3 = new Point2D.Double(this.p3.getX(), this.p3.getY());
+        List<Point2D> curvePoints = BezierCurve.generateCurve(p0, p1, p2, numberOfPoints);
+        logger.logCurve(curvePoints, p0, p1, p2, p3);
+
+        
     }
 
     @Override
@@ -56,6 +66,8 @@ public class FollowCurve extends Command {
         // Point2D point = getPoint(t, p0, p1, p2, p3);
         // // arm.moveToXY(point.getX(),point.getY());
         Point2D point = getPoint(t, p0, p1, p2, p3);
+
+
         double[] angles = solve(point.getX(), point.getY(), L1, L2);
          System.out.println("X: " + point.getX() + " Y: " + point.getY());
      System.out.print(" "+angles[0] + " " + angles[1]);

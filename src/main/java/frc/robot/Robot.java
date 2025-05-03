@@ -6,6 +6,7 @@ package frc.robot;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -45,7 +46,16 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotInit() {
-  
+  // DataLogManager.setLogDir("c:/users/pryland/downloads"); // Removed as the method does not exist
+    DataLogManager.start();
+    //DataLogManager.setEnabled(true);
+    //DataLogManager.setLogDir("c:/users/pryland/downloads");
+    //DataLogManager.start();
+    //DataLogManager.setEnabled(true);
+    //DataLogManager.setLogDir("c:/users/pryland/downloads");
+    //
+
+DataLogManager.start();
 
     FollowPathCommand.warmupCommand().schedule();
     //Pathfinding.setPathfinder(null);
