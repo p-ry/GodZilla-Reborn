@@ -83,8 +83,8 @@ public void setJointAngles(double shoulderDeg, double elbowDeg) {
 
   
 
-  lowerArm.setPos((shoulderDeg/360)*lowerGearRatio,false);
-  upperArm.setPos((elbowDeg/360)*upperGearRatio,false);
+  lowerArm.setPos((shoulderDeg/360)*lowerGearRatio,true);
+  upperArm.setPos((elbowDeg/360)*upperGearRatio,true);
   System.out.println("Lower Gear Ratio: " + (shoulderDeg / 360) * lowerGearRatio + ", Upper Gear Ratio: " + (elbowDeg / 360) * upperGearRatio);
   SmartDashboard.putNumber("lowerARM!!!!", (shoulderDeg/360)*lowerGearRatio);
 

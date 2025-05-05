@@ -347,9 +347,9 @@ public class Utilitys {
 
 public class BezierCurve {
 
-    public static List<Point2D> generateCurve(Point2D p0, Point2D p1, Point2D p2, int numPoints) {
+    public static List<Point2D.Double> generateCurve(Point2D p0, Point2D p1, Point2D p2, int numPoints) {
 
-        List<Point2D> curve = new ArrayList<>();
+        List<Point2D.Double> curve = new ArrayList<>();
 
         for (int i = 0; i <= numPoints; i++) {
 

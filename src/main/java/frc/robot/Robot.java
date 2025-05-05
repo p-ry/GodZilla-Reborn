@@ -8,6 +8,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -46,8 +47,11 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotInit() {
+     if (RobotBase.isSimulation()) {
+        frc.robot.BezierArmVisualizer.showVisualizer();
+    }
   // DataLogManager.setLogDir("c:/users/pryland/downloads"); // Removed as the method does not exist
-    DataLogManager.start();
+    //DataLogManager.start();
     //DataLogManager.setEnabled(true);
     //DataLogManager.setLogDir("c:/users/pryland/downloads");
     //DataLogManager.start();
