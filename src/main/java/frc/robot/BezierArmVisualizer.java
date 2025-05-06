@@ -11,6 +11,9 @@ public class BezierArmVisualizer extends JPanel {
     private final List<Point2D.Double> controlPoints;
     private final double L1 = 496; // Lower arm length
     private final double L2 = 696; // Upper arm length
+    private double sliderLength = 0.0; // Slider length
+    
+    
     private double t = 0.0;
     //private final Timer timer;
 
