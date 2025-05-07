@@ -23,7 +23,7 @@ public class BezierArmVisualizer extends JPanel {
         setBackground(Color.WHITE);
 
         // Timer to animate the curve
-        final Timer timer = new Timer(500, e -> {
+        final Timer timer = new Timer(50, e -> {
             t += 0.02;
             if (t > 1) {
                 ((Timer) e.getSource()).stop();
@@ -106,28 +106,35 @@ public class BezierArmVisualizer extends JPanel {
         //dist = Math.max(dist, Math.abs(L1 - L2));
 
         double angle1 = Math.acos((L1*L1 + dist*dist - sL2*sL2) / (2 * L1 * dist));
-        double angle2 = Math.acos((L1*L1 + sL2*sL2 - dist*dist) / (2 * L1 * sL2));
-
+        
         double baseAngle = Math.atan2(dy, dx);
         double shoulderAngle = baseAngle - angle1;
-        double maxShoulderAngle = Math.PI/2;
-        
-shoulderAngle = Math.max(0, Math.min(maxShoulderAngle, shoulderAngle));
+        shoulderAngle= Math.min(shoulderAngle, Math.toRadians(80));//Math.PI/2); // Limit shoulder angle to [-90°, 90°]
+        double jointX = baseX + L1 * Math.cos(shoulderAngle);
+        double jointY = baseY + L1 * Math.sin(shoulderAngle);
+        dx = target.x - jointX;
+        dy = target.y - jointY;
 
-        double elbowAngle = Math.PI - angle2;
-//double c = Math.sqrt(L1*L1 + L2*L2 - 2*L1*L2*Math.cos(shoulderAngle));
+// True angle between joint and target
+double targetAngle = Math.atan2(dy, dx);
+
+// Elbow angle is angle between L1 and L2 segments
+double elbowAngle = targetAngle - shoulderAngle;
+
+        dist = Math.hypot(dx, dy);
+        sliderLength = dist - L2; // Calculate the slider length
+        if (sliderLength < 0) {
+            sliderLength = 0; // Ensure the slider length is non-negative
+        }
+        
+
+
+        double angle2 = Math.acos((L1*L1 + sL2*sL2 - dist*dist) / (2 * L1 * sL2));
+       // double elbowAngle = Math.PI - angle2;
         System.out.println("Shoulder Angle: " + Math.toDegrees(shoulderAngle));
-      //  System.out.println("Base Angle: " + Math.toDegrees(baseAngle)); 
-       // System.out.println("Angle1: " + Math.toDegrees(angle1));
         System.out.println("Angle2: " + Math.toDegrees(angle2));
         System.out.println("Elbow Angle: " + (180.0-Math.toDegrees(elbowAngle)));
         System.out.println("Slider: " + sliderLength);
-        //System.out.println("c: " + c);
-
-
-
-        double jointX = baseX + L1 * Math.cos(shoulderAngle);
-        double jointY = baseY + L1 * Math.sin(shoulderAngle);
         double endX = jointX + sL2 * Math.cos(shoulderAngle + elbowAngle);
         double endY = jointY + sL2 * Math.sin(shoulderAngle + elbowAngle);
         double sEndx = jointX + sliderLength * Math.cos(shoulderAngle + elbowAngle);
@@ -187,50 +194,4 @@ shoulderAngle = Math.max(0, Math.min(maxShoulderAngle, shoulderAngle));
             frame.setVisible(true);
         });
     }
-
-public static class ArmSolution {
-    double shoulderAngle, elbowAngle;
-    double jointX, jointY, endX, endY;
-    ArmSolution(double s, double e, double jx, double jy, double ex, double ey) {
-        shoulderAngle = s;
-        elbowAngle = e;
-        jointX = jx;
-        jointY = jy;
-        endX = ex;
-        endY = ey;
-    }
-}
-
-public static ArmSolution solveWithShoulderLimit(
-        double baseX, double baseY,
-        double targetX, double targetY,
-        double L1, double L2,
-        double minShoulderDeg, double maxShoulderDeg) {
-
-    double dx = targetX - baseX;
-    double dy = targetY - baseY;
-    double dist = Math.hypot(dx, dy);
-
-    dist = Math.max(Math.abs(L1 - L2), Math.min(L1 + L2, dist));
-
-    double baseAngle = Math.atan2(dy, dx);
-    double cosAngle1 = (L1 * L1 + dist * dist - L2 * L2) / (2 * L1 * dist);
-    if (Double.isNaN(cosAngle1)) return null;
-
-    double angle1 = Math.acos(cosAngle1);
-    double shoulderAngle = baseAngle - angle1;
-    double shoulderDeg = Math.toDegrees(shoulderAngle);
-    if (shoulderDeg < minShoulderDeg || shoulderDeg > maxShoulderDeg) return null;
-
-    double cosAngle2 = (L1 * L1 + L2 * L2 - dist * dist) / (2 * L1 * L2);
-    double elbowAngle = Math.PI - Math.acos(cosAngle2);
-
-    double jointX = baseX + L1 * Math.cos(shoulderAngle);
-    double jointY = baseY + L1 * Math.sin(shoulderAngle);
-    double endX = jointX + L2 * Math.cos(shoulderAngle + elbowAngle);
-    double endY = jointY + L2 * Math.sin(shoulderAngle + elbowAngle);
-
-    return new ArmSolution(shoulderAngle, elbowAngle, jointX, jointY, endX, endY);
-}
-
 }
