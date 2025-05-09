@@ -1,6 +1,5 @@
 package frc.robot;
 
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.Point2D;
@@ -13,9 +12,8 @@ public class BezierArmVisualizer extends JPanel {
     private final double L2 = 696; // Upper arm length
     private double sliderLength = 0.0; // Slider length
 
-
     private double t = 0.0;
-    //private final Timer timer;
+    // private final Timer timer;
 
     public BezierArmVisualizer(List<Point2D.Double> controlPoints) {
         this.controlPoints = controlPoints;
@@ -63,7 +61,7 @@ public class BezierArmVisualizer extends JPanel {
     private void drawBezierCurve(Graphics2D g2) {
         g2.setColor(Color.RED);
         Point2D.Double prev = bezierPoint(0);
-        for (double step = 0.01; step <= 1.0; step += 0.01) {
+        for (double step = 0.0; step <= 1.0; step += 0.1) {
             Point2D.Double point = bezierPoint(step);
             g2.drawLine((int) prev.x, (int) prev.y, (int) point.x, (int) point.y);
             prev = point;
@@ -77,14 +75,14 @@ public class BezierArmVisualizer extends JPanel {
         Point2D.Double p3 = controlPoints.get(3);
 
         double x = Math.pow(1 - t, 3) * p0.x +
-                   3 * Math.pow(1 - t, 2) * t * p1.x +
-                   3 * (1 - t) * t * t * p2.x +
-                   Math.pow(t, 3) * p3.x;
+                3 * Math.pow(1 - t, 2) * t * p1.x +
+                3 * (1 - t) * t * t * p2.x +
+                Math.pow(t, 3) * p3.x;
 
         double y = Math.pow(1 - t, 3) * p0.y +
-                   3 * Math.pow(1 - t, 2) * t * p1.y +
-                   3 * (1 - t) * t * t * p2.y +
-                   Math.pow(t, 3) * p3.y;
+                3 * Math.pow(1 - t, 2) * t * p1.y +
+                3 * (1 - t) * t * t * p2.y +
+                Math.pow(t, 3) * p3.y;
 
         return new Point2D.Double(x, y);
     }
@@ -94,32 +92,33 @@ public class BezierArmVisualizer extends JPanel {
         double dy = target.y - baseY;
         double dist = Math.hypot(dx, dy);
 
-        sliderLength = dist-L1-L2; // Calculate the slider length
+        sliderLength = dist - L1 - L2; // Calculate the slider length
         if (sliderLength < 0) {
             sliderLength = 0; // Ensure the slider length is non-negative
         }
 
+        double sL2 = L2 + sliderLength; // Calculate the length of the second arm segment
 
-        double sL2 = L2+sliderLength; // Calculate the length of the second arm segment
+        // dist = Math.min(dist, L1 + L2);
+        // dist = Math.max(dist, Math.abs(L1 - L2));
 
-        //dist = Math.min(dist, L1 + L2);
-        //dist = Math.max(dist, Math.abs(L1 - L2));
-
-        double angle1 = Math.acos((L1*L1 + dist*dist - sL2*sL2) / (2 * L1 * dist));
+        double angle1 = Math.acos((L1 * L1 + dist * dist - sL2 * sL2) / (2 * L1 * dist));
+        System.out.println("Angle1: " + angle1);
 
         double baseAngle = Math.atan2(dy, dx);
         double shoulderAngle = baseAngle - angle1;
-        shoulderAngle= Math.min(shoulderAngle, Math.toRadians(70));//Math.PI/2); // Limit shoulder angle to [-90°, 90°]
+        shoulderAngle = Math.min(shoulderAngle, Math.toRadians(70));// Math.PI/2); // Limit shoulder angle to [-90°,
+                                                                    // 90°]
         double jointX = baseX + L1 * Math.cos(shoulderAngle);
         double jointY = baseY + L1 * Math.sin(shoulderAngle);
         dx = target.x - jointX;
         dy = target.y - jointY;
 
-// True angle between joint and target
-double targetAngle = Math.atan2(dy, dx);
+        // True angle between joint and target
+        double targetAngle = Math.atan2(dy, dx);
 
-// Elbow angle is angle between L1 and L2 segments
-double elbowAngle = targetAngle - shoulderAngle;
+        // Elbow angle is angle between L1 and L2 segments
+        double elbowAngle = targetAngle - shoulderAngle;
 
         dist = Math.hypot(dx, dy);
         sliderLength = dist - L2; // Calculate the slider length
@@ -127,15 +126,13 @@ double elbowAngle = targetAngle - shoulderAngle;
             sliderLength = 0; // Ensure the slider length is non-negative
         }
 
-
-
-        double angle2 = Math.acos((L1*L1 + sL2*sL2 - dist*dist) / (2 * L1 * sL2));
-       // double elbowAngle = Math.PI - angle2;
+        double angle2 = Math.acos((L1 * L1 + sL2 * sL2 - dist * dist) / (2 * L1 * sL2));
+        // double elbowAngle = Math.PI - angle2;
         // System.out.println("Shoulder Angle: " + Math.toDegrees(shoulderAngle));
         // System.out.println("Angle2: " + Math.toDegrees(angle2));
         // System.out.println("Elbow Angle: " + (180.0-Math.toDegrees(elbowAngle)));
         // System.out.println("Slider: " + sliderLength);
-         double endX = jointX + sL2 * Math.cos(shoulderAngle + elbowAngle);
+        double endX = jointX + sL2 * Math.cos(shoulderAngle + elbowAngle);
         double endY = jointY + sL2 * Math.sin(shoulderAngle + elbowAngle);
         double sEndx = jointX + sliderLength * Math.cos(shoulderAngle + elbowAngle);
         double sEndy = jointY + sliderLength * Math.sin(shoulderAngle + elbowAngle);
@@ -157,14 +154,16 @@ double elbowAngle = targetAngle - shoulderAngle;
         g2.setColor(Color.BLACK);
         g2.setFont(new Font("SansSerif", Font.PLAIN, 12));
         g2.drawString(String.format("Shoulder: %.1f°", Math.toDegrees(shoulderAngle)), 10, 20);
-        g2.drawString(String.format("Elbow: %.1f°",(180- Math.toDegrees(elbowAngle))), 10, 35);
-       // g2.drawString(String.format("L2 Angle: %.1f°", Math.toDegrees(l2Angle)), 10, 50);
+        g2.drawString(String.format("Elbow: %.1f°", (180 - Math.toDegrees(elbowAngle))), 10, 35);
+        // g2.drawString(String.format("L2 Angle: %.1f°", Math.toDegrees(l2Angle)), 10,
+        // 50);
 
     }
 
     public static Point2D.Double scaleIt(Point2D.Double point) {
-        return new Point2D.Double(point.x * 1000, point.y * 1000);
+        return new Point2D.Double(point.x * 1.000, point.y * 1.000);
     }
+
     /** Call this from Robot.java in simulation only */
     public static void showVisualizer() {
         if (GraphicsEnvironment.isHeadless()) {
@@ -173,16 +172,16 @@ double elbowAngle = targetAngle - shoulderAngle;
         }
 
         List<Point2D.Double> controlPoints = Arrays.asList(
-            scaleIt(RobotContainer.startPoint),
-            scaleIt(RobotContainer.controlPoint1),
-            scaleIt(RobotContainer.controlPoint2),
-            scaleIt(RobotContainer.endPoint));
+                scaleIt(RobotContainer.startPoint),
+                scaleIt(RobotContainer.controlPoint1),
+                scaleIt(RobotContainer.controlPoint2),
+                scaleIt(RobotContainer.endPoint));
         // Uncomment the following lines to use hardcoded control points instead
-        //     , // Start point
-        //     new Point2D.Double(0, 300),
-        //     new Point2D.Double(-100, 500),
-        //     new Point2D.Double(-200, 600),
-        //     new Point2D.Double(-100, 900)
+        // , // Start point
+        // new Point2D.Double(0, 300),
+        // new Point2D.Double(-100, 500),
+        // new Point2D.Double(-200, 600),
+        // new Point2D.Double(-100, 900)
         // );
 
         SwingUtilities.invokeLater(() -> {
