@@ -12,8 +12,8 @@ public class BezierArmVisualizer extends JPanel {
     private final double L1 = 496; // Lower arm length
     private final double L2 = 696; // Upper arm length
     private double sliderLength = 0.0; // Slider length
-    
-    
+
+
     private double t = 0.0;
     //private final Timer timer;
 
@@ -24,8 +24,8 @@ public class BezierArmVisualizer extends JPanel {
 
         // Timer to animate the curve
         final Timer timer = new Timer(50, e -> {
-            t += 0.02;
-            if (t > 1) {
+            t += 0.1;
+            if (t >= 1) {
                 ((Timer) e.getSource()).stop();
                 System.out.printf("Final point: (%.2f, %.2f)%n", bezierPoint(1).x, bezierPoint(1).y);
                 return;
@@ -93,7 +93,7 @@ public class BezierArmVisualizer extends JPanel {
         double dx = target.x - baseX;
         double dy = target.y - baseY;
         double dist = Math.hypot(dx, dy);
-        
+
         sliderLength = dist-L1-L2; // Calculate the slider length
         if (sliderLength < 0) {
             sliderLength = 0; // Ensure the slider length is non-negative
@@ -101,15 +101,15 @@ public class BezierArmVisualizer extends JPanel {
 
 
         double sL2 = L2+sliderLength; // Calculate the length of the second arm segment
-        
+
         //dist = Math.min(dist, L1 + L2);
         //dist = Math.max(dist, Math.abs(L1 - L2));
 
         double angle1 = Math.acos((L1*L1 + dist*dist - sL2*sL2) / (2 * L1 * dist));
-        
+
         double baseAngle = Math.atan2(dy, dx);
         double shoulderAngle = baseAngle - angle1;
-        shoulderAngle= Math.min(shoulderAngle, Math.toRadians(80));//Math.PI/2); // Limit shoulder angle to [-90°, 90°]
+        shoulderAngle= Math.min(shoulderAngle, Math.toRadians(70));//Math.PI/2); // Limit shoulder angle to [-90°, 90°]
         double jointX = baseX + L1 * Math.cos(shoulderAngle);
         double jointY = baseY + L1 * Math.sin(shoulderAngle);
         dx = target.x - jointX;
@@ -126,20 +126,20 @@ double elbowAngle = targetAngle - shoulderAngle;
         if (sliderLength < 0) {
             sliderLength = 0; // Ensure the slider length is non-negative
         }
-        
+
 
 
         double angle2 = Math.acos((L1*L1 + sL2*sL2 - dist*dist) / (2 * L1 * sL2));
        // double elbowAngle = Math.PI - angle2;
-        System.out.println("Shoulder Angle: " + Math.toDegrees(shoulderAngle));
-        System.out.println("Angle2: " + Math.toDegrees(angle2));
-        System.out.println("Elbow Angle: " + (180.0-Math.toDegrees(elbowAngle)));
-        System.out.println("Slider: " + sliderLength);
-        double endX = jointX + sL2 * Math.cos(shoulderAngle + elbowAngle);
+        // System.out.println("Shoulder Angle: " + Math.toDegrees(shoulderAngle));
+        // System.out.println("Angle2: " + Math.toDegrees(angle2));
+        // System.out.println("Elbow Angle: " + (180.0-Math.toDegrees(elbowAngle)));
+        // System.out.println("Slider: " + sliderLength);
+         double endX = jointX + sL2 * Math.cos(shoulderAngle + elbowAngle);
         double endY = jointY + sL2 * Math.sin(shoulderAngle + elbowAngle);
         double sEndx = jointX + sliderLength * Math.cos(shoulderAngle + elbowAngle);
         double sEndy = jointY + sliderLength * Math.sin(shoulderAngle + elbowAngle);
-       
+
         g2.setColor(Color.BLUE);
         g2.setStroke(new BasicStroke(4));
         g2.drawLine((int) baseX, (int) baseY, (int) jointX, (int) jointY);
@@ -153,7 +153,7 @@ double elbowAngle = targetAngle - shoulderAngle;
 
         g2.setColor(Color.MAGENTA);
         g2.fillOval((int) target.x - 4, (int) target.y - 4, 8, 8);
-        
+
         g2.setColor(Color.BLACK);
         g2.setFont(new Font("SansSerif", Font.PLAIN, 12));
         g2.drawString(String.format("Shoulder: %.1f°", Math.toDegrees(shoulderAngle)), 10, 20);

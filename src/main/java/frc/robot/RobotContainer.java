@@ -124,12 +124,12 @@ public static double garbage =0;
         public static double maxAngularRateConstant = RotationsPerSecond.of(0.75).in(RadiansPerSecond);
 
         public static Point2D.Double base = new Point2D.Double(0,0);
-        public static Point2D.Double startPoint = new Point2D.Double(-0.30, 0.30); 
+        public static Point2D.Double startPoint = new Point2D.Double(-0.30, 0.10); 
         
 
-        public static Point2D.Double controlPoint1 = new Point2D.Double(-0.6,.5);
-        public static Point2D.Double controlPoint2 = new Point2D.Double(-.2,0.6);
-        public static Point2D.Double endPoint = new Point2D.Double(-0.4,1.5);
+        public static Point2D.Double controlPoint1 = new Point2D.Double(-0.4,.5);
+        public static Point2D.Double controlPoint2 = new Point2D.Double(.2,0.6);
+        public static Point2D.Double endPoint = new Point2D.Double(-0.22,1.7);
         /* Path follower */
         private final SendableChooser<Command> AutoChooser;
 

@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.LimelightHelpers;
 import frc.robot.LimelightHelpers.PoseEstimate;
+import frc.robot.commands.FollowCurve;
 import au.grapplerobotics.LaserCan;
 import au.grapplerobotics.interfaces.LaserCanInterface.RegionOfInterest;
 import au.grapplerobotics.ConfigurationFailedException;
@@ -47,9 +48,11 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotInit() {
+    Command myCommand;
      if (RobotBase.isSimulation()) {
         frc.robot.BezierArmVisualizer.showVisualizer();
-    }
+       
+      }
   // DataLogManager.setLogDir("c:/users/pryland/downloads"); // Removed as the method does not exist
     //DataLogManager.start();
     //DataLogManager.setEnabled(true);
