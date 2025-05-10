@@ -28,12 +28,13 @@ public class FollowCurve extends Command {
     private Point2D p1;
     private Point2D p2;
     private Point2D p3;
-    private int numberOfPoints = 20;
+    private int numberOfPoints =30;
     //private double baseX = 0.0; // Base X coordinate
     //private double baseY = 0.0; // Base Y coordinate
     private Point2D base;
     private static double sliderLength = 0.0; // Slider length
     private double prevShoulderAngle = 0.0; // Previous shoulder angle
+    private double maxSliderLength = 0.0; // Maximum slider length
 
     public FollowCurve(ArmAssembly arm, Point2D p0, Point2D p1, Point2D p2, Point2D p3, Point2D base) {
         this.arm = arm;
@@ -80,11 +81,15 @@ public class FollowCurve extends Command {
          System.out.print("X: " + point.getX() + " Y: " + point.getY());
         
         double[] angles = solve(point.getX(), point.getY(), L1, L2, base.getX(), base.getY(),prevShoulderAngle);
-        System.out.println("X: " + point.getX() + " Y: " + point.getY());
-        System.out.print(" " + angles[0] + " " + angles[1]);
-
+        
+        if(angles[2] > maxSliderLength) {
+            maxSliderLength = angles[2];
+        }
+        System.out.println("Max Slider Length: " + maxSliderLength);
         arm.setJointAngles(angles[0], angles[1]);
-        t += 1.0 / numberOfPoints;
+        arm.slider.setPos(angles[2],false);
+        
+                t += 1.0 / numberOfPoints;
         prevShoulderAngle = angles[0]; // Update previous shoulder angle
 
         // if (index < path.size()) {
@@ -132,21 +137,21 @@ public class FollowCurve extends Command {
         double sL2Squared = sL2 * sL2;
         double distSquared = dist * dist;
         double divisor = 2 * L1 * dist;
-        System.out.println("L1^2: " + l1Squared);
-        System.out.println("sL2^2: " + sL2Squared);
-        System.out.println("dist^2: " + distSquared);
-        System.out.println("Divisor: " + divisor);
+       // System.out.println("L1^2: " + l1Squared);
+        //System.out.println("sL2^2: " + sL2Squared);
+        //System.out.println("dist^2: " + distSquared);
+        //System.out.println("Divisor: " + divisor);
 
         double preMath = (L1 * L1 + dist * dist - sL2 * sL2) / (2.0 * L1 * dist);
-        System.out.println("preMath: " + preMath);
+        //System.out.println("preMath: " + preMath);
         
         double angle1 = Math.acos(preMath);
         
         
         double baseAngle = Math.atan2(dy, dx);
         
-        System.out.print("Base Angle: " + baseAngle);
-        System.out.println(" Angle1: " + angle1);
+       // System.out.print("Base Angle: " + baseAngle);
+        //System.out.println(" Angle1: " + angle1);
         // System.out.println("Base Angle: " + baseAngle);
 /*  Add some code
  * to limit the shoulder angle delta to 5 degrees
@@ -155,28 +160,30 @@ public class FollowCurve extends Command {
  */
         prevShoulderAngle = Math.toRadians(prevShoulderAngle);
         double shoulderAngle = baseAngle - angle1;
-        if(Math.abs(shoulderAngle - prevShoulderAngle) > Math.toRadians(5)) {
-            shoulderAngle = prevShoulderAngle + Math.signum(shoulderAngle - prevShoulderAngle) * Math.toRadians(5);
+        if(Math.abs(shoulderAngle - prevShoulderAngle) > Math.toRadians(5.0)) {
+            shoulderAngle = prevShoulderAngle + Math.signum(shoulderAngle - prevShoulderAngle) * Math.toRadians(5.0);
         }
-        shoulderAngle = Math.min(shoulderAngle, Math.toRadians(70));// Math.PI/2); // Limit shoulder angle to [-90°,
+        shoulderAngle = Math.min(shoulderAngle, Math.toRadians(70.0));// Math.PI/2); // Limit shoulder angle to [-90°,
                                                                     // 90°]
         double jointX = baseX + L1 * Math.cos(shoulderAngle);
         double jointY = baseY + L1 * Math.sin(shoulderAngle);
         dx = targetX - jointX;
         dy = targetY - jointY;
-
-        // True angle between joint and target
-        double targetAngle = Math.atan2(dy, dx); 
         
-
-        // Elbow angle is angle between L1 and L2 segments
-        double elbowAngle = Math.PI-(targetAngle - shoulderAngle);
-
-        dist = Math.hypot(dx, dy); //distance from joint to target
-        sliderLength = dist - L2; // Calculate the slider length
+        double distL2 = Math.hypot(dx, dy); //distance from joint to target
+        sliderLength = distL2 - L2; // Calculate the slider length
         if (sliderLength < 0) {
             sliderLength = 0; // Ensure the slider length is non-negative
         }
+
+        // True angle between joint and target
+            double elbowAngle = Math.acos((L1*L1 + distL2*distL2 -dist*dist)/(2*L1*distL2));
+            
+        
+
+        // Elbow angle is angle between L1 and L2 segments
+        //double elbowAngle = Math.PI-(targetAngle - shoulderAngle);
+
 
         //double angle2 = Math.acos((L1 * L1 + sL2 * sL2 - dist * dist) / (2 * L1 * sL2));
 
@@ -186,7 +193,7 @@ public class FollowCurve extends Command {
         System.out.println("Elbow Angle: " + Math.toDegrees(elbowAngle));//(180.0 - Math.toDegrees(elbowAngle)));
         //System.out.println("Target Angle: " + Math.toDegrees(targetAngle));
         System.out.println("Slider: " + sliderLength);
-        System.out.println("Distance from joint to target: " + dist);
+        //System.out.println("Distance from joint to target: " + dist);
 
         // double baseAngle = Math.atan2(dy, dx); // angle from base to target
         // double angle1 = Math.acos((L1 * L1 + dist * dist - L2 * L2) / (2 * L1 * dist)); // internal triangle angle
@@ -226,7 +233,7 @@ public class FollowCurve extends Command {
         theta2 = Math.toDegrees(elbowAngle);
 
         // Convert to degrees for output
-        return new double[] { theta1, theta2 };
+        return new double[] { theta1, theta2,sliderLength };
     }
 
     @Override
