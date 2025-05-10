@@ -263,10 +263,8 @@ public class MoveArmFix extends Command {
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    double elaspedTime = Timer.getTimestamp() - startTime;
+    double elapsedTime = Timer.getFPGATimestamp() - startTime;
     SmartDashboard.putBoolean("AtLevel", myArm.isAtLevel());
-    return (myArm.isAtLevel()
-        || (elaspedTime > 0.7));
-
+    return (myArm.isAtLevel() || (elapsedTime > 0.7));
   }
 }

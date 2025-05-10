@@ -74,7 +74,7 @@ public class ArmAssembly extends SubsystemBase {
 
   }
 
-public void setJointAngles(double shoulderDeg, double elbowDeg) {
+public void setJointAngles(double shoulderDeg, double elbowDeg,double sliderPos) {
         //double currentShoulder = getShoulderAngleDeg();
         //double currentElbow = getElbowAngleDeg();
 
@@ -82,10 +82,11 @@ public void setJointAngles(double shoulderDeg, double elbowDeg) {
 
 
   
-
+  wrist.setPos(8);
   lowerArm.setPos((shoulderDeg/360)*lowerGearRatio,true);
   upperArm.setPos((elbowDeg/360)*upperGearRatio,true);
-  System.out.println("Lower Gear Ratio: " + (shoulderDeg / 360) * lowerGearRatio + ", Upper Gear Ratio: " + (elbowDeg / 360) * upperGearRatio);
+  slider.setPos(sliderPos*8.1/100, true);
+  //System.out.println("Lower Gear Ratio: " + (shoulderDeg / 360) * lowerGearRatio + ", Upper Gear Ratio: " + (elbowDeg / 360) * upperGearRatio);
   SmartDashboard.putNumber("lowerARM!!!!", (shoulderDeg/360)*lowerGearRatio);
 
 }

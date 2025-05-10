@@ -5,6 +5,8 @@ import java.util.List;
 import com.ctre.phoenix6.configs.Slot2Configs;
 
 import java.awt.geom.Point2D;
+
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 //import java.awt.geom.GeneralPath;
 //import java.awt.geom.Path2D;
@@ -28,7 +30,7 @@ public class FollowCurve extends Command {
     private Point2D p1;
     private Point2D p2;
     private Point2D p3;
-    private int numberOfPoints =30;
+    private int numberOfPoints =40;
     //private double baseX = 0.0; // Base X coordinate
     //private double baseY = 0.0; // Base Y coordinate
     private Point2D base;
@@ -78,16 +80,19 @@ public class FollowCurve extends Command {
         // Point2D point = getPoint(t, p0, p1, p2, p3);
         // // arm.moveToXY(point.getX(),point.getY());
         Point2D.Double point = getPoint(t, p0, p1, p2, p3);
-         System.out.print("X: " + point.getX() + " Y: " + point.getY());
+        // System.out.print("X: " + point.getX() + " Y: " + point.getY());
         
         double[] angles = solve(point.getX(), point.getY(), L1, L2, base.getX(), base.getY(),prevShoulderAngle);
         
         if(angles[2] > maxSliderLength) {
             maxSliderLength = angles[2];
         }
-        System.out.println("Max Slider Length: " + maxSliderLength);
-        arm.setJointAngles(angles[0], angles[1]);
-        arm.slider.setPos(angles[2],false);
+       // System.out.println("Max Slider Length: " + maxSliderLength);
+       
+        //arm.slider.setPos((angles[2]*8.1/100));
+        SmartDashboard.putNumber("ShoulderDeg", angles[0]);
+        SmartDashboard.putNumber("Slider Length", angles[2]*8.1/100);
+        arm.setJointAngles((angles[0]+22.5), angles[1],angles[2]);
         
                 t += 1.0 / numberOfPoints;
         prevShoulderAngle = angles[0]; // Update previous shoulder angle
@@ -160,8 +165,8 @@ public class FollowCurve extends Command {
  */
         prevShoulderAngle = Math.toRadians(prevShoulderAngle);
         double shoulderAngle = baseAngle - angle1;
-        if(Math.abs(shoulderAngle - prevShoulderAngle) > Math.toRadians(5.0)) {
-            shoulderAngle = prevShoulderAngle + Math.signum(shoulderAngle - prevShoulderAngle) * Math.toRadians(5.0);
+        if(Math.abs(shoulderAngle - prevShoulderAngle) > Math.toRadians(2.0)) {
+            shoulderAngle = prevShoulderAngle + Math.signum(shoulderAngle - prevShoulderAngle) * Math.toRadians(2.0);
         }
         shoulderAngle = Math.min(shoulderAngle, Math.toRadians(70.0));// Math.PI/2); // Limit shoulder angle to [-90°,
                                                                     // 90°]
@@ -174,6 +179,10 @@ public class FollowCurve extends Command {
         sliderLength = distL2 - L2; // Calculate the slider length
         if (sliderLength < 0) {
             sliderLength = 0; // Ensure the slider length is non-negative
+        }
+        if(sliderLength>350)    
+        {
+            sliderLength = 350;
         }
 
         // True angle between joint and target
@@ -188,11 +197,11 @@ public class FollowCurve extends Command {
         //double angle2 = Math.acos((L1 * L1 + sL2 * sL2 - dist * dist) / (2 * L1 * sL2));
 
         // elbowAngle = Math.PI - angle2;
-        System.out.println("Shoulder Angle: " + Math.toDegrees(shoulderAngle));
+      //  System.out.println("Shoulder Angle: " + Math.toDegrees(shoulderAngle));
         //System.out.println("Angle2: " + Math.toDegrees(angle2));
-        System.out.println("Elbow Angle: " + Math.toDegrees(elbowAngle));//(180.0 - Math.toDegrees(elbowAngle)));
+      //  System.out.println("Elbow Angle: " + Math.toDegrees(elbowAngle));//(180.0 - Math.toDegrees(elbowAngle)));
         //System.out.println("Target Angle: " + Math.toDegrees(targetAngle));
-        System.out.println("Slider: " + sliderLength);
+     //   System.out.println("Slider: " + sliderLength);
         //System.out.println("Distance from joint to target: " + dist);
 
         // double baseAngle = Math.atan2(dy, dx); // angle from base to target

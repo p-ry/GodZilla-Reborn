@@ -104,6 +104,7 @@ public class Ace extends SubsystemBase {
         if (coralPresent && distance > 100) {
           setSpeed(0);
           gotIt = true;
+          RobotContainer.mArm.lowerArm.setPos(10.0);
         }
       }
     }

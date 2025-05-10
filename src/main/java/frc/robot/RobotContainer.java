@@ -124,12 +124,12 @@ public static double garbage =0;
         public static double maxAngularRateConstant = RotationsPerSecond.of(0.75).in(RadiansPerSecond);
 
         public static Point2D.Double base = new Point2D.Double(176.45,508.9889);//.17645,.50898890);
-        public static Point2D.Double startPoint = new Point2D.Double(-27.77,520.7621);//-.02777, .5207621); 
+        public static Point2D.Double startPoint = new Point2D.Double(-27.77,580.7621);//-.02777, .5207621); 
         
 
-        public static Point2D.Double controlPoint1 = new Point2D.Double(-200.0,500.0);//-0.4,.5);
-        public static Point2D.Double controlPoint2 = new Point2D.Double(200.0,700.0);//.2,0.6);
-        public static Point2D.Double endPoint = new Point2D.Double(4.1,1857.95);//0.0041,1.85795);
+        public static Point2D.Double controlPoint1 = new Point2D.Double(50.0,1000.0);//-0.4,.5);
+        public static Point2D.Double controlPoint2 = new Point2D.Double(100.0,1200.0);//.2,0.6);
+        public static Point2D.Double endPoint = new Point2D.Double(4.1,1960.95);//0.0041,1.85795);
         /* Path follower */
         private final SendableChooser<Command> AutoChooser;
 
@@ -234,7 +234,7 @@ public static double garbage =0;
                                 .onFalse(new MoveArmFix(mArm, 0, 0));
 
   Chomp.onTrue(new FollowCurve(mArm, startPoint,controlPoint1,controlPoint2,endPoint,base));
-  Chomp.onFalse(new FollowCurve(mArm, endPoint, controlPoint2,controlPoint1,startPoint,base));
+  //Chomp.onFalse(new FollowCurve(mArm, endPoint, controlPoint2,controlPoint1,startPoint,base));
   
                                 // Chomp.onTrue(new InstantCommand(() -> {
                                 //         // ace.setSpeed(1);

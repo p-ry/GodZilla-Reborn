@@ -120,6 +120,9 @@ public class Utilitys {
 
             if (right) {
                 where = Utilitys.shiftPoseRight(Utilitys.getAprilTagPose(tagId), Constants.forwardOffset, Constants.rightOffset);//12//6.5); // 0.164285833);
+//where= LimelightHelpers.getTargetPose3d_RobotSpace("limelight-left").toPose2d();
+//System.out.println(where.getX() + " " + where.getY() + " " + where.getRotation().getDegrees());
+           
             } else {
                 where = Utilitys.shiftPoseLeft(Utilitys.getAprilTagPose(tagId), Constants.forwardOffset, Constants.leftOffset);//2);// 0.164285833);
             }
