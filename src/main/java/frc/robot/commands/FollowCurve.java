@@ -18,236 +18,105 @@ import frc.robot.RobotContainer;
 import frc.robot.Utilitys.BezierCurve;
 //import frc.robot.subsystems.ArmController;
 
+import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.subsystems.ArmAssembly;
+
 public class FollowCurve extends Command {
-
     private final ArmAssembly arm;
-    private static List<Point2D.Double> path;
-    private int index = 0;
-    double t = 0.0; // Parameter for the Bezier curve
-    private double L1 = 492.6; // meters
-    private double L2 = 696.9;
-    private Point2D p0;
-    private Point2D p1;
-    private Point2D p2;
-    private Point2D p3;
-    private int numberOfPoints =40;
-    //private double baseX = 0.0; // Base X coordinate
-    //private double baseY = 0.0; // Base Y coordinate
-    private Point2D base;
-    private static double sliderLength = 0.0; // Slider length
-    private double prevShoulderAngle = 0.0; // Previous shoulder angle
-    private double maxSliderLength = 0.0; // Maximum slider length
+    private final BezierCurve curve;
+    private final double totalTime;
+    private final double dt;
+    private double time;
+    private double lastShoulderDeg;
+    private double lastSliderMeters;
 
-    public FollowCurve(ArmAssembly arm, Point2D p0, Point2D p1, Point2D p2, Point2D p3, Point2D base) {
+    private static final double MAX_SHOULDER_DEG = 90.0;
+    private static final double MAX_DELTA_SHOULDER_DEG = 2.0;
+    private static final double L1 = 0.4962; // m
+    private static final double L2 = 0.6969; // m
+
+    public FollowCurve(ArmAssembly arm, BezierCurve curve, double totalTime, double dt) {
         this.arm = arm;
-        this.path = BezierCurve.generateCurve(p0, p1, p2, numberOfPoints);
-        this.p0 = p0;
-        this.p1 = p1;
-        this.p2 = p2;
-        this.p3 = p3;
-        this.base = base;
-
-        // addRequirements(arm);
-        System.out.println("Path size: " + path.size());
+        this.curve = curve;
+        this.totalTime = totalTime;
+        this.dt = dt;
+        this.time = 0;
+        this.lastShoulderDeg = Double.NaN;
+        this.lastSliderMeters = 0;
+        addRequirements(arm);
     }
 
     @Override
     public void initialize() {
-        path = BezierCurve.generateCurve(p0, p1, p2, numberOfPoints);
-        t = 0;
-        //BezierLogger logger = new BezierLogger();
-        Point2D p0 = new Point2D.Double(this.p0.getX(), this.p0.getY());
-        Point2D p1 = new Point2D.Double(this.p1.getX(), this.p1.getY());
-        Point2D p2 = new Point2D.Double(this.p2.getX(), this.p2.getY());
-        Point2D p3 = new Point2D.Double(this.p3.getX(), this.p3.getY());
-
-        List<Point2D.Double> curvePoints = BezierCurve.generateCurve(p0, p1, p2, numberOfPoints);
-        // logger.logCurve(curvePoints, p0, p1, p2, p3);
-        sliderLength = 0.0; // Reset slider length
-
+        time = 0;
+        lastShoulderDeg = Double.NaN;
+        lastSliderMeters = 0;
     }
 
     @Override
     public void execute() {
+        if (time > totalTime) return;
 
-        if (t > 1) {
-            return;
-        }
-        // Point2D p0 = path.get(0);
-        // Point2D p1 = path.get(1);
-        // Point2D p2 = path.get(2);
-        // Point2D p3 = path.get(3);
-        // Point2D point = getPoint(t, p0, p1, p2, p3);
-        // // arm.moveToXY(point.getX(),point.getY());
-        Point2D.Double point = getPoint(t, p0, p1, p2, p3);
-        // System.out.print("X: " + point.getX() + " Y: " + point.getY());
-        
-        double[] angles = solve(point.getX(), point.getY(), L1, L2, base.getX(), base.getY(),prevShoulderAngle);
-        
-        if(angles[2] > maxSliderLength) {
-            maxSliderLength = angles[2];
-        }
-       // System.out.println("Max Slider Length: " + maxSliderLength);
-       
-        //arm.slider.setPos((angles[2]*8.1/100));
-        SmartDashboard.putNumber("ShoulderDeg", angles[0]);
-        SmartDashboard.putNumber("Slider Length", angles[2]*8.1/100);
-        arm.setJointAngles((angles[0]+22.5), angles[1],angles[2]);
-        
-                t += 1.0 / numberOfPoints;
-        prevShoulderAngle = angles[0]; // Update previous shoulder angle
+        var pos = curve.getPositionAtTime(time / totalTime);
+        var vel = curve.getVelocityAtTime(time / totalTime);
+        double dx = pos.x;
+        double dy = pos.y;
+        double dxdT = vel.x / totalTime;
+        double dydT = vel.y / totalTime;
 
-        // if (index < path.size()) {
-        // Point2D target = path.get(index);
-        // arm.moveToXY(target.getX(), target.getY());
-        // index++;
-        // }
-
-    }
-
-    public static Point2D.Double getPoint(double t, Point2D p0, Point2D p1, Point2D p2, Point2D p3) {
-        double oneMinusT = 1.0 - t;
-        double y = Math.pow(oneMinusT, 3) * p0.getX() +
-                3.0 * Math.pow(oneMinusT, 2) * t * p1.getX() +
-                3.0 * oneMinusT * Math.pow(t, 2) * p2.getX() +
-                Math.pow(t, 3) * p3.getX();
-
-        double z = Math.pow(oneMinusT, 3) * p0.getY() +
-                3.0 * Math.pow(oneMinusT, 2) * t * p1.getY() +
-                3.0 * oneMinusT * Math.pow(t, 2) * p2.getY() +
-                Math.pow(t, 3) * p3.getY();
-
-        return new Point2D.Double(y, z);
-    }
-
-    public static double[] solve(double targetX, double targetY, double L1, double L2, double baseX, double baseY, double prevShoulderAngle) {
-        double theta1 = 0.0; // shoulder angle
-        double theta2 = 0.0; // elbow angle
-        double dx = targetX - baseX;
-        double dy = targetY - baseY;
         double dist = Math.hypot(dx, dy);
-        System.out.println(" Distance: " + dist);
-        double sL2=0;
-        sliderLength = dist - L1 - L2; // Calculate the slider length
-        if (sliderLength < 0) {
-            sliderLength = 0; 
-            sL2= L2;// Ensure the slider length is non-negative
-        }
-        else {
-            sL2 = L2 + sliderLength; // Calculate the length of the second arm segment
-        }
+        if (dist > L1 + L2 || dist < Math.abs(L1 - L2)) return;
 
-        //double sL2 = L2 + sliderLength; // Calculate the length of the second arm segment
-        double l1Squared = L1 * L1;
-        double sL2Squared = sL2 * sL2;
-        double distSquared = dist * dist;
-        double divisor = 2 * L1 * dist;
-       // System.out.println("L1^2: " + l1Squared);
-        //System.out.println("sL2^2: " + sL2Squared);
-        //System.out.println("dist^2: " + distSquared);
-        //System.out.println("Divisor: " + divisor);
+        double cosTheta2 = (dx * dx + dy * dy - L1 * L1 - L2 * L2) / (2 * L1 * L2);
+        double theta2 = Math.acos(cosTheta2);
+        double k1 = L1 + L2 * Math.cos(theta2);
+        double k2 = L2 * Math.sin(theta2);
+        double theta1 = Math.atan2(dy, dx) - Math.atan2(k2, k1);
 
-        double preMath = (L1 * L1 + dist * dist - sL2 * sL2) / (2.0 * L1 * dist);
-        //System.out.println("preMath: " + preMath);
-        
-        double angle1 = Math.acos(preMath);
-        
-        
-        double baseAngle = Math.atan2(dy, dx);
-        
-       // System.out.print("Base Angle: " + baseAngle);
-        //System.out.println(" Angle1: " + angle1);
-        // System.out.println("Base Angle: " + baseAngle);
-/*  Add some code
- * to limit the shoulder angle delta to 5 degrees
- * to prevent jerky movements
- * this should make the slider go out
- */
-        prevShoulderAngle = Math.toRadians(prevShoulderAngle);
-        double shoulderAngle = baseAngle - angle1;
-        if(Math.abs(shoulderAngle - prevShoulderAngle) > Math.toRadians(2.0)) {
-            shoulderAngle = prevShoulderAngle + Math.signum(shoulderAngle - prevShoulderAngle) * Math.toRadians(2.0);
-        }
-        shoulderAngle = Math.min(shoulderAngle, Math.toRadians(70.0));// Math.PI/2); // Limit shoulder angle to [-90°,
-                                                                    // 90°]
-        double jointX = baseX + L1 * Math.cos(shoulderAngle);
-        double jointY = baseY + L1 * Math.sin(shoulderAngle);
-        dx = targetX - jointX;
-        dy = targetY - jointY;
-        
-        double distL2 = Math.hypot(dx, dy); //distance from joint to target
-        sliderLength = distL2 - L2; // Calculate the slider length
-        if (sliderLength < 0) {
-            sliderLength = 0; // Ensure the slider length is non-negative
-        }
-        if(sliderLength>350)    
-        {
-            sliderLength = 350;
+        double shoulderDeg = Math.toDegrees(theta1);
+        double elbowDeg = Math.toDegrees(theta2);
+
+        // Enforce shoulder limits
+        shoulderDeg = Math.min(shoulderDeg, MAX_SHOULDER_DEG);
+
+        if (!Double.isNaN(lastShoulderDeg)) {
+            double delta = shoulderDeg - lastShoulderDeg;
+            if (Math.abs(delta) > MAX_DELTA_SHOULDER_DEG) {
+                shoulderDeg = lastShoulderDeg + Math.copySign(MAX_DELTA_SHOULDER_DEG, delta);
+            }
         }
 
-        // True angle between joint and target
-            double elbowAngle = Math.acos((L1*L1 + distL2*distL2 -dist*dist)/(2*L1*distL2));
-            
-        
+        // Recalculate theta1 in radians after limiting
+        double limitedTheta1Rad = Math.toRadians(shoulderDeg);
+        double limitedTheta2Rad = Math.toRadians(elbowDeg);
 
-        // Elbow angle is angle between L1 and L2 segments
-        //double elbowAngle = Math.PI-(targetAngle - shoulderAngle);
+        // Reconstruct (x, y) from joint angles to track true tip position
+        double trueX = L1 * Math.cos(limitedTheta1Rad) + L2 * Math.cos(limitedTheta1Rad + limitedTheta2Rad);
+        double trueY = L1 * Math.sin(limitedTheta1Rad) + L2 * Math.sin(limitedTheta1Rad + limitedTheta2Rad);
 
+        // Calculate slider value as Euclidean distance from base
+        double currentSlider = Math.hypot(trueX, trueY);
+        double sliderVelocity = (currentSlider - lastSliderMeters) / dt;
+        lastSliderMeters = currentSlider;
 
-        //double angle2 = Math.acos((L1 * L1 + sL2 * sL2 - dist * dist) / (2 * L1 * sL2));
+        // Estimate arm angular velocities (rough Jacobian)
+        double dShoulderDeg = (shoulderDeg - lastShoulderDeg) / dt;
+        double dElbowDeg = dxdT * Math.cos(theta2) + dydT * Math.sin(theta2); // rough estimate
 
-        // elbowAngle = Math.PI - angle2;
-      //  System.out.println("Shoulder Angle: " + Math.toDegrees(shoulderAngle));
-        //System.out.println("Angle2: " + Math.toDegrees(angle2));
-      //  System.out.println("Elbow Angle: " + Math.toDegrees(elbowAngle));//(180.0 - Math.toDegrees(elbowAngle)));
-        //System.out.println("Target Angle: " + Math.toDegrees(targetAngle));
-     //   System.out.println("Slider: " + sliderLength);
-        //System.out.println("Distance from joint to target: " + dist);
+        // Send joint velocities
+        arm.setJointVelocities(dShoulderDeg, dElbowDeg, sliderVelocity);
+        lastShoulderDeg = shoulderDeg;
 
-        // double baseAngle = Math.atan2(dy, dx); // angle from base to target
-        // double angle1 = Math.acos((L1 * L1 + dist * dist - L2 * L2) / (2 * L1 * dist)); // internal triangle angle
-        // double shoulderAngle = baseAngle - angle1;
-        // System.out.println("Shoulder Angle: " + Math.toDegrees(shoulderAngle));
-        // // System.out.println("baseAngle: " + Math.toDegrees(baseAngle));
-        // // System.out.println("angle1: " + Math.toDegrees(angle1));
-
-        // double angle2 = Math.acos((L1 * L1 + L2 * L2 - dist * dist) / (2 * L1 * L2));
-        // // System.out.println("angle2" +angle2);
-        // System.out.println("Elbow: " + Math.toDegrees(angle2));
-        // // double elbowAngle = Math.PI-(Math.PI - angle2);
-        // double elbowAngle = angle2;
-
-        // double jointX = baseX + L1 * Math.cos(shoulderAngle);
-        // double jointY = baseY + L1 * Math.sin(shoulderAngle);
-        // double endX = jointX + L2 * Math.cos(shoulderAngle + elbowAngle);
-        // double endY = jointY + L2 * Math.sin(shoulderAngle + elbowAngle);
-
-        // Math.sqrt(y * y + z * z);
-        // distance = Math.min(distance, L1 + L2); // Clamp to max reach
-        // Law of Cosines for elbow (internal angle)
-        // double cosAngle = (distance - L1 * L1 - L2 * L2) / (2.0 * L1 * L2);
-        // cosAngle = Math.max(-1.0, Math.min(1.0, cosAngle)); // clamp
-        // double internalAngle = Math.acos(cosAngle); // always positive
-
-        // // ✅ Define positive elbow angle as CW, so negate it
-        // // double theta2 = -internalAngle+ Math.PI+Math.toRadians(45); // Elbow angle
-        // (internal angle)
-        // double theta2 = Math.PI-internalAngle;//+ Math.PI; // Elbow angle (internal
-        // angle)
-        // // Shoulder angle from horizontal
-        // double k1 = L1 + L2 * Math.cos(theta2);
-        // double k2 = L2 * Math.sin(theta2);
-        // double theta1 = Math.atan2(z, y) - Math.atan2(k2, k1);
-        theta1 = Math.toDegrees(shoulderAngle);
-        theta2 = Math.toDegrees(elbowAngle);
-
-        // Convert to degrees for output
-        return new double[] { theta1, theta2,sliderLength };
+        time += dt;
     }
 
     @Override
     public boolean isFinished() {
+        return time >= totalTime;
+    }
 
-        return index >= path.size();
+    @Override
+    public void end(boolean interrupted) {
+        arm.setJointVelocities(0.0, 0.0, 0.0);
     }
 }

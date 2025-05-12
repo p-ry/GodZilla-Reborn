@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
@@ -26,6 +27,8 @@ import com.ctre.phoenix6.controls.DynamicMotionMagicVoltage;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.PositionDutyCycle;
+import com.ctre.phoenix6.controls.VelocityDutyCycle;
+import com.ctre.phoenix6.controls.VelocityVoltage;
 
 public class LowerArm extends SubsystemBase implements Sendable{
 
@@ -40,6 +43,7 @@ public class LowerArm extends SubsystemBase implements Sendable{
   TalonFXConfiguration talonFXConfigs;
   TalonFXConfigurator leftConfigurator;
   MotionMagicVoltage leftRequest, rightRequest;
+  VelocityDutyCycle leftControl, rightControl;
   
   // PID coefficients
   double kP = 10.0;
@@ -58,6 +62,8 @@ public class LowerArm extends SubsystemBase implements Sendable{
   public static double slowVel = 150;
   public static double slowAcc = 600;
   public static double slowJerk = 600;
+  public static double velocitySetpoint = 0;
+  private final VelocityDutyCycle velocityRequest = new VelocityDutyCycle(0).withSlot(0);
   
   boolean fast;
   
@@ -109,16 +115,68 @@ public class LowerArm extends SubsystemBase implements Sendable{
     LowerArmLeft.getConfigurator().apply(talonFXConfigs);
     LowerArmRight.getConfigurator().apply(talonFXConfigs);
     LowerArmRight.getConfigurator().apply(rightMotorConfigs);    
+    leftControl = new VelocityDutyCycle(0);
+    rightControl = new VelocityDutyCycle(0);
 
     // leftConfigurator = LowerArmLeft.getConfigurator();
     // leftConfigurator.apply(talonFXConfigs);
-
+ configureMotors(LowerArmLeft);
+    configureMotors(LowerArmRight);
+    
     
  ShuffleboardTab tab = Shuffleboard.getTab("Arms");
     tab.add("LowerArm", this);
    
 
   }
+  private void configureMotors(TalonFX motor) {
+    var motorConfig = new TalonFXConfiguration();
+
+    // Feedback Sensor setup (Kraken has integrated sensor)
+    motorConfig.Feedback.SensorToMechanismRatio = 128.0; // adjust if gear ratio exists
+    motorConfig.Feedback.RotorToSensorRatio = 1.0;
+
+    // PID values (Slot 0)
+    var slot0 = motorConfig.Slot0;
+    slot0.kP = 0.3;
+    slot0.kI = 0.0;
+    slot0.kD = 0.0;
+    slot0.kV = 1.0; // Velocity feedforward in Volts per RPS
+    slot0.kS = 0.0; // Static friction voltage (optional)
+
+    // Optional current limits and voltage compensation
+    motorConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+    motorConfig.CurrentLimits.SupplyCurrentLimit = 40;
+
+    motorConfig.Voltage.PeakForwardVoltage = 12;
+    motorConfig.Voltage.PeakReverseVoltage = -12;
+
+    motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+
+    motor.getConfigurator().apply(motorConfig);
+    motor.setPosition(0.0); // reset position if needed
+}
+
+public void setTargetVelocityRPS(double velocityRPS) {
+  velocitySetpoint = velocityRPS;  
+  velocityRequest.Velocity = velocitySetpoint;
+    LowerArmLeft.setControl(velocityRequest);
+    LowerArmRight.setControl(velocityRequest);
+}
+
+public void stop(TalonFX motor) {
+    motor.stopMotor();
+}
+
+public double getCurrentVelocity(TalonFX motor) {
+    return motor.getVelocity().getValueAsDouble(); // in RPS
+}
+
+public boolean atTargetVelocity(TalonFX motor ,double targetRPS, double tolerance) {
+    return Math.abs(motor.getVelocity().getValueAsDouble() - targetRPS) < tolerance;
+}
+
+
 
   public void setPos(double position) {
     requestedPosition = position;
@@ -176,7 +234,14 @@ public void updatePID(){
   @Override
   public void periodic() {
     //updatePID = SmartDashboard.getBoolean("update", updatePID);
-    
+    if (Math.abs(velocitySetpoint) < 0.01) {
+      LowerArmLeft.setNeutralMode(NeutralModeValue.Brake);
+      LowerArmRight.setNeutralMode(NeutralModeValue.Brake);
+  } else {
+     LowerArmLeft.setNeutralMode(NeutralModeValue.Coast);
+      LowerArmRight.setNeutralMode(NeutralModeValue.Coast);
+  }
+  
      
     if (atPos(LowerArmLeft) && atPos(LowerArmRight)) {
       atPosition = true;

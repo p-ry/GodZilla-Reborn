@@ -22,6 +22,7 @@ import com.ctre.phoenix6.controls.DynamicMotionMagicVoltage;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.PositionDutyCycle;
+import com.ctre.phoenix6.controls.VelocityDutyCycle;
 
 public class UpperArm extends SubsystemBase implements Sendable{
 
@@ -53,11 +54,14 @@ public class UpperArm extends SubsystemBase implements Sendable{
   public static double slowVel = 150;
   public static double slowAcc = 300;
   public static double slowJerk = 300;
+  VelocityDutyCycle leftControl, rightControl;
   
   
   public static DynamicMotionMagicVoltage dynamic = new DynamicMotionMagicVoltage(0, 80, 300, 800);
   private Slot0Configs pidConfigs = new Slot0Configs();
   private MotionMagicConfigs mmConfigs = new MotionMagicConfigs();
+
+  private final VelocityDutyCycle velocityRequest = new VelocityDutyCycle(0).withSlot(0);
   
 
   // TalonFXConfigurator leftConfigurator;
@@ -105,10 +109,69 @@ var rightMotorConfigs = new MotorOutputConfigs();
     UpperArmLeft.setNeutralMode(NeutralModeValue.Brake);
     UpperArmRight.setNeutralMode(NeutralModeValue.Brake);
 
+
+    leftControl = new VelocityDutyCycle(0);
+    rightControl = new VelocityDutyCycle(0);
+
+    // leftConfigurator = LowerArmLeft.getConfigurator();
+    // leftConfigurator.apply(talonFXConfigs);
+ configureMotors(UpperArmLeft);
+    configureMotors(UpperArmRight);
+
  ShuffleboardTab tab = Shuffleboard.getTab("Arms");
     tab.add("UpperArm", this);
 
   }
+
+
+  private void configureMotors(TalonFX motor) {
+    var motorConfig = new TalonFXConfiguration();
+
+    // Feedback Sensor setup (Kraken has integrated sensor)
+    motorConfig.Feedback.SensorToMechanismRatio = 128.0; // adjust if gear ratio exists
+    motorConfig.Feedback.RotorToSensorRatio = 1.0;
+
+    // PID values (Slot 0)
+    var slot0 = motorConfig.Slot0;
+    slot0.kP = 0.3;
+    slot0.kI = 0.0;
+    slot0.kD = 0.0;
+    slot0.kV = 1.0; // Velocity feedforward in Volts per RPS
+    slot0.kS = 0.0; // Static friction voltage (optional)
+
+    // Optional current limits and voltage compensation
+    motorConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+    motorConfig.CurrentLimits.SupplyCurrentLimit = 40;
+
+    motorConfig.Voltage.PeakForwardVoltage = 12;
+    motorConfig.Voltage.PeakReverseVoltage = -12;
+
+    motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+
+    motor.getConfigurator().apply(motorConfig);
+    motor.setPosition(0.0); // reset position if needed
+    
+}
+
+public void setTargetVelocityRPS(double velocityRPS) {
+    velocityRequest.Velocity = velocityRPS;
+    UpperArmLeft.setControl(velocityRequest);
+    UpperArmRight.setControl(velocityRequest);
+}
+
+public void stop(TalonFX motor) {
+    motor.stopMotor();
+}
+
+public double getCurrentVelocity(TalonFX motor) {
+    return motor.getVelocity().getValueAsDouble(); // in RPS
+}
+
+public boolean atTargetVelocity(TalonFX motor ,double targetRPS, double tolerance) {
+    return Math.abs(motor.getVelocity().getValueAsDouble() - targetRPS) < tolerance;
+}
+
+
 
   public void setPos(double position) {
     setPos(position,fast);
