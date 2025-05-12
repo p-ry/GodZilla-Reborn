@@ -25,6 +25,8 @@ import com.ctre.phoenix6.controls.DynamicMotionMagicVoltage;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.PositionDutyCycle;
 import com.ctre.phoenix6.controls.PositionVoltage;
+import com.ctre.phoenix6.controls.VelocityDutyCycle;
+import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.hardware.TalonFXS;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorArrangementValue;
@@ -65,6 +67,9 @@ public class Slider extends SubsystemBase implements Sendable{
  public static double slowVel = 60;
  public static double slowAcc = 900;
  public static double slowJerk = 1800;//1800
+
+ private static double velocitySetpoint = 0;
+   private final VelocityDutyCycle velocityRequest = new VelocityDutyCycle(0).withSlot(0);
   
 
   /** Creates a new Slider. */
@@ -78,6 +83,7 @@ public class Slider extends SubsystemBase implements Sendable{
 
     sliderConfigs.Commutation.MotorArrangement=MotorArrangementValue.Minion_JST;
     sliderConfigs.MotorOutput.Inverted =InvertedValue.Clockwise_Positive;
+    sliderConfigs.ExternalFeedback.SensorToMechanismRatio= 1.0;
     //sliderConfigs.SoftwareLimitSwitch.ReverseSoftLimitEnable = ReverseLimitValue
     pidConfigs = sliderConfigs.Slot0;
     pidConfigs2 = sliderConfigs.Slot1;
@@ -95,10 +101,29 @@ public class Slider extends SubsystemBase implements Sendable{
     ShuffleboardTab tab = Shuffleboard.getTab("Arms");
     tab.add("Slider", this);
     SmartDashboard.putData(slider);
-    
-    
+
 
   }
+
+  public void setTargetVelocityRPS(double velocityRPS) {
+    velocitySetpoint = velocityRPS;
+    velocityRequest.Velocity = velocitySetpoint;
+    slider.setControl(velocityRequest);
+    
+  }
+
+  public void stop(TalonFXS motor) {
+    motor.stopMotor();
+  }
+
+  public double getCurrentVelocity(TalonFXS motor) {
+    return motor.getVelocity().getValueAsDouble();
+  }
+
+  public boolean atTargetVelocity(TalonFXS motor, double targetRPS, double tolerance) {
+    return Math.abs(getCurrentVelocity(motor) - targetRPS) < tolerance;
+  }
+
 
   public void setPos(double position) {
     setPos(position, true);

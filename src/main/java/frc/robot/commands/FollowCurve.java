@@ -16,6 +16,7 @@ import frc.robot.subsystems.ArmAssembly;
 import frc.robot.BezierLogger;
 import frc.robot.RobotContainer;
 import frc.robot.Utilitys.BezierCurve;
+import frc.robot.BezierCurveJava;
 //import frc.robot.subsystems.ArmController;
 
 import edu.wpi.first.wpilibj2.command.Command;
@@ -23,23 +24,45 @@ import frc.robot.subsystems.ArmAssembly;
 
 public class FollowCurve extends Command {
     private final ArmAssembly arm;
-    private final BezierCurve curve;
-    private final double totalTime;
-    private final double dt;
+    //private final BezierCurve curve;
+    private static final double totalTime =5.0;
+    private final double dt =0.02;
     private double time;
     private double lastShoulderDeg;
     private double lastSliderMeters;
 
-    private static final double MAX_SHOULDER_DEG = 90.0;
+    private static final double MAX_SHOULDER_DEG = 70.0;
     private static final double MAX_DELTA_SHOULDER_DEG = 2.0;
     private static final double L1 = 0.4962; // m
     private static final double L2 = 0.6969; // m
+    private static final double MAX_SHOULDER_VEL = 2.0; // deg/s
+    private static final double MAX_ELBOW_VEL = 2.0; // deg/s
+    private static final double MAX_SLIDER_VEL = 0.142875; // m/s
+    private static final double MAX_SLIDER_RPS = 1.0; // rps
+    private Point2D p0;
+    private Point2D p1;
+    private Point2D p2;
+    private Point2D p3;
+    private Point2D pos;
+    private Point2D vel;
+    private int numberOfPoints =40;
+    private static List<Point2D.Double> path;
+    //private double baseX = 0.0; // Base X coordinate
+    //private double baseY = 0.0; // Base Y coordinate
+    private Point2D base;
+    private BezierCurveJava curve;
 
-    public FollowCurve(ArmAssembly arm, BezierCurve curve, double totalTime, double dt) {
+
+    public FollowCurve(ArmAssembly arm, Point2D p0, Point2D p1, Point2D p2, Point2D p3, Point2D base) {
         this.arm = arm;
-        this.curve = curve;
-        this.totalTime = totalTime;
-        this.dt = dt;
+        
+        
+        this.p0 = p0;
+        this.p1 = p1;
+        this.p2 = p2;
+        this.p3 = p3;
+        this.base = base;
+        this.curve = new BezierCurveJava(p0, p1, p2, p3);
         this.time = 0;
         this.lastShoulderDeg = Double.NaN;
         this.lastSliderMeters = 0;
@@ -57,12 +80,12 @@ public class FollowCurve extends Command {
     public void execute() {
         if (time > totalTime) return;
 
-        var pos = curve.getPositionAtTime(time / totalTime);
-        var vel = curve.getVelocityAtTime(time / totalTime);
-        double dx = pos.x;
-        double dy = pos.y;
-        double dxdT = vel.x / totalTime;
-        double dydT = vel.y / totalTime;
+        pos = curve.getPositionAtTime(time / totalTime);
+        vel = curve.getVelocityAtTime(time / totalTime);
+        double dx = pos.getX();
+        double dy = pos.getY();
+        double dxdT = vel.getX() / totalTime;
+        double dydT = vel.getY() / totalTime;
 
         double dist = Math.hypot(dx, dy);
         if (dist > L1 + L2 || dist < Math.abs(L1 - L2)) return;
@@ -96,7 +119,10 @@ public class FollowCurve extends Command {
 
         // Calculate slider value as Euclidean distance from base
         double currentSlider = Math.hypot(trueX, trueY);
-        double sliderVelocity = (currentSlider - lastSliderMeters) / dt;
+        double linearSliderSpeedMPS = (currentSlider - lastSliderMeters) / dt; // m/s
+        double sliderRPS = linearSliderSpeedMPS / 0.142875; // convert to RPS
+        
+
         lastSliderMeters = currentSlider;
 
         // Estimate arm angular velocities (rough Jacobian)
@@ -104,7 +130,7 @@ public class FollowCurve extends Command {
         double dElbowDeg = dxdT * Math.cos(theta2) + dydT * Math.sin(theta2); // rough estimate
 
         // Send joint velocities
-        arm.setJointVelocities(dShoulderDeg, dElbowDeg, sliderVelocity);
+        arm.setJointVelocities(dShoulderDeg, dElbowDeg, sliderRPS);
         lastShoulderDeg = shoulderDeg;
 
         time += dt;
