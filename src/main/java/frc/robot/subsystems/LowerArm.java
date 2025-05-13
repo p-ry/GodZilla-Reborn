@@ -24,7 +24,7 @@ public class LowerArm extends SubsystemBase implements Sendable {
 
   private double requestedPosition;
   private boolean atPosition;
-  private boolean fast;
+  private boolean fast, moving, wasMoving;
   private static double velocitySetpoint = 0;
 
   // PID and Motion Magic parameters
@@ -39,6 +39,8 @@ public class LowerArm extends SubsystemBase implements Sendable {
   public LowerArm() {
     configureMotor(lowerArmLeft, false);
     configureMotor(lowerArmRight, true);
+    moving = false;
+    wasMoving = false;
 
     ShuffleboardTab tab = Shuffleboard.getTab("Arms");
     tab.add("LowerArm", this);
@@ -58,7 +60,8 @@ public class LowerArm extends SubsystemBase implements Sendable {
     slot.kS = kS;
 
     config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    if (invert) config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+    if (invert)
+      config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
     config.CurrentLimits.SupplyCurrentLimitEnable = true;
     config.CurrentLimits.SupplyCurrentLimit = 40;
@@ -133,10 +136,20 @@ public class LowerArm extends SubsystemBase implements Sendable {
 
   @Override
   public void periodic() {
+   
     boolean moving = Math.abs(velocitySetpoint) >= 0.01;
-    lowerArmLeft.setNeutralMode(moving ? NeutralModeValue.Coast : NeutralModeValue.Brake);
-    lowerArmRight.setNeutralMode(moving ? NeutralModeValue.Coast : NeutralModeValue.Brake);
-
+    if (moving != wasMoving) {
+      if(moving) {
+        lowerArmLeft.setNeutralMode(NeutralModeValue.Coast);
+        lowerArmRight.setNeutralMode(NeutralModeValue.Coast);
+      }
+      else{
+        lowerArmLeft.setNeutralMode(NeutralModeValue.Brake);
+        lowerArmRight.setNeutralMode(NeutralModeValue.Brake);
+      }
+      wasMoving = moving;
+    }
+        
     atPosition = atPos(lowerArmLeft) && atPos(lowerArmRight);
   }
 
