@@ -50,7 +50,7 @@ public class Robot extends TimedRobot {
   public void robotInit() {
     Command myCommand;
      if (RobotBase.isSimulation()) {
-        frc.robot.BezierArmVisualizer.showVisualizer();
+       // frc.robot.BezierArmVisualizer.showVisualizer();
        
       }
   // DataLogManager.setLogDir("c:/users/pryland/downloads"); // Removed as the method does not exist

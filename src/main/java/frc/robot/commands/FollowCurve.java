@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 
 import frc.robot.subsystems.ArmAssembly;
 import frc.robot.BezierLogger;
+import frc.robot.BezierPlotTool;
 import frc.robot.RobotContainer;
 import frc.robot.Utilitys.BezierCurve;
 import frc.robot.BezierCurveJava;
@@ -25,155 +26,96 @@ import frc.robot.Vector2D;
 
 public class FollowCurve extends Command {
     private final ArmAssembly arm;
-    // private final BezierCurve curve;
+    private final BezierCurveJava curve;
+    private final Point2D.Double base;
+
     private static final double totalTime = 5.0;
     private static final double dt = 0.02;
     private double time;
+
+    // arm geometry & limits
+    private static final double L1 = 496.2; // mm
+    private static final double L2 = 696.9; // mm
+    private static final double MAX_SHOULDER_DEG = 70.0; // °
+    private static final double MAX_SLIDER_LENGTH = 350.0; // mm
+    private static final double SLIDER_METERS_PER_REV = 0.142875; // mm per rev
+    private double sL2 = 0;
+
+    // state for finite-difference
     private double lastShoulderDeg;
+    private double lastElbowDeg;
     private double lastSliderMeters;
 
-    private static final double MAX_SHOULDER_DEG = 70.0;
-    private static final double MAX_DELTA_SHOULDER_DEG = 4.0;
-    private static final double L1 = 496.2; // m
-    private static final double L2 = 696.9; // m
-    private static final double MAX_SHOULDER_VEL = 2.0; // deg/s
-    private static final double MAX_ELBOW_VEL = 2.0; // deg/s
-    private static final double MAX_SLIDER_VEL = 0.142875; // m/s
-    private static final double MAX_SLIDER_RPS = 1.0; // rps
-    private Point2D.Double p0;
-    private static final double SLIDER_METERS_PER_REV = 0.142875;
-    private static final double MAX_SLIDER_LENGTH = 350.0; // Maximum slider extension (in meters)
-    private double lastElbowDeg;
+    private double shoulderDeg, elbowDeg;
 
-    private Point2D.Double p1;
-    private Point2D.Double p2;
-    private Point2D.Double p3;
-    private Point2D.Double pos;
-    private Point2D.Double vel;
-    private int numberOfPoints = 40;
-    private static List<Point2D.Double> path;
-    // private double baseX = 0.0; // Base X coordinate
-    // private double baseY = 0.0; // Base Y coordinate
-    private Point2D base;
-    private BezierCurveJava curve;
-
-    public FollowCurve(ArmAssembly arm, Point2D.Double p0, Point2D.Double p1, Point2D.Double p2, Point2D.Double p3,
+    public FollowCurve(
+            ArmAssembly arm,
+            Point2D.Double p0, Point2D.Double p1,
+            Point2D.Double p2, Point2D.Double p3,
             Point2D.Double base) {
         this.arm = arm;
-
-        this.p0 = p0;
-        this.p1 = p1;
-        this.p2 = p2;
-        this.p3 = p3;
-        this.base = base;
-        System.out.println("p0 = " + p0);
-        System.out.println("p1 = " + p1);
-        System.out.println("p2 = " + p2);
-        System.out.println("p3 = " + p3);
-
         this.curve = new BezierCurveJava(p0, p1, p2, p3);
-        this.time = 0;
-        this.lastShoulderDeg = Double.NaN;
-        this.lastSliderMeters = 0;
+        this.base = base;
         addRequirements(arm);
     }
 
     @Override
     public void initialize() {
         time = 0;
-        lastShoulderDeg = Double.NaN;
-        lastSliderMeters = 0;
-        lastElbowDeg = Double.NaN;
+        Point2D.Double startPos = curve.getPositionAtArcLengthTime(0.0);
+
+    // seed so (deg₀ − deg₀)/dt == 0
+    lastShoulderDeg  = computeShoulderDeg(startPos);
+    lastElbowDeg     = computeElbowDeg(startPos);
+    lastSliderMeters = computeSlider(startPos);
     }
 
-        @Override
-        public void execute() {
-            if (time > totalTime) return;
-        
-            double t = time / totalTime;
-        
-            // Get position and velocity from Bézier
-            Point2D.Double pos = curve.getPositionAtTime(t);
-            Point2D.Double vel = curve.getVelocityAtTime(t);
-            double dxdT = vel.getX() / totalTime;
-            double dydT = vel.getY() / totalTime;
-        
-            double targetX = pos.getX();
-            double targetY = pos.getY();
-        
-            double dx = targetX - base.getX();
-            double dy = targetY - base.getY();
-        
-            double dist = Math.hypot(dx, dy);
-            if (dist > L1 + L2 + MAX_SLIDER_LENGTH || dist < Math.abs(L1 - L2)) {
-                SmartDashboard.putString("Unreachable", "Unreachable");
-                return; // unreachable
-            }
-        
-            // Initial IK for position
-            double currentSlider = Math.max(0, Math.min(dist - L2, MAX_SLIDER_LENGTH));
-            double SL2 = L2 + currentSlider;
-            double baseAngle = Math.atan2(dy, dx);
-            double theta1 = Math.acos(Math.max(-1.0, Math.min(1.0, (L1 * L1 + dist * dist - SL2 * SL2) / (2.0 * L1 * dist))));
-            double shoulderAngle = baseAngle - theta1;
-            double shoulderDeg = Math.toDegrees(shoulderAngle);
-            shoulderDeg = Math.min(shoulderDeg, MAX_SHOULDER_DEG);
-        
-            // Forward kinematics to get elbow position
-            double theta1Rad = Math.toRadians(shoulderDeg);
-            double elbowX = base.getX() + L1 * Math.cos(theta1Rad);
-            double elbowY = base.getY() + L1 * Math.sin(theta1Rad);
-            double tdist = Math.hypot(targetX - elbowX, targetY - elbowY);
-        
-            currentSlider = Math.max(0, Math.min(tdist - L2, MAX_SLIDER_LENGTH));
-            double theta2 = Math.acos(Math.max(-1.0, Math.min(1.0, (L1 * L1 + tdist * tdist - dist * dist) / (2 * L1 * tdist))));
-            double elbowDeg = Math.toDegrees(theta2);
-        
-            // Jacobian-based inverse velocity kinematics
-            double theta1RadActual = Math.toRadians(shoulderDeg);
-            double theta2RadActual = Math.toRadians(elbowDeg);
-            double s1 = Math.sin(theta1RadActual);
-            double c1 = Math.cos(theta1RadActual);
-            double s12 = Math.sin(theta1RadActual + theta2RadActual);
-            double c12 = Math.cos(theta1RadActual + theta2RadActual);
-        
-            double det = L1 * L2 * Math.sin(theta2RadActual);
-            double shoulderVelDegPerSec = 0.0;
-            double elbowVelDegPerSec = 0.0;
-        
-            if (Math.abs(det) > 1e-5) {
-                double invDet = 1.0 / det;
-        
-                // Compute angular velocities in radians
-                double theta1Dot = invDet * (L2 * c12 * dydT - L2 * s12 * dxdT);
-                double theta2Dot = invDet * (- (L1 * c1 + L2 * c12) * dydT + (L1 * s1 + L2 * s12) * dxdT);
-        
-                // Convert to deg/s
-                shoulderVelDegPerSec = Math.toDegrees(theta1Dot);
-                elbowVelDegPerSec = Math.toDegrees(theta2Dot);
-            }
-        
-            // Slider velocity (m/s → rps)
-            double sliderVelocityMPS = (currentSlider - lastSliderMeters) / dt;
-            double sliderRPS = sliderVelocityMPS / SLIDER_METERS_PER_REV;
-        
-            // Output to dashboard (optional)
-            SmartDashboard.putNumber("ShoulderDeg", shoulderDeg);
-            SmartDashboard.putNumber("ElbowDeg", elbowDeg);
-            SmartDashboard.putNumber("CurrentSlider", currentSlider);
-            
-            // Command joints
-            arm.setJointVelocities(shoulderVelDegPerSec, elbowVelDegPerSec, sliderRPS);
-        
-            // Update state
-            lastShoulderDeg = shoulderDeg;
-            lastSliderMeters = currentSlider;
-            lastElbowDeg = elbowDeg;
-        
-            time += dt;
+    @Override
+    public void execute() {
+        if (time > totalTime) {
+            arm.setJointVelocities(0, 0, 0);
+            return;
         }
-        
-    
+
+        // 1) normalize time and calculate smoothstep warp
+        double u = time / totalTime;
+        double s = smoothstep(u); // maps [0→1] with zero slope at ends
+        double sp = smoothstepDeriv(u); // = d s/du
+
+        // 2) sample curve at arc‐length parameter s
+        Point2D.Double pos = curve.getPositionAtArcLengthTime(s);
+        Point2D.Double vel = curve.getVelocityAtArcLengthTime(s);
+
+        // 3) world‐frame velocity:
+        // dpos/dt = dpos/ds * (ds/du) * (du/dt) = vel * sp * (1/totalTime)
+        double scale = sp / totalTime;
+        double dxdT = vel.x * scale;
+        double dydT = vel.y * scale;
+
+        // 4) inverse kinematics for this pos
+        shoulderDeg = computeShoulderDeg(pos);
+        double elbowDeg = computeElbowDeg(pos);
+        double sliderMM = computeSlider(pos);
+
+        // 5) finite-difference joint velocities
+        double shoulderVel = (shoulderDeg - lastShoulderDeg) / dt;
+        double elbowVel = (elbowDeg - lastElbowDeg) / dt;
+        double sliderVelM = (sliderMM - lastSliderMeters) / dt;
+        double sliderRPS = sliderVelM / SLIDER_METERS_PER_REV;
+
+        // 6) dashboard & command
+        SmartDashboard.putNumber("ShoulderDeg", shoulderDeg);
+        SmartDashboard.putNumber("ElbowDeg", elbowDeg);
+        SmartDashboard.putNumber("CurrentSlider", sliderMM);
+
+        arm.setJointVelocities(shoulderVel, elbowVel, sliderRPS);
+
+        // 7) remember for next cycle
+        lastShoulderDeg = shoulderDeg;
+        lastElbowDeg = elbowDeg;
+        lastSliderMeters = sliderMM;
+        time += dt;
+    }
 
     @Override
     public boolean isFinished() {
@@ -182,6 +124,99 @@ public class FollowCurve extends Command {
 
     @Override
     public void end(boolean interrupted) {
-        arm.setJointVelocities(0.0, 0.0, 0.0);
+        arm.setJointVelocities(0, 0, 0);
+    }
+
+    // ——— helpers ———
+
+    /** Smoothstep [0→1] with zero derivatives at both ends */
+    private static double smoothstep(double u) {
+        // simple cubic: 3u^2 − 2u^3
+        return u * u * (3 - 2 * u);
+    }
+
+    /** derivative of smoothstep: d/du[3u^2-2u^3] = 6u(1 − u) */
+    private static double smoothstepDeriv(double u) {
+        return 6 * u * (1 - u);
+    }
+
+
+    /** 
+ * The *true* shoulder joint angle in degrees, unconstrained 
+ */
+private double computeRawShoulderDeg(Point2D.Double pos) {
+    double dx   = pos.x - base.x;
+    double dy   = pos.y - base.y;
+    double dist = Math.hypot(dx, dy);
+
+    // slider folded into forearm
+    double sliderMM = clamp(dist - L1 - L2, 0, MAX_SLIDER_LENGTH);
+    double SL2      = L2 + sliderMM;
+
+    double baseAng = Math.atan2(dy, dx);
+    double cosArg  = clamp((L1*L1 + dist*dist - SL2*SL2)/(2*L1*dist), -1, 1);
+    double theta1  = Math.acos(cosArg);
+
+    // **no clamp here**, convert to degrees
+    return Math.toDegrees(baseAng - theta1);
+}
+
+/**
+ * What you actually show (and/or enforce) on the robot:
+ */
+private double clampShoulderDeg(double rawDeg) {
+    return clamp(rawDeg, -180.0, MAX_SHOULDER_DEG);
+}
+
+    /** IK for shoulder angle (°), clamped to your max */
+    private double computeShoulderDeg(Point2D.Double pos) {
+        double dx = pos.x - base.x;
+        double dy = pos.y - base.y;
+        double dist = Math.hypot(dx, dy);
+        double rawExt = dist - L1 - L2;
+        double sliderMM = clamp(rawExt, 0, MAX_SLIDER_LENGTH);
+
+        // 3) now fold slider into the effective forearm length
+        sL2 = L2 + sliderMM;
+
+        // law-of-cos + bearing
+        double baseAng = Math.atan2(dy, dx);
+        // note: slider is folded into L2 here
+        double cosArg = clamp((L1 * L1 + dist * dist - L2 * sL2) / (2 * L1 * dist), -1, 1);
+        double theta1 = Math.acos(cosArg);
+        return Math.toDegrees(clamp(baseAng - theta1, -Math.PI, Math.toRadians(MAX_SHOULDER_DEG)));
+    }
+
+    /** IK for elbow interior angle (°) between L1 and L2 */
+    private double computeElbowDeg(Point2D.Double pos) {
+
+        double shoulderRad = Math.toRadians(shoulderDeg);
+
+        // 1) elbow joint pos
+        double elbowX = base.x + L1 * Math.cos(shoulderRad);
+        double elbowY = base.y + L1 * Math.sin(shoulderRad);
+
+        // 2) two vectors
+        double ux = base.x - elbowX;
+        double uy = base.y - elbowY;
+        double vx = pos.x - elbowX;
+        double vy = pos.y - elbowY;
+
+        // 3) elbow angle via dot‐product
+        double cosElbow = clamp((ux * vx + uy * vy) / (Math.hypot(ux, uy) * Math.hypot(vx, vy)), -1, 1);
+        double elbowDeg = Math.toDegrees(Math.acos(cosElbow));
+        return elbowDeg;
+    }
+
+    /** slider extension (mm) */
+    private double computeSlider(Point2D.Double pos) {
+        double dx = pos.x - base.x;
+        double dy = pos.y - base.y;
+        double dist = Math.hypot(dx, dy);
+        return clamp(dist - L1 - L2, 0, MAX_SLIDER_LENGTH);
+    }
+
+    private static double clamp(double v, double lo, double hi) {
+        return Math.max(lo, Math.min(hi, v));
     }
 }
