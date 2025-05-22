@@ -16,11 +16,15 @@ import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import frc.robot.LimelightHelpers.PoseEstimate;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructArrayPublisher;
+import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 
@@ -44,7 +48,7 @@ public class Utilitys {
         double forwardMeters = Units.inchesToMeters(forwardInches);
         double rightMeters = Units.inchesToMeters(rightInches);
 
-        // Calculate new position  shift target to it's right
+        // Calculate new position shift target to it's right
         double xNew = x + forwardMeters * Math.cos(theta.getRadians()) + rightMeters * Math.sin(theta.getRadians());
         double yNew = y + forwardMeters * Math.sin(theta.getRadians()) - rightMeters * Math.cos(theta.getRadians());
 
@@ -55,7 +59,6 @@ public class Utilitys {
     public static Pose2d shiftPoseRight(Pose2d originalPose, double forwardInches, double leftInches) {
         // Get current pose components
 
-
         double x = originalPose.getX();
         double y = originalPose.getY();
         Rotation2d theta = originalPose.getRotation(); // Rotation2d object
@@ -63,7 +66,7 @@ public class Utilitys {
         double rightMeters = Units.inchesToMeters(leftInches);
         Rotation2d invTheta = theta.fromRadians(theta.getRadians() + Math.PI);
 
-        // Compute new coordinates (shift left)  shift target to it's left
+        // Compute new coordinates (shift left) shift target to it's left
         double xNew = x + forwardMeters * Math.cos(theta.getRadians()) - rightMeters * Math.sin(theta.getRadians());
         double yNew = y + forwardMeters * Math.sin(theta.getRadians()) + rightMeters * Math.cos(theta.getRadians());
 
@@ -72,9 +75,13 @@ public class Utilitys {
     }
 
     public static Command driveToIt(boolean right) {
+        StructArrayPublisher<Pose2d> arrayPub = NetworkTableInstance.getDefault()
+                .getStructArrayTopic("robotPoseArray", Pose2d.struct)
+                .publish();
+
         PathConstraints constraints = new PathConstraints(
-      2.0, 3.0,
-      Units.degreesToRadians(540), Units.degreesToRadians(720));
+                2.0, 3.0,
+                Units.degreesToRadians(540), Units.degreesToRadians(720));
         double leftDist = 0;
         Pose2d where;
         double rightDist = 0;
@@ -84,11 +91,21 @@ public class Utilitys {
         LimelightHelpers.LimelightResults resultsLeft = LimelightHelpers.getLatestResults("limelight-left");
 
         LimelightHelpers.LimelightResults resultsRight = LimelightHelpers.getLatestResults("limelight-right");
+        LimelightHelpers.LimelightResults results = LimelightHelpers.getLatestResults("limelight-left");
+        Pose3d targetPose3D;
         where = RobotContainer.drivetrain.getPose();
+        double leftAmbiguity = 0;
+        double rightAmbiguity = 0;
+        double yawToTagRad, desiredRotationDeg;
+        Rotation2d desiredHeading;
+        double[] targetPose = LimelightHelpers.getTargetPose_RobotSpace("limelight-left");
+        Rotation2d tagFieldYaw, robotRelYaw;
 
         if (resultsLeft.valid) {
             leftDist = resultsLeft.botpose_avgdist;
             validTarget = true;
+            // leftAmbiguity = resultsLeft.targets_Fiducials[0].
+            // getAmbiguity().getValueAsDouble; // Ensure getAmbiguity() is a valid method
             tagIds[0] = (int) resultsLeft.targets_Fiducials[0].fiducialID;
         } else {
             leftDist = 999999;
@@ -102,29 +119,63 @@ public class Utilitys {
         } else {
             rightDist = 999999;
         }
-
+        Pose3d robotTagPose3d = LimelightHelpers.getBotPose3d_TargetSpace("limelight-left");
         if (validTarget) {
             if (leftDist < rightDist) {
                 tagId = tagIds[0];
 
+                targetPose3D = LimelightHelpers.getTargetPose3d_RobotSpace("limelight-left");
+                yawToTagRad = targetPose[5] - Math.toRadians(-15.0);
+
             } else {
                 tagId = tagIds[1];
+                results = resultsRight;
+                targetPose3D = LimelightHelpers.getTargetPose3d_RobotSpace("limelight-right");
+                targetPose = LimelightHelpers.getTargetPose_RobotSpace("limelight-right");
+                robotTagPose3d = LimelightHelpers.getBotPose3d_TargetSpace("limelight-right");
+                yawToTagRad = targetPose[5] - Math.toRadians(15.0);
 
             }
-
+            
+            desiredRotationDeg = -Math.toDegrees(yawToTagRad);
+            desiredHeading = Rotation2d.fromDegrees(desiredRotationDeg);
+            desiredHeading = new Rotation2d(targetPose3D.getRotation().getAngle());
+            // SmartDashboard.putNumberArray("TargetPose3D",
+            // new
+            // double[]{robotTagPose3d.getX(),robotTagPose3d.getY(),robotTagPose3d.getRotation().getZ()});
+            SmartDashboard.putNumber("3dtagRot", Math.toDegrees(targetPose3D.getRotation().getZ()));
             if (right) {
-                where = Utilitys.shiftPoseRight(Utilitys.getAprilTagPose(tagId), Constants.forwardOffset, Constants.rightOffset);//12//6.5); // 0.164285833);
+
+                
+                Translation2d translation = new Translation2d(targetPose3D.getZ() - 0.3,
+                        targetPose3D.getX());
+              
+
+                // Transform to apply: translation in robot-relative coordinates
+                Transform2d transform = new Transform2d(translation, desiredHeading);
+                where = where.plus(transform);
+
+                // New pose after applying the transform
+
+                // where = Utilitys.shiftPoseRight(Utilitys.getAprilTagPose(tagId),
+                // Constants.forwardOffset, Constants.rightOffset);//12//6.5); // 0.164285833);
             } else {
-                where = Utilitys.shiftPoseLeft(Utilitys.getAprilTagPose(tagId), Constants.forwardOffset, Constants.leftOffset);//2);// 0.164285833);
+                where = Utilitys.shiftPoseLeft(Utilitys.getAprilTagPose(tagId), Constants.forwardOffset,
+                        Constants.leftOffset);// 2);// 0.164285833);
             }
-            SmartDashboard.putNumberArray("Where",new double[]{where.getX(),where.getY(),where.getRotation().getRadians()});
-            Command driveit = AutoBuilder.pathfindToPose(where, constraints, 0.0);
+            SmartDashboard.putNumberArray("Where",
+                    new double[] { where.getX(), where.getY(), where.getRotation().getRadians() });
+
+                    Pose2d[]  poses = new Pose2d[] { RobotContainer.drivetrain.botPose2d,Pose3Dto2D(robotTagPose3d),
+                         Pose3Dto2D(targetPose3D),where };
+                    arrayPub.set(poses);
+
+                    Command driveit = AutoBuilder.pathfindToPose(where, constraints, 0.0);
             return driveit;
         }
-       return null;
+        return null;
         //
     }
-    
 
     // PathPlannerPath path = PathPlannerPath.fromPathFile("Alpha",true);
 
@@ -134,8 +185,6 @@ public class Utilitys {
     // NOT quite ready to drive it
 
     // Command driveit = AutoBuilder.pathfindToPose(where, constraints);
-   
-    
 
     public static Pose2d getAprilTagPose(int tagID) {
         try {
@@ -253,6 +302,11 @@ public class Utilitys {
         return tagId;
 
     }
+
+    public static Pose2d Pose3Dto2D(Pose3d pose3d) {
+        return new Pose2d(pose3d.getX(), pose3d.getY(), pose3d.getRotation().toRotation2d());
+    }   
+
 
     // public void updateOdometry() {
     // boolean doRejectUpdate = false;
