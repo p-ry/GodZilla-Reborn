@@ -35,6 +35,8 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -55,6 +57,12 @@ import frc.robot.Utilitys;
  * Subsystem so it can easily be used in command-based projects.
  */
 public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Subsystem {
+StructPublisher<Pose2d> botPublisher =
+         NetworkTableInstance.getDefault()
+           .getStructTopic("bot", Pose2d.struct)
+           .publish();
+           
+
 
     private static final double kSimLoopPeriod = 0.005; // 5 ms
     private Notifier m_simNotifier = null;
@@ -312,14 +320,15 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
         m_poseEstimator.update(getGyroRotation2D(), getModulePositions());
         botPose2d = m_poseEstimator.getEstimatedPosition();
+        botPublisher.set(botPose2d);
         //SmartDashboard.putNumber("Rotation2D",getGyroRotation2D().getDegrees());
 
         updateCameraPose();
 
         //resetOdometry(botPose2d);
-        SmartDashboard.putNumberArray("BotPose",
-                new double[] { botPose2d.getTranslation().getX(), botPose2d.getTranslation().getY(),
-                        botPose2d.getRotation().getRadians() });
+        // SmartDashboard.putNumberArray("BotPose",
+        //         new double[] { botPose2d.getTranslation().getX(), botPose2d.getTranslation().getY(),
+        //                 botPose2d.getRotation().getRadians() });
         /*
          * This allows us to correct the perspective in case the robot code restarts
          * mid-match.

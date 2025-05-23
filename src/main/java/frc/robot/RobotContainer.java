@@ -382,10 +382,10 @@ public static double garbage =0;
                         
                         driveIt = Utilitys.driveToIt(true);//rightTree
                       
-                        //  if(driveIt !=null){
-                        //         driveIt.schedule();
+                         if(driveIt !=null){
+                                driveIt.schedule();
                          
-                        // }
+                        }
 
                  }));
                 controller.rightBumper()
