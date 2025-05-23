@@ -79,9 +79,16 @@ public class Utilitys {
         StructPublisher<Pose2d> whereToPublisher = NetworkTableInstance.getDefault()
                 .getStructTopic("WhereTo", Pose2d.struct)
                 .publish();
-
-        
-                Translation2d targetTranslation;
+        StructPublisher<Pose2d> tagRel2DPublisher = NetworkTableInstance.getDefault()
+                .getStructTopic("TagRel2d", Pose2d.struct)
+                .publish();
+        StructPublisher<Transform2d> transPublisher = NetworkTableInstance.getDefault()
+                .getStructTopic("Transform", Transform2d.struct)
+                .publish();
+        StructPublisher<Pose2d> ignorePublisher = NetworkTableInstance.getDefault()
+                .getStructTopic("ignore", Pose2d.struct)
+                .publish();
+        Translation2d targetTranslation;
         PathConstraints constraints = new PathConstraints(
                 2.0, 3.0,
                 Units.degreesToRadians(540), Units.degreesToRadians(720));
@@ -96,13 +103,16 @@ public class Utilitys {
         LimelightHelpers.LimelightResults resultsRight = LimelightHelpers.getLatestResults("limelight-right");
         LimelightHelpers.LimelightResults results = LimelightHelpers.getLatestResults("limelight-left");
         Pose3d targetPose3D;
-        where = RobotContainer.drivetrain.getPose();
+        Pose2d robotPose = RobotContainer.drivetrain.getPose();
+        where = robotPose;
         double leftAmbiguity = 0;
         double rightAmbiguity = 0;
         double yawToTagRad, desiredRotationDeg;
         Rotation2d desiredHeading;
         double[] targetPose = LimelightHelpers.getTargetPose_RobotSpace("limelight-left");
         Rotation2d tagFieldYaw, robotRelYaw;
+        Transform2d robotToTag;
+        Pose2d tagRel2d;
 
         if (resultsLeft.valid) {
             leftDist = resultsLeft.botpose_avgdist;
@@ -122,13 +132,14 @@ public class Utilitys {
         } else {
             rightDist = 999999;
         }
-        
-        Pose3d robotPoseTargetSpacePose3d = LimelightHelpers.getTargetPose3d_RobotSpace("limelight-left");
-        //Pose3d robotPoseTargetSpacePose3d = LimelightHelpers.getBotPose3d_TargetSpace("limelight-left");
+
+       // Pose3d robotPoseTargetSpacePose3d = LimelightHelpers.getTargetPose3d_RobotSpace("limelight-left");
+         Pose3d robotPoseTargetSpacePose3d = LimelightHelpers.getBotPose3d_TargetSpace("limelight-left");
+
         if (validTarget) {
             if (leftDist < rightDist) {
                 tagId = tagIds[0];
-                targetPose3D = LimelightHelpers.getTargetPose3d_RobotSpace("limelight-left");
+                //targetPose3D = LimelightHelpers.getTargetPose3d_RobotSpace("limelight-left");
             } else {
                 tagId = tagIds[1];
                 results = resultsRight;
@@ -140,12 +151,27 @@ public class Utilitys {
             // Rotation2d yawOffset = new Rotation2d(targetPose3D.getRotation().getY());
 
             if (right) {
-                targetTranslation = new Translation2d(
-                        - robotPoseTargetSpacePose3d.getTranslation().getZ()-0.3,
-                        robotPoseTargetSpacePose3d.getTranslation().getX() - Units.inchesToMeters(6.0));
+                // targetTranslation = new Translation2d(
+                // - robotPoseTargetSpacePose3d.getTranslation().getZ()-0.3,
+                // robotPoseTargetSpacePose3d.getTranslation().getX() -
+                // Units.inchesToMeters(6.0));
+
+                
+                tagRel2d = new Pose2d(-robotPoseTargetSpacePose3d.getZ()-0.4, robotPoseTargetSpacePose3d.getX() +Units.inchesToMeters(6.0),
+                        new Rotation2d(robotPoseTargetSpacePose3d.getRotation().getY()));
+//******** This is NOT the answer */
+                tagRel2d = new Pose2d(
+                        robotPose.getX() + tagRel2d.getX(),
+                        robotPose.getY() + tagRel2d.getY() ,
+                        robotPose.getRotation().plus(tagRel2d.getRotation()));
+//**              This is the answer */
+                // tagRel2d = new Pose2d(-robotPoseTargetSpacePose3d.getX(), robotPoseTargetSpacePose3d.getY(),
+                //         new Rotation2d(robotPoseTargetSpacePose3d.getRotation().getZ()));
+
+                // robotToTag = new Transform2d(tagRel2d.getTranslation(), tagRel2d.getRotation());
 
                 // Translation2d translation = new Translation2d(targetPose3D.getZ() - 0.3,
-                //         targetPose3D.getX());
+                // targetPose3D.getX());
 
                 // New pose after applying the transform
 
@@ -153,15 +179,24 @@ public class Utilitys {
                 // Constants.forwardOffset, Constants.rightOffset);//12//6.5); // 0.164285833);
             } else {
                 targetTranslation = new Translation2d(
-                    0.3 - robotPoseTargetSpacePose3d.getTranslation().getZ(),
-                    robotPoseTargetSpacePose3d.getTranslation().getX() - Units.inchesToMeters(6.0));
+                        0.3 - robotPoseTargetSpacePose3d.getTranslation().getZ(),
+                        robotPoseTargetSpacePose3d.getTranslation().getX() - Units.inchesToMeters(6.0));
                 where = Utilitys.shiftPoseLeft(Utilitys.getAprilTagPose(tagId), Constants.forwardOffset,
                         Constants.leftOffset);// 2);// 0.164285833);
+
+                tagRel2d = new Pose2d(-robotPoseTargetSpacePose3d.getX(), robotPoseTargetSpacePose3d.getY(),
+                        new Rotation2d(robotPoseTargetSpacePose3d.getRotation().getZ()));
+
+                robotToTag = new Transform2d(Pose3Dto2D(robotPoseTargetSpacePose3d).getTranslation(),
+                        Pose3Dto2D(robotPoseTargetSpacePose3d).getRotation());
+
             }
-            Pose2d whereTo = RobotContainer.drivetrain.botPose2d
-            .plus(new Transform2d(targetTranslation, yawOffset));
+          //  Pose2d whereTo = RobotContainer.drivetrain.botPose2d                    .transformBy(robotToTag);
+                    Pose2d whereTo = tagRel2d;
 
             whereToPublisher.set(whereTo);
+            tagRel2DPublisher.set(tagRel2d);
+          //  transPublisher.set(robotToTag);
 
             Command driveit = AutoBuilder.pathfindToPose(whereTo, constraints, 0.0);
             return driveit;

@@ -6,6 +6,7 @@ package frc.robot;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -48,6 +49,8 @@ public class Robot extends TimedRobot {
     FollowPathCommand.warmupCommand().schedule();
     //Pathfinding.setPathfinder(null);
     Pathfinding.setPathfinder(new LocalADStar());
+
+
     //RobotContainer.candle.setLEDs(236,0,140);
 
     // laserCan = new LaserCan(10);
@@ -70,8 +73,15 @@ public class Robot extends TimedRobot {
     // double omegaRps =
     // Units.radiansToRotations(driveState.Speeds.omegaRadiansPerSecond);
 
+
+// var headingDeg = m_robotContainer.drivetrain.gyro.getYaw().getValueAsDouble();
+//     LimelightHelpers.SetRobotOrientation("limelight-left", headingDeg, 0, 0, 0,
+//       0, 0);
+      
+//       LimelightHelpers.SetRobotOrientation("limelight-right", headingDeg, 0, 0, 0,
+//       0, 0);
     /*
-     * LimelightHelpers.SetRobotOrientation("limelight-left", headingDeg, 0, 0, 0,
+     LimelightHelpers.SetRobotOrientation("limelight-left", headingDeg, 0, 0, 0,
      * 0, 0);
      * var llMeasurement =
      * LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-left");
