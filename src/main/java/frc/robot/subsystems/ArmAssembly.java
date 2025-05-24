@@ -69,6 +69,10 @@ public class ArmAssembly extends SubsystemBase {
 
   @Override
   public void periodic() {
+    SmartDashboard.putBoolean("lowerARM", lowerArm.atPos());
+    SmartDashboard.putBoolean("upperARM", upperArm.atPos());
+    SmartDashboard.putBoolean("slider", slider.atPos());
+    SmartDashboard.putBoolean("wrist", wrist.atPos());
  SmartDashboard.putNumber("Wristpos", wrist.getPos());
 SmartDashboard.putNumber("slider",slider.getPos());
 SmartDashboard.putNumber("UpperArm",upperArm.getPos());

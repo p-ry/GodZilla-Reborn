@@ -188,7 +188,7 @@ StructPublisher<Pose2d> botPublisher =
         try {
             var config = RobotConfig.fromGUISettings();
             AutoBuilder.configure(
-                    () ->  getPose(),/// getState().Pose, // Supplier of current robot pose
+                    () -> getPose(),/// getState().Pose, // Supplier of current robot pose
                     this::resetOdometry,//resetPose, // Consumer for seeding pose against auto
                     () -> getState().Speeds, // Supplier of current robot speeds
                     // Consumer of ChassisSpeeds and feedforwards to drive the robot
