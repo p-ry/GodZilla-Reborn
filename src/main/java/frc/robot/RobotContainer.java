@@ -129,7 +129,7 @@ public static double garbage =0;
 
         public static Point2D.Double controlPoint1 = new Point2D.Double(-20.0,800.0);//-0.4,.5);
         public static Point2D.Double controlPoint2 = new Point2D.Double(-20.0,1200.0);//.2,0.6);
-        public static Point2D.Double endPoint = new Point2D.Double(-20.1,1960.95);//0.0041,1.85795);
+        public static Point2D.Double endPoint = new Point2D.Double(-20.1,1160.95);//0.0041,1.85795);
         /* Path follower */
         private final SendableChooser<Command> AutoChooser;
 

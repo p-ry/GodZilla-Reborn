@@ -29,7 +29,7 @@ public class FollowCurve extends Command {
     private final BezierCurveJava curve;
     private final Point2D.Double base;
 
-    private static final double totalTime = 1.0;
+    private static final double totalTime = 5.0;
     private static final double dt = 0.02;
     private double time;
 

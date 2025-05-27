@@ -74,6 +74,7 @@ public class LowerArm extends SubsystemBase implements Sendable {
   }
 
   public void setTargetVelocityRPS(double velocityRPS) {
+    SmartDashboard.putNumber("LowerArm Velocity", velocityRPS);
     velocitySetpoint = velocityRPS;
     velocityRequest.Velocity = velocitySetpoint;
     lowerArmLeft.setControl(velocityRequest);
@@ -93,24 +94,24 @@ public class LowerArm extends SubsystemBase implements Sendable {
   }
 
   public void setPos(double position) {
-    this.requestedPosition = position;
-    lowerArmLeft.setControl(leftRequest.withPosition(position));
-    lowerArmRight.setControl(rightRequest.withPosition(position));
-  }
+  //   this.requestedPosition = position;
+  //   lowerArmLeft.setControl(leftRequest.withPosition(position));
+  //   lowerArmRight.setControl(rightRequest.withPosition(position));
+   }
 
   public void setPos(double position, boolean fast) {
-    this.fast = fast;
-    requestedPosition = position;
+    // this.fast = fast;
+    // requestedPosition = position;
 
-    double vel = fast ? fastVel : slowVel;
-    double acc = fast ? fastAcc : slowAcc;
-    double jerk = fast ? fastJerk : slowJerk;
+    // double vel = fast ? fastVel : slowVel;
+    // double acc = fast ? fastAcc : slowAcc;
+    // double jerk = fast ? fastJerk : slowJerk;
 
-    var command = dynamic.withVelocity(vel).withAcceleration(acc).withJerk(jerk).withPosition(position);
-    lowerArmLeft.setControl(command);
-    lowerArmRight.setControl(command);
+    // var command = dynamic.withVelocity(vel).withAcceleration(acc).withJerk(jerk).withPosition(position);
+    // lowerArmLeft.setControl(command);
+    // lowerArmRight.setControl(command);
 
-    SmartDashboard.putBoolean("Fast", fast);
+    // SmartDashboard.putBoolean("Fast", fast);
   }
 
   public double getPos() {

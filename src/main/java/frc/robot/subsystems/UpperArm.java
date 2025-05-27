@@ -133,7 +133,7 @@ var rightMotorConfigs = new MotorOutputConfigs();
 
     // PID values (Slot 0)
     var slot0 = motorConfig.Slot0;
-    slot0.kP = 0.3;
+    slot0.kP = 3.0;
     slot0.kI = 0.0;
     slot0.kD = 0.0;
     slot0.kV = 1.0; // Velocity feedforward in Volts per RPS
@@ -154,6 +154,7 @@ var rightMotorConfigs = new MotorOutputConfigs();
 }
 
 public void setTargetVelocityRPS(double velocityRPS) {
+  SmartDashboard.putNumber("UpperArm Velocity", velocityRPS);
     velocityRequest.Velocity = velocityRPS;
     UpperArmLeft.setControl(velocityRequest);
     UpperArmRight.setControl(velocityRequest);
@@ -174,21 +175,21 @@ public boolean atTargetVelocity(TalonFX motor ,double targetRPS, double toleranc
 
 
   public void setPos(double position) {
-    setPos(position,fast);
+   // setPos(position,fast);
   }
 
   public void setPos(double position, boolean fast) {
    
    
-    this.fast = fast;
-    requestedPosition = position;
-    if (fast){
-      UpperArmLeft.setControl(dynamic.withVelocity(fastVel).withAcceleration(fastAcc).withJerk(fastJerk).withPosition(position));
-      UpperArmRight.setControl(dynamic.withVelocity(fastVel).withAcceleration(fastAcc).withJerk(fastJerk).withPosition(position));
-    }else {
-    UpperArmLeft.setControl(dynamic.withVelocity(slowVel).withAcceleration(slowAcc).withJerk(slowJerk).withPosition(position));
-      UpperArmRight.setControl(dynamic.withVelocity(slowVel).withAcceleration(slowAcc).withJerk(slowJerk).withPosition(position));
-    }
+    // this.fast = fast;
+    // requestedPosition = position;
+    // if (fast){
+    //   UpperArmLeft.setControl(dynamic.withVelocity(fastVel).withAcceleration(fastAcc).withJerk(fastJerk).withPosition(position));
+    //   UpperArmRight.setControl(dynamic.withVelocity(fastVel).withAcceleration(fastAcc).withJerk(fastJerk).withPosition(position));
+    // }else {
+    // UpperArmLeft.setControl(dynamic.withVelocity(slowVel).withAcceleration(slowAcc).withJerk(slowJerk).withPosition(position));
+    //   UpperArmRight.setControl(dynamic.withVelocity(slowVel).withAcceleration(slowAcc).withJerk(slowJerk).withPosition(position));
+    // }
 
   }
   public void setSpeed(double speed) {

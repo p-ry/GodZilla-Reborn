@@ -106,7 +106,7 @@ public class Slider extends SubsystemBase implements Sendable{
   }
 
   public void setTargetVelocityRPS(double velocityRPS) {
-    velocitySetpoint = velocityRPS;
+    velocitySetpoint =0;// velocityRPS;
     velocityRequest.Velocity = velocitySetpoint;
     slider.setControl(velocityRequest);
     
