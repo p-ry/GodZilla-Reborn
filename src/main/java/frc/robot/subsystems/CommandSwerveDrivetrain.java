@@ -58,14 +58,13 @@ import frc.robot.Utilitys;
  * Subsystem so it can easily be used in command-based projects.
  */
 public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Subsystem {
-StructPublisher<Pose2d> botPublisher =
-         NetworkTableInstance.getDefault()
-           .getStructTopic("bot", Pose2d.struct)
-           .publish();
-           
-           StructPublisher<Pose2d> whereToPublisher = NetworkTableInstance.getDefault()
-           .getStructTopic("WhereTo", Pose2d.struct)
-           .publish();
+    StructPublisher<Pose2d> botPublisher = NetworkTableInstance.getDefault()
+            .getStructTopic("bot", Pose2d.struct)
+            .publish();
+
+    StructPublisher<Pose2d> whereToPublisher = NetworkTableInstance.getDefault()
+            .getStructTopic("WhereTo", Pose2d.struct)
+            .publish();
 
     private static final double kSimLoopPeriod = 0.005; // 5 ms
     private Notifier m_simNotifier = null;
@@ -126,7 +125,7 @@ StructPublisher<Pose2d> botPublisher =
         getModule(2).getDriveMotor().setPosition(0);
         getModule(3).getDriveMotor().setPosition(0);
 
-       // botPose2d = new Pose2d();
+        // botPose2d = new Pose2d();
 
         // swerveOdometry = new SwerveDriveOdometry(getKinematics(),
         // kBlueAlliancePerspectiveRotation, getModulePositions());
@@ -138,10 +137,8 @@ StructPublisher<Pose2d> botPublisher =
                 getModulePositions(), getPose(), VecBuilder.fill(0.1, 0.1, Units.degreesToRadians(0.5)),
                 VecBuilder.fill(0.5, 0.5, Units.degreesToRadians(1.0)));
 
-               
-
         configureAutoBuilder();
-       
+
         // mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-left");
         /**
          * Sets the operator perspective forward direction.
@@ -192,8 +189,8 @@ StructPublisher<Pose2d> botPublisher =
         try {
             var config = RobotConfig.fromGUISettings();
             AutoBuilder.configure(
-                    () ->  getPose(),/// getState().Pose, // Supplier of current robot pose
-                    this::resetOdometry,//resetPose, // Consumer for seeding pose against auto
+                    () -> getPose(), /// getState().Pose, // Supplier of current robot pose
+                    this::resetOdometry, // resetPose, // Consumer for seeding pose against auto
                     () -> getState().Speeds, // Supplier of current robot speeds
                     // Consumer of ChassisSpeeds and feedforwards to drive the robot
                     (speeds, feedforwards) -> setControl(
@@ -202,16 +199,16 @@ StructPublisher<Pose2d> botPublisher =
                                     .withWheelForceFeedforwardsY(feedforwards.robotRelativeForcesYNewtons())),
                     new PPHolonomicDriveController(
                             // PID constants for translation
-                            new PIDConstants(2., 0, 0),// was 0.5  //was 0.7
+                            new PIDConstants(2., 0, 0), // was 0.5 //was 0.7
                             // kP10
                             // PID constants for rotation
-                            new PIDConstants(2, 0, 0)),// was 2.0
+                            new PIDConstants(2, 0, 0)), // was 2.0
                     config,
                     // Assume the path needs to be flipped for Red vs Blue, this is normally the
                     // case
                     () -> {
-                        var alliance =DriverStation.getAlliance();
-                        if (alliance.isPresent()){
+                        var alliance = DriverStation.getAlliance();
+                        if (alliance.isPresent()) {
                             return alliance.get() == DriverStation.Alliance.Red;
 
                         }
@@ -247,39 +244,43 @@ StructPublisher<Pose2d> botPublisher =
     public void updateCameraPose() {
         boolean doRejectUpdate = false;
         int bestCamera;
-        double leftAmbiguity = 0;
-        double rightAmbiguity = 0;
+        double leftAmbiguity = 1.0;
+        double rightAmbiguity = 1.0;
         cameraPoses[0] = grabPose("limelight-left");
-       cameraPoses[1] = grabPose("limelight-right");
-      
+        cameraPoses[1] = grabPose("limelight-right");
 
         if (cameraPoses[0] == null && cameraPoses[1] == null) {
             bestCamera = -1;
-        } else if (cameraPoses[0] == null) {
-            bestCamera = 1;
-        } else if (cameraPoses[1] == null) {
-            bestCamera = 0;
         } else {
-            if (cameraPoses[0].tagCount > 0) {
-                leftAmbiguity = cameraPoses[0].rawFiducials[0].ambiguity;
+            if (cameraPoses[0] != null) {
+                if (cameraPoses[0].tagCount > 0) {
+                    leftAmbiguity = cameraPoses[0].rawFiducials[0].ambiguity;
+                }
             }
-            if (cameraPoses[1].tagCount > 0) {
-                rightAmbiguity = cameraPoses[1].rawFiducials[0].ambiguity;
+            if (cameraPoses[1] != null) {
+                if (cameraPoses[1].tagCount > 0) {
+                    rightAmbiguity = cameraPoses[1].rawFiducials[0].ambiguity;
+                }
             }
+
             if (leftAmbiguity < rightAmbiguity) {
                 bestCamera = 0;
             } else {
                 bestCamera = 1;
             }
+
         }
+        SmartDashboard.putNumber("RA", rightAmbiguity);
+        SmartDashboard.putNumber("LA", leftAmbiguity);
+
         if (bestCamera == -1) {
             doRejectUpdate = true;
-        }else {
-            if(cameraPoses[bestCamera].tagCount<1){
-                doRejectUpdate=true;
+        } else {
+            if (cameraPoses[bestCamera].tagCount < 1) {
+                doRejectUpdate = true;
             }
         }
-        
+
         // for (int i = 0; i < 2; i++) {
 
         // doRejectUpdate = false;
@@ -304,16 +305,17 @@ StructPublisher<Pose2d> botPublisher =
         }
         SmartDashboard.putBoolean("RejectUpdate", doRejectUpdate);
         if (!doRejectUpdate) {
-            if(bestCamera==0){
+            if (bestCamera == 0) {
                 targetPose2d = getTargetPose2d("limelight-left");
-            }
-            else{
+            } else {
                 targetPose2d = getTargetPose2d("limelight-right");
             }
             whereToPublisher.set(targetPose2d);
-            SmartDashboard.putNumber("bestcamera",bestCamera);
-            SmartDashboard.putNumberArray("CameraPose", new double[] { cameraPoses[bestCamera].pose.getTranslation().getX(), cameraPoses[bestCamera].pose.getTranslation().getY(),
-                cameraPoses[bestCamera].pose.getRotation().getRadians() });
+            SmartDashboard.putNumber("bestcamera", bestCamera);
+            SmartDashboard.putNumberArray("CameraPose",
+                    new double[] { cameraPoses[bestCamera].pose.getTranslation().getX(),
+                            cameraPoses[bestCamera].pose.getTranslation().getY(),
+                            cameraPoses[bestCamera].pose.getRotation().getRadians() });
             m_poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(.7, .7, 9999));
             m_poseEstimator.addVisionMeasurement(
                     cameraPoses[bestCamera].pose,
@@ -325,22 +327,21 @@ StructPublisher<Pose2d> botPublisher =
 
     }
 
-    
-
     @Override
     public void periodic() {
 
         m_poseEstimator.update(getGyroRotation2D(), getModulePositions());
         botPose2d = m_poseEstimator.getEstimatedPosition();
         botPublisher.set(botPose2d);
-        //SmartDashboard.putNumber("Rotation2D",getGyroRotation2D().getDegrees());
+        // SmartDashboard.putNumber("Rotation2D",getGyroRotation2D().getDegrees());
 
         updateCameraPose();
 
-        //resetOdometry(botPose2d);
+        // resetOdometry(botPose2d);
         // SmartDashboard.putNumberArray("BotPose",
-        //         new double[] { botPose2d.getTranslation().getX(), botPose2d.getTranslation().getY(),
-        //                 botPose2d.getRotation().getRadians() });
+        // new double[] { botPose2d.getTranslation().getX(),
+        // botPose2d.getTranslation().getY(),
+        // botPose2d.getRotation().getRadians() });
         /*
          * This allows us to correct the perspective in case the robot code restarts
          * mid-match.
@@ -369,12 +370,13 @@ StructPublisher<Pose2d> botPublisher =
 
     public Rotation2d getGyroscopeRotation() {
 
-        return Rotation2d.fromDegrees(getCompassHeading());//gyro.getYaw().getValueAsDouble());
+        return Rotation2d.fromDegrees(getCompassHeading());// gyro.getYaw().getValueAsDouble());
     }
 
     public void resetGyro() {
         gyro.setYaw(0);
     }
+
     public void resetGyro(double heading) {
         gyro.setYaw(heading);
     }
@@ -384,7 +386,7 @@ StructPublisher<Pose2d> botPublisher =
     }
 
     public Pose2d getPose() {
-        //m_poseEstimator.getEstimatedPosition();
+        // m_poseEstimator.getEstimatedPosition();
         // return swerveOdometry.getPoseMeters();
         return botPose2d;
     }
@@ -428,7 +430,7 @@ StructPublisher<Pose2d> botPublisher =
 
     public Rotation2d getGyroRotation2D() {
         SmartDashboard.putNumber("yaw", gyro.getYaw().getValueAsDouble());
-        return Rotation2d.fromDegrees(getCompassHeading());//gyro.getYaw().getValueAsDouble());
+        return Rotation2d.fromDegrees(getCompassHeading());// gyro.getYaw().getValueAsDouble());
     }
 
     public PoseEstimate grabPose(String camera) {
@@ -440,17 +442,20 @@ StructPublisher<Pose2d> botPublisher =
         return mt2;
 
     }
-    public Pose2d getTargetPose2d(String camera){
+
+    public Pose2d getTargetPose2d(String camera) {
         Pose3d robotPoseTargetSpacePose3d = LimelightHelpers.getBotPose3d_TargetSpace(camera);
 
-        Pose2d tagRel2d = new Pose2d(-robotPoseTargetSpacePose3d.getZ()-0.4, robotPoseTargetSpacePose3d.getX() +Units.inchesToMeters(6.0),
-        new Rotation2d(robotPoseTargetSpacePose3d.getRotation().getY()));
+        Pose2d tagRel2d = new Pose2d(-robotPoseTargetSpacePose3d.getZ() - 0.4,
+                robotPoseTargetSpacePose3d.getX() + Units.inchesToMeters(6.0),
+                new Rotation2d(robotPoseTargetSpacePose3d.getRotation().getY()));
         tagRel2d = new Pose2d(
-            botPose2d.getX() + tagRel2d.getX(),
-                botPose2d.getY() + tagRel2d.getY() ,
-                botPose2d.getRotation().plus( new Rotation2d(robotPoseTargetSpacePose3d.getRotation().getY())));
+                botPose2d.getX() + tagRel2d.getX(),
+                botPose2d.getY() + tagRel2d.getY(),
+                botPose2d.getRotation().plus(new Rotation2d(robotPoseTargetSpacePose3d.getRotation().getY())));
 
-          //tagRel2d = botPose2d.plus(new Transform2d(tagRel2d.getTranslation(),tagRel2d.getRotation()));
+        // tagRel2d = botPose2d.plus(new
+        // Transform2d(tagRel2d.getTranslation(),tagRel2d.getRotation()));
 
         return tagRel2d;
     }
