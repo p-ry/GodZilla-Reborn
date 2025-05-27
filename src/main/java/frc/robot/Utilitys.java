@@ -76,9 +76,9 @@ public class Utilitys {
 
     public static Command driveToIt(boolean right) {
 
-        StructPublisher<Pose2d> whereToPublisher = NetworkTableInstance.getDefault()
-                .getStructTopic("WhereTo", Pose2d.struct)
-                .publish();
+        // StructPublisher<Pose2d> whereToPublisher = NetworkTableInstance.getDefault()
+        //         .getStructTopic("WhereTo", Pose2d.struct)
+        //         .publish();
         StructPublisher<Pose2d> tagRel2DPublisher = NetworkTableInstance.getDefault()
                 .getStructTopic("TagRel2d", Pose2d.struct)
                 .publish();
@@ -159,11 +159,15 @@ public class Utilitys {
                 
                 tagRel2d = new Pose2d(-robotPoseTargetSpacePose3d.getZ()-0.4, robotPoseTargetSpacePose3d.getX() +Units.inchesToMeters(6.0),
                         new Rotation2d(robotPoseTargetSpacePose3d.getRotation().getY()));
+                tagRel2d = robotPose.transformBy(new Transform2d(tagRel2d.getTranslation(),tagRel2d.getRotation()));
+
+
+
 //******** This is NOT the answer */
-                tagRel2d = new Pose2d(
-                        robotPose.getX() + tagRel2d.getX(),
-                        robotPose.getY() + tagRel2d.getY() ,
-                        robotPose.getRotation().plus(tagRel2d.getRotation()));
+                // tagRel2d = new Pose2d(
+                //         robotPose.getX() + tagRel2d.getX(),
+                //         robotPose.getY() + tagRel2d.getY() ,
+                //         robotPose.getRotation().plus(tagRel2d.getRotation()));
 //**              This is the answer */
                 // tagRel2d = new Pose2d(-robotPoseTargetSpacePose3d.getX(), robotPoseTargetSpacePose3d.getY(),
                 //         new Rotation2d(robotPoseTargetSpacePose3d.getRotation().getZ()));
@@ -194,7 +198,7 @@ public class Utilitys {
           //  Pose2d whereTo = RobotContainer.drivetrain.botPose2d                    .transformBy(robotToTag);
                     Pose2d whereTo = tagRel2d;
 
-            whereToPublisher.set(whereTo);
+            //whereToPublisher.set(whereTo);
             tagRel2DPublisher.set(tagRel2d);
           //  transPublisher.set(robotToTag);
 

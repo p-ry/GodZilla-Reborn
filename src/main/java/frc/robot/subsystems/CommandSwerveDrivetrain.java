@@ -32,6 +32,7 @@ import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
@@ -62,7 +63,9 @@ StructPublisher<Pose2d> botPublisher =
            .getStructTopic("bot", Pose2d.struct)
            .publish();
            
-
+           StructPublisher<Pose2d> whereToPublisher = NetworkTableInstance.getDefault()
+           .getStructTopic("WhereTo", Pose2d.struct)
+           .publish();
 
     private static final double kSimLoopPeriod = 0.005; // 5 ms
     private Notifier m_simNotifier = null;
@@ -82,6 +85,7 @@ StructPublisher<Pose2d> botPublisher =
     public Pose3d botPose3d = new Pose3d();
     public PoseEstimate best = new PoseEstimate();
     public Utilitys utils = new Utilitys();
+    public Pose2d targetPose2d;
     // private final SwerveModule[] swerveModules = new SwerveModule[] { new
     // SwerveModule(0, 1), new SwerveModule(2, 3),
     // new SwerveModule(4, 5), new SwerveModule(6, 7) };
@@ -247,6 +251,7 @@ StructPublisher<Pose2d> botPublisher =
         double rightAmbiguity = 0;
         cameraPoses[0] = grabPose("limelight-left");
        cameraPoses[1] = grabPose("limelight-right");
+      
 
         if (cameraPoses[0] == null && cameraPoses[1] == null) {
             bestCamera = -1;
@@ -299,6 +304,13 @@ StructPublisher<Pose2d> botPublisher =
         }
         SmartDashboard.putBoolean("RejectUpdate", doRejectUpdate);
         if (!doRejectUpdate) {
+            if(bestCamera==0){
+                targetPose2d = getTargetPose2d("limelight-left");
+            }
+            else{
+                targetPose2d = getTargetPose2d("limelight-right");
+            }
+            whereToPublisher.set(targetPose2d);
             SmartDashboard.putNumber("bestcamera",bestCamera);
             SmartDashboard.putNumberArray("CameraPose", new double[] { cameraPoses[bestCamera].pose.getTranslation().getX(), cameraPoses[bestCamera].pose.getTranslation().getY(),
                 cameraPoses[bestCamera].pose.getRotation().getRadians() });
@@ -427,6 +439,20 @@ StructPublisher<Pose2d> botPublisher =
         mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(camera);
         return mt2;
 
+    }
+    public Pose2d getTargetPose2d(String camera){
+        Pose3d robotPoseTargetSpacePose3d = LimelightHelpers.getBotPose3d_TargetSpace(camera);
+
+        Pose2d tagRel2d = new Pose2d(-robotPoseTargetSpacePose3d.getZ()-0.4, robotPoseTargetSpacePose3d.getX() +Units.inchesToMeters(6.0),
+        new Rotation2d(robotPoseTargetSpacePose3d.getRotation().getY()));
+        tagRel2d = new Pose2d(
+            botPose2d.getX() + tagRel2d.getX(),
+                botPose2d.getY() + tagRel2d.getY() ,
+                botPose2d.getRotation().plus( new Rotation2d(robotPoseTargetSpacePose3d.getRotation().getY())));
+
+          //tagRel2d = botPose2d.plus(new Transform2d(tagRel2d.getTranslation(),tagRel2d.getRotation()));
+
+        return tagRel2d;
     }
 
     /**
