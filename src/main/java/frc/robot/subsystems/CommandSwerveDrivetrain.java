@@ -28,16 +28,22 @@ import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.estimator.PoseEstimator;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
+import edu.wpi.first.units.Unit;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -65,6 +71,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     StructPublisher<Pose2d> whereToPublisher = NetworkTableInstance.getDefault()
             .getStructTopic("WhereTo", Pose2d.struct)
             .publish();
+            // StructPublisher<Pose2d> robotRotation = NetworkTableInstance.getDefault()
+            // .getStructTopic("WhereTo", Pose2d.struct)
+            // .publish();
+            // StructPublisher<Pose2d> whereToPublisher = NetworkTableInstance.getDefault()
+            // .getStructTopic("WhereTo", Pose2d.struct)
+            // .publish();
 
     private static final double kSimLoopPeriod = 0.005; // 5 ms
     private Notifier m_simNotifier = null;
@@ -85,6 +97,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     public PoseEstimate best = new PoseEstimate();
     public Utilitys utils = new Utilitys();
     public Pose2d targetPose2d;
+    public PoseEstimate targetPoseEstimate = new PoseEstimate();
+   
     // private final SwerveModule[] swerveModules = new SwerveModule[] { new
     // SwerveModule(0, 1), new SwerveModule(2, 3),
     // new SwerveModule(4, 5), new SwerveModule(6, 7) };
@@ -138,6 +152,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 VecBuilder.fill(0.5, 0.5, Units.degreesToRadians(1.0)));
 
         configureAutoBuilder();
+       // public final PoseEstimator tPoseEstimator  = m_poseEstimator;
+    
 
         // mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-left");
         /**
@@ -303,13 +319,20 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         {
             doRejectUpdate = true;
         }
+
         SmartDashboard.putBoolean("RejectUpdate", doRejectUpdate);
         if (!doRejectUpdate) {
             if (bestCamera == 0) {
                 targetPose2d = getTargetPose2d("limelight-left");
+                double timestamp = System.currentTimeMillis() / 1000.0;
+             //   tPoseEstimator.addVisionMeasurement(targetPose2d, timestamp);
+                //Pose3d target3d  = limelight.getTargetPose_RobotSpace();
             } else {
                 targetPose2d = getTargetPose2d("limelight-right");
+                double timestamp = System.currentTimeMillis() / 1000.0;
+              //  tPoseEstimator.addVisionMeasurement(targetPose2d, timestamp);
             }
+            //targetPose2d= tPoseEstimator.getEstimatedPosition();
             whereToPublisher.set(targetPose2d);
             SmartDashboard.putNumber("bestcamera", bestCamera);
             SmartDashboard.putNumberArray("CameraPose",
@@ -444,20 +467,91 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
 
     public Pose2d getTargetPose2d(String camera) {
-        Pose3d robotPoseTargetSpacePose3d = LimelightHelpers.getBotPose3d_TargetSpace(camera);
+        LimelightHelpers.SetRobotOrientation(camera, gyro.getYaw().getValueAsDouble(), 0, 0, 0, 0, 0);
+      
+//         Pose3d robotPose_TagFrame = LimelightHelpers.getBotPose3d_TargetSpace(camera);
+//         double Xr = -robotPose_TagFrame.getZ();   // forward  = –Zt  (tag‑out → robot‑fwd)
+//         double Yr =  robotPose_TagFrame.getX();   // left     =  Xt  (tag‑right → robot‑left)
 
-        Pose2d tagRel2d = new Pose2d(-robotPoseTargetSpacePose3d.getZ() - 0.4,
-                robotPoseTargetSpacePose3d.getX() + Units.inchesToMeters(6.0),
-                new Rotation2d(robotPoseTargetSpacePose3d.getRotation().getY()));
-        tagRel2d = new Pose2d(
-                botPose2d.getX() + tagRel2d.getX(),
-                botPose2d.getY() + tagRel2d.getY(),
-                botPose2d.getRotation().plus(new Rotation2d(robotPoseTargetSpacePose3d.getRotation().getY())));
+//         double tagYawRadInRobot = -robotPose_TagFrame.getRotation().getY();
+// Translation3d tRobot = new Translation3d(Xr, Yr, /*Zr=*/ -robotPose_TagFrame.getY());
+// Rotation3d   rRobot = new Rotation3d(          // map roll/pitch/yaw in order
+//         -robotPose_TagFrame.getRotation().getZ(),     // roll  (tag‑Y down → –Z roll)
+//          robotPose_TagFrame.getRotation().getX(),     // pitch (tag‑X right →  X pitch)
+//         tagYawRadInRobot);                     // yaw   (as above)
+
+// Transform3d robotToTag3d = new Transform3d(tRobot, rRobot);
+// Pose3d      tagPoseField3d = new Pose3d(botPose2d).transformBy(robotToTag3d);
+
+
+Pose3d robotPose_T = LimelightHelpers.getBotPose3d_TargetSpace(camera);
+
+if (robotPose_T == null) {               // no tag detected this frame
+    return null;
+}
+
+double hyp = robotPose_T.getZ();
+double y = Math.cos(Units.degreesToRadians(-60)) * hyp;
+double x = Math.sin(Units.degreesToRadians(-60)) * hyp;
+
+/* 2 ─ Target‑Space translation → ROBOT axes
+        Xt (right)  → +Y (left)
+        Zt (out)    → –X (forward)                                   */
+Translation2d robotToTag_robot = new Translation2d(x, y);
+        
+/* 3 ─ Rotate vector from robot frame into FIELD frame */
+Rotation2d tagRotation = new Rotation2d(robotPose_T.getRotation().getY());
+Transform2d robotToTag_field = new Transform2d(robotToTag_robot, tagRotation);
+
+
+Pose2d fieldTagPose2d = botPose2d.transformBy(robotToTag_field);
+       // robotToTag_robot.rotateBy(botPose2d.getRotation());
+
+
+/* 4 ─ Compose translation + yaw and return */
+return fieldTagPose2d;
+
+
+// /* --- 1. remap translation into robot axes --- */
+// Translation3d tRobot = new Translation3d(
+//         -robotPose_T.getZ(),   // +X forward
+//          robotPose_T.getX(),   // +Y left
+//         -robotPose_T.getY());  // +Z up  (rarely used on flat field)
+
+// /* --- 2. remap rotation into robot axes (roll‑pitch‑yaw order) --- */
+// Rotation3d rT = robotPose_T.getRotation();
+// Rotation3d rRobot = new Rotation3d(
+//         -rT.getZ(),            // roll  (tag Y down ⇒ –Z roll)
+//          rT.getX(),            // pitch (tag X right ⇒ +X pitch)
+//         -rT.getY());           // yaw   (tag Z out  ⇒ –Y becomes +Z CCW)
+
+// /* --- 3. build robot→tag transform in robot frame --- */
+// Transform3d robotToTag = new Transform3d(tRobot, rRobot);
+
+
+
+// /* --- 4. promote robot 2‑D pose to 3‑D and compose --- */
+// Pose3d tagPoseField3d = new Pose3d(botPose2d).transformBy(robotToTag);
+
+
+
+
+
+
+
+
+        // Pose2d tagRel2d = new Pose2d(-robotPoseTargetSpacePose3d.getZ(),// - 0.4,
+        //         robotPoseTargetSpacePose3d.getX(),// + Units.inchesToMeters(6.0),
+        //         new Rotation2d(robotPoseTargetSpacePose3d.getRotation().getY()));
+        // tagRel2d = new Pose2d(
+        //         botPose2d.getX() + tagRel2d.getX(),
+        //         botPose2d.getY() + tagRel2d.getY(),
+        //         botPose2d.getRotation().plus(new Rotation2d(robotPoseTargetSpacePose3d.getRotation().getY())));
 
         // tagRel2d = botPose2d.plus(new
         // Transform2d(tagRel2d.getTranslation(),tagRel2d.getRotation()));
 
-        return tagRel2d;
+       // return tagPoseField3d.toPose2d();
     }
 
     /**
