@@ -21,6 +21,7 @@ import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.events.EventTrigger;
 import com.pathplanner.lib.auto.CommandUtil;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -379,13 +380,16 @@ public static double garbage =0;
                 // drivetrain.resetGyro(0))))) ;
          
                 .onTrue(new InstantCommand(() -> {
+                        drivetrain.driv
+
                         
-                        driveIt = Utilitys.driveToIt(true);//rightTree
+                        // driveIt = Utilitys.driveToIt(true);//rightTree
                       
-                         if(driveIt !=null){
-                                driveIt.schedule();
+                        //  if(driveIt !=null){
+                        //         driveIt.schedule();
                          
-                        }
+                        //}
+
 
                  }));
                 controller.rightBumper()
@@ -394,6 +398,21 @@ public static double garbage =0;
                         if(driveIt!=null){
                                 driveIt.cancel();
                         }
+
+
+
+        // 1) Get the current field heading from the gyro (CCW +)
+        Rotation2d fieldYaw = Rotation2d
+                .fromDegrees(-drivetrain.gyro.getYaw().getValueAsDouble());
+
+        // 2) Option A – keep the current XY estimate, but “snap” the heading
+        Pose2d newFieldPose = new Pose2d(
+                drivetrain.getPose().getTranslation(),  // whatever odometry thought for XY
+                fieldYaw);                          // trusty gyro heading
+
+        // 3) Seed the estimator / odometry
+        drivetrain.resetOdometry(newFieldPose);  
+
                 }));
 
 

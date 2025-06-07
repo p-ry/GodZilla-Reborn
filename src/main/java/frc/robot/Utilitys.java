@@ -14,12 +14,14 @@ import com.pathplanner.lib.path.PathConstraints;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import frc.robot.LimelightHelpers.PoseEstimate;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -74,7 +76,7 @@ public class Utilitys {
         return new Pose2d(xNew, yNew, invTheta);
     }
 
-    public static Command driveToIt(boolean right) {
+    public static double[] driveToIt(boolean right) {
 
         // StructPublisher<Pose2d> whereToPublisher = NetworkTableInstance.getDefault()
         //         .getStructTopic("WhereTo", Pose2d.struct)
@@ -113,6 +115,12 @@ public class Utilitys {
         Rotation2d tagFieldYaw, robotRelYaw;
         Transform2d robotToTag;
         Pose2d tagRel2d;
+        
+
+double vx;
+double vy;
+double omega;
+
 
         if (resultsLeft.valid) {
             leftDist = resultsLeft.botpose_avgdist;
@@ -135,6 +143,8 @@ public class Utilitys {
 
        // Pose3d robotPoseTargetSpacePose3d = LimelightHelpers.getTargetPose3d_RobotSpace("limelight-left");
          Pose3d robotPoseTargetSpacePose3d = LimelightHelpers.getBotPose3d_TargetSpace("limelight-left");
+         Pose2d tagPoseRobot = LimelightHelpers.getTargetPose3d_RobotSpace("limelight-left").toPose2d();   // drop height/roll/pitch
+
 
         if (validTarget) {
             if (leftDist < rightDist) {
@@ -145,6 +155,9 @@ public class Utilitys {
                 results = resultsRight;
 
                 robotPoseTargetSpacePose3d = LimelightHelpers.getBotPose3d_TargetSpace("limelight-right");
+                 tagPoseRobot = LimelightHelpers.getTargetPose3d_RobotSpace("limelight-right").toPose2d();   // drop height/roll/pitch
+         
+         
             }
 
             Rotation2d yawOffset = new Rotation2d(robotPoseTargetSpacePose3d.getRotation().getY());
@@ -155,6 +168,31 @@ public class Utilitys {
                 // - robotPoseTargetSpacePose3d.getTranslation().getZ()-0.3,
                 // robotPoseTargetSpacePose3d.getTranslation().getX() -
                 // Units.inchesToMeters(6.0));
+
+
+
+PIDController xPid = new PIDController(2.5, 0, 0);
+PIDController yPid = new PIDController(2.5, 0, 0);
+PIDController thetaPid = new PIDController(4.0, 0, 0);
+thetaPid.enableContinuousInput(-Math.PI, Math.PI);
+
+
+
+
+
+vx = xPid.calculate(tagPoseRobot.getX());               // +FWD
+vy = yPid.calculate(tagPoseRobot.getY());               // +LEFT
+omega = thetaPid.calculate(tagPoseRobot.getRotation().getRadians());
+
+
+
+
+
+
+
+
+
+                
 
                 
                 tagRel2d = new Pose2d(-robotPoseTargetSpacePose3d.getZ()-0.4, robotPoseTargetSpacePose3d.getX() +Units.inchesToMeters(6.0),
@@ -194,6 +232,24 @@ public class Utilitys {
                 robotToTag = new Transform2d(Pose3Dto2D(robotPoseTargetSpacePose3d).getTranslation(),
                         Pose3Dto2D(robotPoseTargetSpacePose3d).getRotation());
 
+
+                        
+PIDController xPid = new PIDController(2.5, 0, 0);
+PIDController yPid = new PIDController(2.5, 0, 0);
+PIDController thetaPid = new PIDController(4.0, 0, 0);
+thetaPid.enableContinuousInput(-Math.PI, Math.PI);
+
+
+
+
+
+vx = xPid.calculate(tagPoseRobot.getX());               // +FWD
+vy = yPid.calculate(tagPoseRobot.getY());               // +LEFT
+omega = thetaPid.calculate(tagPoseRobot.getRotation().getRadians());
+
+
+
+
             }
           //  Pose2d whereTo = RobotContainer.drivetrain.botPose2d                    .transformBy(robotToTag);
                     Pose2d whereTo = tagRel2d;
@@ -203,7 +259,13 @@ public class Utilitys {
           //  transPublisher.set(robotToTag);
 
             Command driveit = AutoBuilder.pathfindToPose(whereTo, constraints, 0.0);
-            return driveit;
+           double[] driving = new double[3];
+            driving[0] = vx;
+
+            driving[1] = vy;
+            driving[2] = omega;
+
+            return driving;//driveit;
         }
         return null;
         //
