@@ -88,14 +88,14 @@ public class Ace extends SubsystemBase {
   @Override
   public void periodic() {
     LaserCan.Measurement measurement = laserCan.getMeasurement();
-   // SmartDashboard.putNumber("LaserDistance", distance);
+   SmartDashboard.putNumber("LaserDistance", measurement.distance_mm);
 
     if (RobotContainer.loading) {
      
 
       if (measurement != null && measurement.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT) {
         distance = measurement.distance_mm;
-       // SmartDashboard.putNumber("distance", distance);
+       SmartDashboard.putNumber("ValidLASERDistance", distance);
         
         if ((distance < 100)) {
           coralPresent = true;

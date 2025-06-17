@@ -12,7 +12,6 @@ import java.io.Console;
 import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix.led.CANdle;
 
-
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
@@ -27,9 +26,11 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.DriveItCommand;
 import frc.robot.commands.Extend;
@@ -42,20 +43,22 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Ace;
 import frc.robot.subsystems.ArmAssembly;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.LowerArm;
 import frc.robot.subsystems.Wrist;
 
 public class RobotContainer {
         // public static Pigeon2 gyro;
-        public static double MaxSpeed = 4.73;//TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired
-                                                                                            // top
-                                                                                            // speed
+        public static double MaxSpeed = 4.73;// TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts
+                                             // desired
+                                             // top
+                                             // speed
 
         public static double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per
                                                                                                 // second
                                                                                                 // max angular velocity
-public static double driveDeadband = 0.473;
-public static double turnDeadband= 0.47;
-public static double garbage =0;
+        public static double driveDeadband = 0.473;
+        public static double turnDeadband = 0.47;
+        public static double garbage = 0;
         /* Setting up bindings for necessary control of the swerve drive platform */
         /*
          * private final SwerveRequest.FieldCentric drive = new
@@ -65,11 +68,11 @@ public static double garbage =0;
          * .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop
          * control for drive
          * // motors
-         * 
+         *
          */
         private double prevHeading = 0;
         private double slowFactor = 3;
-       // public static CANdle candle = new CANdle(37);
+        // public static CANdle candle = new CANdle(37);
 
         private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
         private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
@@ -93,8 +96,8 @@ public static double garbage =0;
                         .withDriveRequestType(DriveRequestType.Velocity);
 
         private final SwerveRequest.RobotCentric robotCentricDrive = new SwerveRequest.RobotCentric()
-                        .withDeadband(MaxSpeed * 0.1)
-                        .withRotationalDeadband(MaxAngularRate * 0.1)
+                        .withDeadband(0.0)
+                        .withRotationalDeadband(turnDeadband)
                         .withDriveRequestType(DriveRequestType.Velocity);
 
         final JoystickButton Dump = new JoystickButton(copilot, 1);
@@ -113,11 +116,15 @@ public static double garbage =0;
         final JoystickButton Load = new JoystickButton(copilot, 12);
         final JoystickButton Barge = new JoystickButton(copilot2, 2);
         final JoystickButton Chomp = new JoystickButton(copilot, 9);
-        private final CommandXboxController controller = new CommandXboxController(0);
-        public static boolean loading=false;
-        public static int BlueAlliance =1;
-        public static  Command driveIt;
-        public static boolean rightTree =true;
+        final JoystickButton CoveredSwitch = new JoystickButton(copilot, 8);
+
+        public static final CommandXboxController controller = new CommandXboxController(0);
+        final Trigger lTrigger = controller.leftTrigger();
+        final Trigger rTrigger = controller.rightTrigger();
+        public static boolean loading = false;
+        public static int BlueAlliance = 1;
+        public static Command driveIt;
+        public static boolean rightTree = true;
         public static double maxSpeedConstant = 4.73;
         public static double maxAngularRateConstant = RotationsPerSecond.of(0.75).in(RadiansPerSecond);
         /* Path follower */
@@ -126,31 +133,29 @@ public static double garbage =0;
         public RobotContainer() {
                 // gyro = new Pigeon2(0, "Canivore");
                 SmartDashboard.putNumber("prevHeading", prevHeading);
-                
-                
 
                 // Note that X is defined as forward according to WPILib convention,
                 // and Y is defined as to the left according to WPILib convention.
                 drivetrain.setDefaultCommand(
                                 // Drivetrain will execute this command periodically
                                 drivetrain.applyRequest(() -> drive.withVelocityX(
-                                        -(controller.getLeftY() )
-                                        * MaxSpeed*BlueAlliance) // Drive
-                      
+                                                -(controller.getLeftY())
+                                                                * MaxSpeed * BlueAlliance) // Drive
+
                                                 // -(controller.getLeftY() * controller.getLeftY()
-                                                //                 * Math.signum(controller.getLeftY()))
-                                                //                 * MaxSpeed) // Drive
+                                                // * Math.signum(controller.getLeftY()))
+                                                // * MaxSpeed) // Drive
                                                 // // forward
                                                 // with
                                                 // negative
                                                 // Y
                                                 // (forward)
-                                                 .withVelocityY(-(controller.getLeftX() ) * MaxSpeed*BlueAlliance) // Drive
-                                                                                                                 
+                                                .withVelocityY(-(controller.getLeftX()) * MaxSpeed * BlueAlliance) // Drive
+
                                                 // .withVelocityY(-(controller.getLeftX() * controller.getLeftX()
-                                                //                 * Math.signum(controller.getLeftX()) * MaxSpeed)) // Drive
-                                                //                                                                   // left
-                                                                                                                  // with
+                                                // * Math.signum(controller.getLeftX()) * MaxSpeed)) // Drive
+                                                // // left
+                                                // with
                                                 // negative X (left)
                                                 .withRotationalRate(-controller.getRightX() * MaxAngularRate) // Drive
                                                                                                               // counterclockwise
@@ -163,15 +168,20 @@ public static double garbage =0;
 
                 NamedCommands.registerCommand("raiseArm", new MoveArmFix(mArm, 42, -1));
                 NamedCommands.registerCommand("level3", new MoveArmFix(mArm, 3, 1));
-                NamedCommands.registerCommand("Load", new WaitCommand(0.7).andThen(new MoveArmFix(mArm, 1, 0).alongWith(new InstantCommand(() -> ace.setSpeed(1)))));
+                NamedCommands.registerCommand("Load", new WaitCommand(0.7).andThen(
+                                new MoveArmFix(mArm, 1, 0).alongWith(new InstantCommand(() -> ace.setSpeed(1)))));
                 NamedCommands.registerCommand("L1", new MoveArmFix(mArm, 6, 0));
                 NamedCommands.registerCommand("L2", new MoveArmFix(mArm, 2, 0));
                 NamedCommands.registerCommand("L3", new MoveArmFix(mArm, 3, 0));
                 NamedCommands.registerCommand("L4", new MoveArmFix(mArm, 4, 0));
-                NamedCommands.registerCommand("Intake", new InstantCommand(() -> ace.setSpeed(1)).alongWith(new InstantCommand(() -> ace.gotIt = false)).alongWith(new InstantCommand(() -> ace.coralPresent = false)));
+                NamedCommands.registerCommand("Intake",
+                                new InstantCommand(() -> ace.setSpeed(1))
+                                                .alongWith(new InstantCommand(() -> ace.gotIt = false))
+                                                .alongWith(new InstantCommand(() -> ace.coralPresent = false)));
                 new EventTrigger("L400").onTrue(new MoveArmFix(mArm, 4, 0));
-                new EventTrigger("LoadIt").onTrue(new MoveArmFix(mArm, 1, 0).alongWith(new InstantCommand(() -> System.out.println("loadit")) .alongWith(new InstantCommand(() -> ace.setSpeed(1)))));
-                
+                new EventTrigger("LoadIt").onTrue(new MoveArmFix(mArm, 1, 0)
+                                .alongWith(new InstantCommand(() -> System.out.println("loadit"))
+                                                .alongWith(new InstantCommand(() -> ace.setSpeed(1)))));
 
                 AutoChooser = AutoBuilder.buildAutoChooser("none");
                 SmartDashboard.putData("AutoChooser", AutoChooser);
@@ -194,16 +204,16 @@ public static double garbage =0;
 
                 Load
                                 .whileTrue(new MoveArmFix(mArm, 1, 0));
-                                Load.onTrue(new InstantCommand(() -> ace.setSpeed(1)));
+                Load.onTrue(new InstantCommand(() -> ace.setSpeed(1)));
                 Load
                                 .onTrue(new InstantCommand(() -> ace.gotIt = false));
                 Load
                                 .onTrue(new InstantCommand(() -> ace.coralPresent = false));
-                                Load.onTrue(new InstantCommand(() -> loading = true));
+                Load.onTrue(new InstantCommand(() -> loading = true));
 
                 Load
                                 .onFalse(new MoveArmFix(mArm, 0, 0));
-                                Load.onFalse(new InstantCommand(() -> loading = false));
+                Load.onFalse(new InstantCommand(() -> loading = false));
                 Process
                                 .onTrue(new MoveArmFix(mArm, 5, 0));
                 // Process.whileTrue(new InstantCommand(() -> ace.setSpeed(0.1)));
@@ -223,17 +233,65 @@ public static double garbage =0;
                 Dump
                                 .onFalse(new MoveArmFix(mArm, 0, 0));
 
+                // Chomp.onTrue(new InstantCommand(() -> {
+                // // ace.setSpeed(1);
+                // mArm.wrist.setSpeed(.3);
+                // System.out.println("Chomp is on");
+                // })); // Chomp is on
+                // Chomp.onFalse(new InstantCommand(() -> {
+                // // ace.setSpeed(0);
+                // mArm.wrist.setSpeed(0);
+                // System.out.println("Chomp is off");
+                // })); // Chomp is off
 
-                                // Chomp.onTrue(new InstantCommand(() -> {
-                                //         // ace.setSpeed(1);
-                                //         mArm.wrist.setSpeed(.3);
-                                //         System.out.println("Chomp is on");
-                                // })); // Chomp is on
-                                // Chomp.onFalse(new InstantCommand(() -> {
-                                //         // ace.setSpeed(0);
-                                //         mArm.wrist.setSpeed(0);
-                                //         System.out.println("Chomp is off");
-                                // })); // Chomp is off
+                CoveredSwitch.whileTrue(
+                        new MoveArmFix(mArm, 8, 0)//Need to add isfinished command
+                        
+                );
+            
+
+                lTrigger.whileTrue(
+                                new RunCommand(() -> {
+                                        double axis = controller.getLeftTriggerAxis(); // 0 → 1
+                                       
+                                        double vLeft = axis * 0.5;
+
+                                        drivetrain.setControl(
+                                                        robotCentricDrive
+                                                                        .withVelocityX(0.0) // no fwd/back
+                                                                        .withVelocityY(vLeft) // +Y = left
+                                                                        .withRotationalRate(0.0)); // no spin
+                                }, drivetrain));
+                lTrigger.onFalse(new InstantCommand(() -> {
+                        drivetrain.setControl(
+                                        robotCentricDrive
+                                                        .withVelocityX(0.0) // no fwd/back
+                                                        .withVelocityY(0.0) // +Y = left
+                                                        .withRotationalRate(0.0)); // no spin
+                }, drivetrain));
+                rTrigger.whileTrue(
+                                new RunCommand(() -> {
+                                        double axis = controller.getRightTriggerAxis(); // 0 → 1
+                                        double vRight = axis * 0.5;
+
+                                        drivetrain.setControl(
+                                                        robotCentricDrive
+                                                                        .withVelocityX(0.0) // no fwd/back
+                                                                        .withVelocityY(-vRight) // +Y = right
+                                                                        .withRotationalRate(0.0)); // no spin
+                                }, drivetrain));
+
+        rTrigger.onFalse(new InstantCommand(() -> {
+                        drivetrain.setControl(
+                                        robotCentricDrive
+                                                        .withVelocityX(0.0) // no fwd/back
+                                                        .withVelocityY(0.0) // +Y = right
+                                                        .withRotationalRate(0.0)); // no spin
+                }, drivetrain));
+
+                // /* Stop the moment the trigger is released --------------------------- */
+                // .onFalse(new InstantCommand(swerve::stop, swerve));
+                // }
                 // **************TRUE ******** */
                 Lv2L.whileTrue(new MoveArmFix(mArm, 2, -1));
                 Lv2L.onTrue(new InstantCommand(() -> MaxSpeed = maxSpeedConstant));
@@ -241,41 +299,40 @@ public static double garbage =0;
                 Lv2L.onTrue(new InstantCommand(() -> rightTree = false));
                 Lv2R.whileTrue(new MoveArmFix(mArm, 2, 1));
                 Lv2R.onTrue(new InstantCommand(() -> MaxSpeed = maxSpeedConstant));
-                Lv2R.onTrue(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant/ 2));
+                Lv2R.onTrue(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant / 2));
                 Lv2R.onTrue(new InstantCommand(() -> rightTree = true));
 
                 // ********FALSE ******** */
                 Lv2L.onFalse(new MoveArmFix(mArm, 44, 0));
-                //.andThen(new InstantCommand(() -> ace.setSpeed(1))));
-               
+                // .andThen(new InstantCommand(() -> ace.setSpeed(1))));
+
                 Lv2L.onFalse(new InstantCommand(() -> MaxSpeed = maxSpeedConstant));
                 Lv2L.onFalse(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant));
                 Lv2R.onFalse(new MoveArmFix(mArm, 44, 0));
-                //.andThen(new InstantCommand(() -> ace.setSpeed(1))));
+                // .andThen(new InstantCommand(() -> ace.setSpeed(1))));
                 Lv2R.onFalse(new InstantCommand(() -> MaxSpeed = maxSpeedConstant));
                 Lv2R.onFalse(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant));
 
-
                 // ******** True ****** */
                 Lv3L.whileTrue(new MoveArmFix(mArm, 3, -1));
-                Lv3L.onTrue(new InstantCommand(() -> MaxSpeed = maxSpeedConstant/ 3));
+                Lv3L.onTrue(new InstantCommand(() -> MaxSpeed = maxSpeedConstant / 3));
                 Lv3L.onTrue(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant / 2));
                 Lv3L.onTrue(new InstantCommand(() -> rightTree = false));
 
                 Lv3R.whileTrue(new MoveArmFix(mArm, 3, 1));
-                Lv3R.onTrue(new InstantCommand(() -> MaxSpeed = maxSpeedConstant/ 3));
+                Lv3R.onTrue(new InstantCommand(() -> MaxSpeed = maxSpeedConstant / 3));
                 Lv3R.onTrue(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant / 2));
                 Lv3R.onTrue(new InstantCommand(() -> rightTree = true));
                 // ******** FALSE *** *****************************************/
                 // Lv3L.onFalse(new Retract(mArm, 3).andThen(new MoveArmFix(mArm, 1, 0)));
                 Lv3L.onFalse(new MoveArmFix(mArm, 44, 0));
-                //.andThen(new InstantCommand(() -> ace.setSpeed(1))));
+                // .andThen(new InstantCommand(() -> ace.setSpeed(1))));
                 Lv3L.onFalse(new InstantCommand(() -> MaxSpeed = maxSpeedConstant));
                 Lv3L.onFalse(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant));
 
                 // Lv3R.onFalse(new Retract(mArm, 3).andThen(new MoveArmFix(mArm, 1, 0)));
                 Lv3R.onFalse(new MoveArmFix(mArm, 44, 0));
-                //.andThen(new InstantCommand(() -> ace.setSpeed(1))));
+                // .andThen(new InstantCommand(() -> ace.setSpeed(1))));
                 Lv3R.onFalse(new InstantCommand(() -> MaxSpeed = maxSpeedConstant));
                 Lv3R.onFalse(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant));
                 // *********TRUE *************************************** */
@@ -289,21 +346,23 @@ public static double garbage =0;
                 Lv4R.onTrue(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant / 2.5));
                 Lv4R.onTrue(new InstantCommand(() -> rightTree = true));
                 // *********FALSE **************************************************/
-                Lv4L.onFalse(new MoveArmFix(mArm, 44, 0).andThen(new WaitCommand(0.1)).andThen(new InstantCommand(()->{
+                Lv4L.onFalse(new MoveArmFix(mArm, 44, 0).andThen(new WaitCommand(0.1))
+                                .andThen(new InstantCommand(() -> {
 
-                MaxSpeed = maxSpeedConstant;
+                                        MaxSpeed = maxSpeedConstant;
 
-                MaxAngularRate = maxAngularRateConstant;
-                       })));
+                                        MaxAngularRate = maxAngularRateConstant;
+                                })));
 
-                //.andThen(new InstantCommand(() -> ace.setSpeed(1))));
+                // .andThen(new InstantCommand(() -> ace.setSpeed(1))));
                 // Lv4L.onFalse(new InstantCommand(() -> MaxSpeed = MaxSpeed * 4));
                 // Lv4L.onFalse(new InstantCommand(() -> MaxAngularRate = MaxAngularRate * 2));
-                Lv4R.onFalse(new MoveArmFix(mArm, 44, 0).andThen(new WaitCommand(0.1)).andThen(new InstantCommand(()->{
-                MaxSpeed = maxSpeedConstant;
-                  MaxAngularRate = maxAngularRateConstant;
-                         })));
-                //.andThen(new InstantCommand(() -> ace.setSpeed(1))));
+                Lv4R.onFalse(new MoveArmFix(mArm, 44, 0).andThen(new WaitCommand(0.1))
+                                .andThen(new InstantCommand(() -> {
+                                        MaxSpeed = maxSpeedConstant;
+                                        MaxAngularRate = maxAngularRateConstant;
+                                })));
+                // .andThen(new InstantCommand(() -> ace.setSpeed(1))));
                 // Lv4R.onFalse(new InstantCommand(() -> MaxSpeed = MaxSpeed * 4));
                 // Lv4R.onFalse(new InstantCommand(() -> MaxAngularRate = MaxAngularRate * 2));
 
@@ -373,73 +432,69 @@ public static double garbage =0;
                  */
 
                 controller.rightBumper()
-               // .onTrue(new DriveItCommand(true));//
-                // .andThen(new InstantCommand(()->prevHeading =
-                // drivetrain.getCompassHeading()).andThen(new InstantCommand(() ->
-                // drivetrain.resetGyro(0))))) ;
-         
-                .onTrue(new InstantCommand(() -> {
-                        
-                        driveIt = Utilitys.driveToIt(true);//rightTree
-                      
-                         if(driveIt !=null){
-                                driveIt.schedule();
-                         
-                        }
+                                // .onTrue(new DriveItCommand(true));//
+                                // .andThen(new InstantCommand(()->prevHeading =
+                                // drivetrain.getCompassHeading()).andThen(new InstantCommand(() ->
+                                // drivetrain.resetGyro(0))))) ;
 
-                 }));
+                                .onTrue(new InstantCommand(() -> {
+
+                                        driveIt = Utilitys.driveToIt(true);// rightTree
+
+                                        if (driveIt != null) {
+                                                driveIt.schedule();
+
+                                        }
+
+                                }));
                 controller.rightBumper()
-                .onFalse(new InstantCommand(() -> {
-                                             
-                        if(driveIt!=null){
-                                driveIt.cancel();
-                        }
-                }));
+                                .onFalse(new InstantCommand(() -> {
 
+                                        if (driveIt != null) {
+                                                driveIt.cancel();
+                                        }
+                                }));
 
-             
-           
-       
+                controller.leftBumper().onTrue(
 
-          controller.leftBumper().onTrue(
-                   
-                new InstantCommand(() -> {
-                        
-                        driveIt = Utilitys.driveToIt(false);
-                        if(driveIt !=null){
-                                driveIt.schedule();
-                        }
-               }));
+                                new InstantCommand(() -> {
+
+                                        driveIt = Utilitys.driveToIt(false);
+                                        if (driveIt != null) {
+                                                driveIt.schedule();
+                                        }
+                                }));
                 controller.leftBumper()
-                .onFalse(new InstantCommand(() -> {
-                                             
-                        if(driveIt!=null){
-                                driveIt.cancel();
-                        }
-                }));
-                //.andThen(new InstantCommand(() -> drivetrain.resetGyro(prevHeading))));
+                                .onFalse(new InstantCommand(() -> {
 
-                //  (new DriveToAmpPath(1));
+                                        if (driveIt != null) {
+                                                driveIt.cancel();
+                                        }
+                                }));
+                // .andThen(new InstantCommand(() -> drivetrain.resetGyro(prevHeading))));
+
+                // (new DriveToAmpPath(1));
                 // []\]
                 // drivetrain.resetGyroToAlliance()));
 
-                // controller.rightBumper().whileTrue(drivetrain.applyRequest(() -> drive.withVelocityX(
-                //         -(controller.getLeftY() )                        * MaxSpeed) // Drive
-                //                  .withVelocityY(-(controller.getLeftX() ) * MaxSpeed) // Drive
-                                                                                                 
-                //                 .withRotationalRate(-controller.getRightX() * MaxAngularRate))); // Drive
-                //                                                                               // counterclockwise
-                //                                                                               // with
-                //                                                                               // negative
-                // controller.rightBumper().onFalse()                                          
-                
+                // controller.rightBumper().whileTrue(drivetrain.applyRequest(() ->
+                // drive.withVelocityX(
+                // -(controller.getLeftY() ) * MaxSpeed) // Drive
+                // .withVelocityY(-(controller.getLeftX() ) * MaxSpeed) // Drive
 
-              //  controller.leftBumper().onTrue(new InstantCommand(() -> drivetrain.setHeading(new Rotation2d(0))));
+                // .withRotationalRate(-controller.getRightX() * MaxAngularRate))); // Drive
+                // // counterclockwise
+                // // with
+                // // negative
+                // controller.rightBumper().onFalse()
+
+                // controller.leftBumper().onTrue(new InstantCommand(() ->
+                // drivetrain.setHeading(new Rotation2d(0))));
 
                 controller
                                 .start()
                                 .onTrue(new InstantCommand(() -> drivetrain.gyro.reset()));
-                                controller.start()
+                controller.start()
                                 .onTrue(new InstantCommand(() -> drivetrain.setHeading(new Rotation2d(0))));
 
                 controller.b().whileTrue(drivetrain.applyRequest(
@@ -452,11 +507,6 @@ public static double garbage =0;
                                 .whileTrue(drivetrain.applyRequest(
                                                 () -> forwardStraight.withVelocityX(-0.5).withVelocityY(0)));
 
-
-
-
-
-                                                
                 // Run SysId routines when holding back/start and X/Y.
                 // Note that each routine should be run exactly once in a single log.
 
@@ -469,11 +519,11 @@ public static double garbage =0;
                  * Direction.kForward));
                  * joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdQuasistatic(
                  * Direction.kReverse));
-                 * 
+                 *
                  * joystick.a().whileTrue(new InstantCommand(() ->
                  * System.out.println(drivetrain.gyro.getYaw().getValueAsDouble())));
-                 * 
-                 * 
+                 *
+                 *
                  * // reset the field-centric heading on left bumper press
                  * joystick.leftBumper().onTrue(drivetrain.runOnce(() ->
                  * drivetrain.seedFieldCentric()));

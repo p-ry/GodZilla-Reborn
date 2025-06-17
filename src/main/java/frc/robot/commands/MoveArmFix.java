@@ -202,6 +202,11 @@ public class MoveArmFix extends Command {
 
         System.out.println("WARNING!!!!  OLD MOVE!!!!!!!");
         break;
+
+        case 8: //Climb pos
+
+        //myArm.lowerArm.setPos();
+
       case 12:
         myArm.wrist.setPos(myArm.wrist.getPos() + 1.0);
         break;
