@@ -117,8 +117,8 @@ public class MoveArmFix extends Command {
         break;
       case 2:
         if (algae) {
-          myArm.lowerArm.setPos(1.0); // 16.10 load
-          myArm.upperArm.setPos(5, true);
+          myArm.lowerArm.setPos(12.0); // 16.10 load
+          myArm.upperArm.setPos(3.5, true);
           myArm.slider.setPos(0.50);
           myArm.wrist.setPos(3.0);
 
@@ -146,10 +146,10 @@ public class MoveArmFix extends Command {
         break;
       case 3:
         if (algae) {
-          myArm.lowerArm.setPos(25.0);
+          myArm.lowerArm.setPos(28.0);//25.0
           myArm.upperArm.setPos(20.0, false);
           myArm.slider.setPos(1.5);
-          myArm.wrist.setPos(3.0);
+          myArm.wrist.setPos(6.0);
         } else {
           myArm.lowerArm.setPos(20);
           myArm.upperArm.setPos(21, true);

@@ -198,7 +198,7 @@ public class RobotContainer {
                 // Process
                 // .onTrue(new MoveArmFix(mArm, 12));
                 Algae
-                                .onTrue(new InstantCommand(() -> ace.setSpeed(-.7)));
+                                .onTrue(new InstantCommand(() -> ace.setSpeed(.8)));
                 Algae
                                 .onFalse(new InstantCommand(() -> ace.setSpeed(0)));
 
