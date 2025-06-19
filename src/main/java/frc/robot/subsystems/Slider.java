@@ -83,7 +83,7 @@ public class Slider extends SubsystemBase implements Sendable{
     pidConfigs2 = sliderConfigs.Slot1;
     pidConfigs.kP = 2.5;
     pidConfigs2.kP = 0.02;
-    pidConfigs.kS=0.5;
+    pidConfigs.kS=0.5;// maybe change to 0.6
     pidConfigs.kV=0.2;
 
     mmConfigs= sliderConfigs.MotionMagic;
