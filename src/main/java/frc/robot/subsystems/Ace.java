@@ -4,7 +4,9 @@
 
 package frc.robot.subsystems;
 
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
@@ -43,6 +45,7 @@ public class Ace extends SubsystemBase {
   LaserCan.Measurement measurement;
   public static boolean gotIt;
   public static boolean coralPresent;
+  public static boolean backup=false;
 
   /** Creates a new Ace. */
   public Ace(int level) {
@@ -56,7 +59,8 @@ public class Ace extends SubsystemBase {
 
     try {
       laserCan.setRangingMode(LaserCan.RangingMode.SHORT);
-      laserCan.setRegionOfInterest(new LaserCan.RegionOfInterest(4, 6, 9, 7));
+      //laserCan.setRegionOfInterest(new LaserCan.RegionOfInterest(4, 6, 9, 7));
+      laserCan.setRegionOfInterest(new LaserCan.RegionOfInterest(4, 4, 8, 8));
       laserCan.setTimingBudget(LaserCan.TimingBudget.TIMING_BUDGET_33MS);
     } catch (ConfigurationFailedException e) {
       e.printStackTrace();
@@ -104,8 +108,25 @@ public class Ace extends SubsystemBase {
         if (coralPresent && distance > 100) {
           setSpeed(0);
           gotIt = true;
+          
         }
       }
+      if(!backup && gotIt){
+        if (distance > 100) {
+
+          setSpeed(-0.5);
+          
+        } else {
+          // setSpeed(0.4);
+          // startTime = Timer.getTimestamp();
+          // wait(10);
+
+          setSpeed(0.0);
+          backup = true;
+        }
+      }
+    } else {
+      backup= false;
     }
 
     // level = RobotContainer.

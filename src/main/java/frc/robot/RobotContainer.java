@@ -204,7 +204,7 @@ public class RobotContainer {
 
                 Load
                                 .whileTrue(new MoveArmFix(mArm, 1, 0));
-                Load.onTrue(new InstantCommand(() -> ace.setSpeed(1)));
+                Load.onTrue(new InstantCommand(() -> ace.setSpeed(0.9)));
                 Load
                                 .onTrue(new InstantCommand(() -> ace.gotIt = false));
                 Load
