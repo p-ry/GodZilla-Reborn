@@ -168,7 +168,7 @@ public class Ace extends SubsystemBase {
 
           setSpeed(0.0);
           backup = true;
-          setPos(getPos());
+          setPos(getPos());//adjust in grip
         }
       }
     } else {

@@ -166,6 +166,7 @@ public class MoveArmFix extends Command {
         myArm.slider.setPos(31.8,false);//30
 
          myArm.wrist.setPos(9.8);//9.4
+         RobotContainer.ace.setPos(RobotContainer.ace.getPos());//adjust grip
 
         // System.out.println("Level 4");
         break;
