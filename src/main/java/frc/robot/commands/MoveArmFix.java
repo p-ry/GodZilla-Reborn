@@ -109,7 +109,7 @@ public class MoveArmFix extends Command {
         } else {
           RobotContainer.loading = true;
           myArm.lowerArm.setPos(18.00); //19
-          myArm.upperArm.setPos(3.5, true);// 0.0 load  //3.7
+          myArm.upperArm.setPos(2.5, true);// 3.5   0.0 load  //3.7
           myArm.wrist.setPos(0.1 );
           myArm.slider.setPos(0.5);
         }
@@ -216,7 +216,7 @@ public class MoveArmFix extends Command {
 
       case 44: // lower from position 4 MOVE THAT SLIDER FAST
         myArm.lowerArm.setPos(18.00);  //19
-        myArm.upperArm.setPos(3.5, false);// 0.0 load  //3.7
+        myArm.upperArm.setPos(2.5, false);// 3.50 load  //3.7
         myArm.wrist.setPos(0.7);
         myArm.slider.setPos(0.5, true);
         // new WaitCommand(0.2).andThen(new InstantCommand(()->{
