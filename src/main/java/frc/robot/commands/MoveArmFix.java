@@ -218,7 +218,7 @@ public class MoveArmFix extends Command {
       case 44: // lower from position 4 MOVE THAT SLIDER FAST
         myArm.lowerArm.setPos(18.00);  //19
         myArm.upperArm.setPos(3.5, false);// 0.0 load  //3.7
-        myArm.wrist.setPos(0.7);
+        // myArm.wrist.setPos(0.7);
         myArm.slider.setPos(0.5, true);
         // new WaitCommand(0.2).andThen(new InstantCommand(()->{
         //   RobotContainer.MaxSpeed = RobotContainer.maxSpeedConstant;

@@ -352,6 +352,7 @@ public class RobotContainer {
                                         MaxSpeed = maxSpeedConstant;
 
                                         MaxAngularRate = maxAngularRateConstant;
+                                        mArm.wrist.setPos(0.7);
                                 })));
 
                 // .andThen(new InstantCommand(() -> ace.setSpeed(1))));
@@ -361,6 +362,7 @@ public class RobotContainer {
                                 .andThen(new InstantCommand(() -> {
                                         MaxSpeed = maxSpeedConstant;
                                         MaxAngularRate = maxAngularRateConstant;
+                                        mArm.wrist.setPos(0.7);
                                 })));
                 // .andThen(new InstantCommand(() -> ace.setSpeed(1))));
                 // Lv4R.onFalse(new InstantCommand(() -> MaxSpeed = MaxSpeed * 4));
