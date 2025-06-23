@@ -84,7 +84,7 @@ public class Slider extends SubsystemBase implements Sendable{
     pidConfigs.kP = 2.5;
     pidConfigs2.kP = 0.02;
     pidConfigs.kS=0.65;// maybe change to 0.6  was 0.5
-    pidConfigs.kV=0.3;// was 0.2
+    pidConfigs.kV=0.35;// was 0.2
 
     mmConfigs= sliderConfigs.MotionMagic;
     mmConfigs.MotionMagicCruiseVelocity = fastVel; // Target cruise velocity of 80 rps

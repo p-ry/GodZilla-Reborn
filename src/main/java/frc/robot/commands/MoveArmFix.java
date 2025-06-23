@@ -161,12 +161,12 @@ public class MoveArmFix extends Command {
         break;
 
       case 4:
-        myArm.lowerArm.setPos(26.6, true);// myArm.lowerArm.setPos(27.2);// 28.2
-        myArm.upperArm.setPos(33.0, true);
-        myArm.slider.setPos(31.8,false);//30
+        myArm.lowerArm.setPos(28.0, true);// myArm.lowerArm.setPos(27.2);// 28.2
+        myArm.upperArm.setPos(33.0, true);//33.0
+        myArm.slider.setPos(30.5,false);//31.8  //30
 
-         myArm.wrist.setPos(9.8);//9.4
-         RobotContainer.ace.setPos(RobotContainer.ace.getPos());//adjust grip
+         myArm.wrist.setPos(9.4);//9.8 //9.4
+         RobotContainer.ace.setPos(1.5);//adjust grip
 
         // System.out.println("Level 4");
         break;
@@ -218,7 +218,7 @@ public class MoveArmFix extends Command {
       case 44: // lower from position 4 MOVE THAT SLIDER FAST
         myArm.lowerArm.setPos(18.00);  //19
         myArm.upperArm.setPos(3.5, false);// 0.0 load  //3.7
-        // myArm.wrist.setPos(0.7);
+         myArm.wrist.setPos(0.1);
         myArm.slider.setPos(0.5, true);
         // new WaitCommand(0.2).andThen(new InstantCommand(()->{
         //   RobotContainer.MaxSpeed = RobotContainer.maxSpeedConstant;

@@ -198,7 +198,7 @@ StructPublisher<Pose2d> botPublisher =
                                     .withWheelForceFeedforwardsY(feedforwards.robotRelativeForcesYNewtons())),
                     new PPHolonomicDriveController(
                             // PID constants for translation
-                            new PIDConstants(2., 0, 0),// was 0.5  //was 0.7
+                            new PIDConstants(2.2, 0, 0),//was 2.0 was 0.5  //was 0.7
                             // kP10
                             // PID constants for rotation
                             new PIDConstants(2, 0, 0)),// was 2.0

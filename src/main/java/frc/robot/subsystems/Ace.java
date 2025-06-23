@@ -49,53 +49,46 @@ public class Ace extends SubsystemBase {
   LaserCan.Measurement measurement;
   public static boolean gotIt;
   public static boolean coralPresent;
-  public static boolean backup=false;
+  public static boolean backup = false;
 
- PositionDutyCycle motorPosRequest;
- DutyCycleOut motorSpdRequest;
- 
+  PositionDutyCycle motorPosRequest;
+  DutyCycleOut motorSpdRequest;
 
   TalonFXConfiguration talonFXConfigs;
   private Slot0Configs pidConfigs;
-  
-  
- 
-
 
   /** Creates a new Ace. */
   public Ace(int level) {
-    ace = new TalonFX(37,"Canivore2");
+    ace = new TalonFX(37, "Canivore2");
     aceConfigs = new TalonFXConfiguration();
     aceConfigs.CurrentLimits.SupplyCurrentLimitEnable = true;
     aceConfigs.CurrentLimits.SupplyCurrentLimit = 50;
     ace.setNeutralMode(NeutralModeValue.Brake);
- // PID coefficients
- kP = 2.0;
- kI = 0.0;
-  kD = 0.000;
- //double kS = .25;
- motorPosRequest = new PositionDutyCycle(0);
- motorSpdRequest = new DutyCycleOut(0);
- 
- pidConfigs = new Slot0Configs();
- 
- pidConfigs = aceConfigs.Slot0;
- pidConfigs.kS = 0.0; // Add 0.25 V output to overcome static friction
- pidConfigs.kV = 0.12; // A velocity target of 1 rps results in 0.12 V output
- pidConfigs.kA = 0.01; // An acceleration of 1 rps/s requires 0.01 V output
- pidConfigs.kP = kP; // A position error of 2.5 rotations results in 12 V output
- pidConfigs.kI = kI; // no output for integrated error
- pidConfigs.kD = kD; // A velocity error of 1 rps results in 0.1 V output
- ace.getConfigurator().apply(aceConfigs);
+    // PID coefficients
+    kP = 2.0;
+    kI = 0.0;
+    kD = 0.000;
+    // double kS = .25;
+    motorPosRequest = new PositionDutyCycle(0);
+    motorSpdRequest = new DutyCycleOut(0);
 
+    pidConfigs = new Slot0Configs();
 
+    pidConfigs = aceConfigs.Slot0;
+    pidConfigs.kS = 0.0; // Add 0.25 V output to overcome static friction
+    pidConfigs.kV = 0.12; // A velocity target of 1 rps results in 0.12 V output
+    pidConfigs.kA = 0.01; // An acceleration of 1 rps/s requires 0.01 V output
+    pidConfigs.kP = kP; // A position error of 2.5 rotations results in 12 V output
+    pidConfigs.kI = kI; // no output for integrated error
+    pidConfigs.kD = kD; // A velocity error of 1 rps results in 0.1 V output
+    ace.getConfigurator().apply(aceConfigs);
 
     this.level = level;
     laserCan = new LaserCan(10);
 
     try {
       laserCan.setRangingMode(LaserCan.RangingMode.SHORT);
-      //laserCan.setRegionOfInterest(new LaserCan.RegionOfInterest(4, 6, 9, 7));
+      // laserCan.setRegionOfInterest(new LaserCan.RegionOfInterest(4, 6, 9, 7));
       laserCan.setRegionOfInterest(new LaserCan.RegionOfInterest(4, 4, 8, 8));
       laserCan.setTimingBudget(LaserCan.TimingBudget.TIMING_BUDGET_50MS);
     } catch (ConfigurationFailedException e) {
@@ -109,10 +102,10 @@ public class Ace extends SubsystemBase {
   public void setSpeed(double speed) {
     if (RobotContainer.Algae.getAsBoolean()) {
       ace.setControl(motorSpdRequest.withOutput(speed));
-      
+
     } else {
-      ace.setControl(motorSpdRequest.withOutput(speed/2));
-      
+      ace.setControl(motorSpdRequest.withOutput(speed / 2));
+
     }
     // aceController.setReference(speed,ControlType.kVelocity);
   }
@@ -126,26 +119,27 @@ public class Ace extends SubsystemBase {
     return ace.getRotorVelocity().getValueAsDouble();
 
   }
-  public double getPos(){
+
+  public double getPos() {
     return ace.getPosition().getValueAsDouble();
   }
-  public void setPos(double position){
-    requestedPosition = position+1.30;
+
+  public void setPos(double position) {
+    requestedPosition = getPos() + position;
     ace.setControl(motorPosRequest.withPosition(requestedPosition));
   }
 
   @Override
   public void periodic() {
     LaserCan.Measurement measurement = laserCan.getMeasurement();
-   SmartDashboard.putNumber("LaserDistance", measurement.distance_mm);
+    SmartDashboard.putNumber("LaserDistance", measurement.distance_mm);
 
     if (RobotContainer.loading) {
-     
 
       if (measurement != null && measurement.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT) {
         distance = measurement.distance_mm;
-       SmartDashboard.putNumber("ValidLASERDistance", distance);
-        
+        SmartDashboard.putNumber("ValidLASERDistance", distance);
+
         if ((distance < 100)) {
           coralPresent = true;
 
@@ -153,35 +147,42 @@ public class Ace extends SubsystemBase {
         if (coralPresent && distance > 100) {
           setSpeed(0);
           gotIt = true;
-          
+
         }
       }
-      if(!backup && gotIt){
-        if (distance > 100) {
+      // if (!backup && gotIt) {
+      //   backup = true;
+      //   setPos(-3.0);// adjust in grip
 
-          setSpeed(-0.4);
-          
-        } else {
-          // setSpeed(0.4);
-          // startTime = Timer.getTimestamp();
-          // wait(10);
+      //   // if (distance > 100) {
 
-          setSpeed(0.0);
-          backup = true;
-          setPos(getPos());//adjust in grip
-        }
-      }
+      //   // setSpeed(-0.4);
+
+      //   // } else {
+      //   // // setSpeed(0.4);
+      //   // // startTime = Timer.getTimestamp();
+      //   // // wait(10);
+
+      //   // setSpeed(0.0);
+      //   // backup = true;
+      //   // setPos(getPos());//adjust in grip
+      //   // }
+      //   // }
+      //   // } else {
+      //   // backup= false;
+      // } else {
+      //   backup = false;
+      // }
+
+      // level = RobotContainer.
+
+      // if ((ace.getTorqueCurrent().getValueAsDouble()>35.0) && (level==1)){
+      // setSpeed(0);
+      // }
+      // This method will be called once per scheduler run
+
     } else {
-      backup= false;
+      backup = false;
     }
-
-    // level = RobotContainer.
-
-    // if ((ace.getTorqueCurrent().getValueAsDouble()>35.0) && (level==1)){
-    // setSpeed(0);
-    // }
-    // This method will be called once per scheduler run
-
   }
-
 }
