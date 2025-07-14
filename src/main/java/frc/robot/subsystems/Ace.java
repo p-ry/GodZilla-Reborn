@@ -43,9 +43,10 @@ public class Ace extends SubsystemBase {
   SparkMaxConfig config;
   public double kP, kI, kD, kIz, kFF, kMaxOutput, kMinOutput, maxRPM, maxVel, minVel, maxAcc, allowedErr;
   public double i, d, ff, aFF;
-  public LaserCan laserCan;
+  public LaserCan Sens1;
+  public LaserCan Sens2;
   int level;
-  double distance;
+  double distance,distance2;
   LaserCan.Measurement measurement;
   public static boolean gotIt;
   public static boolean coralPresent;
@@ -84,13 +85,15 @@ public class Ace extends SubsystemBase {
     ace.getConfigurator().apply(aceConfigs);
 
     this.level = level;
-    laserCan = new LaserCan(10);
+    Sens1 = new LaserCan(10);
+    Sens2 = new LaserCan(11);
 
     try {
-      laserCan.setRangingMode(LaserCan.RangingMode.SHORT);
+      Sens1.setRangingMode(LaserCan.RangingMode.SHORT);
+      Sens2.setRangingMode(LaserCan.RangingMode.SHORT);
       // laserCan.setRegionOfInterest(new LaserCan.RegionOfInterest(4, 6, 9, 7));
-      laserCan.setRegionOfInterest(new LaserCan.RegionOfInterest(4, 4, 8, 8));
-      laserCan.setTimingBudget(LaserCan.TimingBudget.TIMING_BUDGET_50MS);
+      Sens1.setRegionOfInterest(new LaserCan.RegionOfInterest(4, 4, 8, 8));
+      Sens2.setTimingBudget(LaserCan.TimingBudget.TIMING_BUDGET_50MS);
     } catch (ConfigurationFailedException e) {
       e.printStackTrace();
     }
@@ -111,7 +114,8 @@ public class Ace extends SubsystemBase {
   }
 
   public void LaserCANStop() {
-    if (laserCan == null)
+    if (Sens1 == null && Sens2 == null)
+    
       setSpeed(0);
   }
 
@@ -134,22 +138,68 @@ public class Ace extends SubsystemBase {
 
   @Override
   public void periodic() {
-    LaserCan.Measurement measurement = laserCan.getMeasurement();
+    LaserCan.Measurement measurement = Sens1.getMeasurement();
+    LaserCan.Measurement measurement2 = Sens2.getMeasurement();
    
 
     if (RobotContainer.loading) {
 
-      if (measurement != null && measurement.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT) {
+      if (measurement != null && measurement.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT && measurement2 != null && measurement2.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT) {
         distance = measurement.distance_mm;
+        distance2 = measurement2.distance_mm;
         SmartDashboard.putNumber("ValidLASERDistance", distance);
+        SmartDashboard.putNumber("ValidLASERDistance2", distance2);
 
-        if ((distance < 100)) {
+
+        if ((distance < 100 || distance2 < 100)) {
           coralPresent = true;
-
         }
-        if (coralPresent && distance > 100) {
+
+        if ((distance < 100 && distance2 < 100)) {
+          setSpeed(0.9);
+        }
+        if ((distance > 100 && distance2 < 100)) {
+          setSpeed(0.0);
+        }
+
+        if (coralPresent){
+
+          if(distance > 100 && distance2 > 100) {
+          setSpeed(-.4);
+          }
+        
+
+        if (distance < 100 && distance2 > 100) {
+          setSpeed(0.9);
+        }
+
+       
+
+        if (distance < 100 && distance2 < 100) {
+          setSpeed(0.9);
+        }
+
+        if ( distance > 100 && distance2 < 100) {
           setSpeed(0);
           gotIt = true;
+        }
+      }// endif coral present
+
+        if (!coralPresent){
+
+      //     if(distance < 100 && distance2 < 100) {
+      //     setSpeed(-.4);
+      //     }
+        
+
+      //   if (distance > 100 && distance2 < 100) {
+      //     setSpeed(0.9);
+      //   }
+
+      //  if ((distance < 100 && distance2 > 100)) {
+      //     setSpeed(.9);
+      //  }
+
           
           
 
