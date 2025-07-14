@@ -179,7 +179,7 @@ public class Ace extends SubsystemBase {
       if (coralPresent) {
 
         if (distance > 100 && distance2 > 100) {
-          setSpeed(-.4);
+          setSpeed(-.6);
         }
 
         if (distance < 100 && distance2 > 100) {
