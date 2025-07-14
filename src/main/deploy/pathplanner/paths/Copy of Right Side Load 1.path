@@ -3,29 +3,45 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.146299342105263,
-        "y": 4.015378289473684
+        "x": 5.0,
+        "y": 3.0
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.674835526315789,
-        "y": 4.073108552631578
+        "x": 5.1172890772962365,
+        "y": 2.4434982956877693
+      },
+      "isLocked": false,
+      "linkedName": "Right Auto 1"
+    },
+    {
+      "anchor": {
+        "x": 4.537756849315069,
+        "y": 1.9965325342465758
+      },
+      "prevControl": {
+        "x": 5.021911712860953,
+        "y": 2.215183117783427
+      },
+      "nextControl": {
+        "x": 3.606164383561644,
+        "y": 1.5758133561643832
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 1.2893092105263155,
-        "y": 7.180921052631579
+        "x": 1.1720034246575342,
+        "y": 0.73
       },
       "prevControl": {
-        "x": 1.8377467105263152,
-        "y": 6.305345394736841
+        "x": 2.2688784246575344,
+        "y": 0.9403595890410963
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "Right Auto 2"
     }
   ],
   "rotationTargets": [],
@@ -42,13 +58,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -50.572197803963846
+    "rotation": 55.0
   },
   "reversed": false,
-  "folder": "Left Side 4 Piece",
+  "folder": "Right Auto",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -0.5070290609147925
+    "rotation": 119.99999999999999
   },
   "useDefaultConstraints": true
 }

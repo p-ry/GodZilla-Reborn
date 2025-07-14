@@ -32,12 +32,13 @@ public class Wrist extends SubsystemBase implements Sendable {
 
   TalonFX wrist;
 
+
   TalonFXConfigurator wristConfigurator;
   PositionDutyCycle wristController;
   // CommutationConfigs commutationConfigs;
 
   TalonFXConfiguration wristConfigs;
-  double requestedPosition;
+  double requestedPosition,newPosition;
   boolean atPosition;
 
   public double kP, kI, kD, kIz, kFF, kMaxOutput, kMinOutput, maxRPM, maxVel, minVel, maxAcc, allowedErr;
@@ -58,7 +59,9 @@ public class Wrist extends SubsystemBase implements Sendable {
     wristConfigs.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
     wristConfigs.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
     wristConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 10.0;
-    wristConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold= 0.1;
+    wristConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold= -0.1;
+    wristConfigs.MotorOutput.NeutralMode=NeutralModeValue.Brake;
+    
     wrist.getConfigurator().apply(wristConfigs);
     
     //wristConfigs.Commutation.MotorArrangement = MotorArrangementValue.Minion_JST;
@@ -88,10 +91,19 @@ public class Wrist extends SubsystemBase implements Sendable {
     return atPosition;
   }
 
+  public void moveIt(double position) {
+    newPosition = getPos() + position;
+    SmartDashboard.putNumber("WcurrentPOS", getPos());
+    SmartDashboard.putNumber("Wposition", requestedPosition);
+    setPos(newPosition);
+   
+
+  }
+
   @Override
   public void periodic() {
 
-    if (Math.abs(Math.abs(getPos()) - Math.abs(requestedPosition)) < 0.8) {
+    if (Math.abs(Math.abs(getPos()) - Math.abs(requestedPosition)) < 0.3) {
       atPosition = true;
     } else {
       atPosition = false;

@@ -503,11 +503,11 @@ public class RobotContainer {
                                 () -> point.withModuleDirection(
                                                 new Rotation2d(-controller.getLeftY(), -controller.getLeftX()))));
 
-                controller.pov(0).whileTrue(
-                                drivetrain.applyRequest(() -> forwardStraight.withVelocityX(0.5).withVelocityY(0)));
-                controller.pov(180)
-                                .whileTrue(drivetrain.applyRequest(
-                                                () -> forwardStraight.withVelocityX(-0.5).withVelocityY(0)));
+                controller.y().whileTrue(
+                                new InstantCommand(() ->
+                                mArm.wrist.moveIt(-0.5)));
+                controller.x().whileTrue(new InstantCommand(() ->
+                                mArm.wrist.moveIt(0.5)));
 
                 // Run SysId routines when holding back/start and X/Y.
                 // Note that each routine should be run exactly once in a single log.

@@ -132,7 +132,7 @@ StructPublisher<Pose2d> botPublisher =
 
         m_poseEstimator = new SwerveDrivePoseEstimator(Constants.swerveKinematics, getGyroRotation2D(),
                 getModulePositions(), getPose(), VecBuilder.fill(0.1, 0.1, Units.degreesToRadians(0.5)),
-                VecBuilder.fill(0.5, 0.5, Units.degreesToRadians(1.0)));
+                VecBuilder.fill(0.5, 0.5, Units.degreesToRadians(1.0))); // getGyroRotation2D()
 
                
 
@@ -198,7 +198,7 @@ StructPublisher<Pose2d> botPublisher =
                                     .withWheelForceFeedforwardsY(feedforwards.robotRelativeForcesYNewtons())),
                     new PPHolonomicDriveController(
                             // PID constants for translation
-                            new PIDConstants(2.2, 0, 0),//was 2.0 was 0.5  //was 0.7
+                            new PIDConstants(2.8, 0, 0),//was 2.0 was 0.5  //was 0.7
                             // kP10
                             // PID constants for rotation
                             new PIDConstants(2, 0, 0)),// was 2.0
@@ -367,10 +367,25 @@ StructPublisher<Pose2d> botPublisher =
         gyro.setYaw(heading);
     }
 
+    // public void resetGyroToAlliance() {
+    //     gyro.setYaw(DriverStation.getAlliance().get() == Alliance.Red ? 0 : 180);
+    // }
     public void resetGyroToAlliance() {
-        gyro.setYaw(DriverStation.getAlliance().get() == Alliance.Red ? 0 : 180);
-    }
 
+        gyro.setYaw(0);
+        // Optional<Alliance> alliance = DriverStation.getAlliance();
+        // if (alliance.isPresent()) {
+        //     if (alliance.get() == Alliance.Red) {
+        //         gyro.setYaw(0);
+        //     } else {
+        //         gyro.setYaw(180);
+        //     }
+        // } else {
+        //     // Default or error fallback, for example:
+        //     gyro.setYaw(0);
+        //     System.out.println("Alliance not available; defaulting gyro to 0.");
+        // }
+    }
     public Pose2d getPose() {
         //m_poseEstimator.getEstimatedPosition();
         // return swerveOdometry.getPoseMeters();

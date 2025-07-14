@@ -115,10 +115,10 @@ public class Utilitys {
         Transform2d robotToTag;
         Pose2d tagRel2d;
         Pose2d tagPose2d;
-        RawFiducial[] fiducialsLeft; 
-        RawFiducial[] fiducialsRight; 
-        
-        
+        RawFiducial[] fiducialsLeft;
+        RawFiducial[] fiducialsRight;
+        boolean algae;
+
         if (resultsLeft.valid) {
             fiducialsLeft = LimelightHelpers.getRawFiducials("limelight-left");
             leftAmbiguity = fiducialsLeft[0].ambiguity;
@@ -133,7 +133,7 @@ public class Utilitys {
 
         if (resultsRight.valid) {
             fiducialsRight = LimelightHelpers.getRawFiducials("limelight-right");
-            rightAmbiguity= fiducialsRight[0].ambiguity;
+            rightAmbiguity = fiducialsRight[0].ambiguity;
             rightDist = resultsRight.botpose_avgdist;
 
             tagIds[1] = (int) resultsRight.targets_Fiducials[0].fiducialID;
@@ -142,61 +142,68 @@ public class Utilitys {
             rightDist = 999999;
         }
 
-       Pose3d tagPose3d = LimelightHelpers.getTargetPose3d_RobotSpace("limelight-left");
-       //  Pose3d robotPoseTargetSpacePose3d = LimelightHelpers.getBotPose3d_TargetSpace("limelight-left");
-       SmartDashboard.putNumber("leftAmbiguity", leftAmbiguity);
-       SmartDashboard.putNumber("rightAmbiguity", rightAmbiguity);
+        Pose3d tagPose3d = LimelightHelpers.getTargetPose3d_RobotSpace("limelight-left");
+        // Pose3d robotPoseTargetSpacePose3d =
+        // LimelightHelpers.getBotPose3d_TargetSpace("limelight-left");
+        SmartDashboard.putNumber("leftAmbiguity", leftAmbiguity);
+        SmartDashboard.putNumber("rightAmbiguity", rightAmbiguity);
 
         if (validTarget) {
             if (leftDist < rightDist) {
                 tagId = tagIds[0];
-                //targetPose3D = LimelightHelpers.getTargetPose3d_RobotSpace("limelight-left");
+                // targetPose3D = LimelightHelpers.getTargetPose3d_RobotSpace("limelight-left");
             } else {
                 tagId = tagIds[1];
                 results = resultsRight;
                 tagPose3d = LimelightHelpers.getTargetPose3d_RobotSpace("limelight-right");
-      
-                //tagPose3d = LimelightHelpers.getBotPose3d_TargetSpace("limelight-right");
+
+                // tagPose3d = LimelightHelpers.getBotPose3d_TargetSpace("limelight-right");
             }
-SmartDashboard.putNumber("tagID", tagId);
-          
+            SmartDashboard.putNumber("tagID", tagId);
+
             Rotation2d yawOffset = new Rotation2d(tagPose3d.getRotation().getY());
             // Rotation2d yawOffset = new Rotation2d(targetPose3D.getRotation().getY());
 
             if (right) {
-               
-                
-                // tagRel2d = new Pose2d(tagPose3d.getZ()-0.8, -tagPose3d.getX() -Units.inchesToMeters(6.0),
-                //         new Rotation2d(tagPose3d.getRotation().getY()));
+
+                // tagRel2d = new Pose2d(tagPose3d.getZ()-0.8, -tagPose3d.getX()
+                // -Units.inchesToMeters(6.0),
+                // new Rotation2d(tagPose3d.getRotation().getY()));
 
                 // tagPose2d = Pose3Dto2D(tagPose3d);
-                // robotToTag = new Transform2d(tagRel2d.getTranslation(), tagRel2d.getRotation().unaryMinus());
-
-               
+                // robotToTag = new Transform2d(tagRel2d.getTranslation(),
+                // tagRel2d.getRotation().unaryMinus());
 
                 where = Utilitys.shiftPoseRight(Utilitys.getAprilTagPose(tagId),
-                Constants.forwardOffset, Constants.rightOffset);//12//6.5); // 0.164285833);
+                        Constants.forwardOffset, Constants.rightOffset);// 12//6.5); // 0.164285833);
             } else {
                 where = Utilitys.shiftPoseLeft(Utilitys.getAprilTagPose(tagId),
-                Constants.forwardOffset, Constants.leftOffset);
-                //tagRel2d = new Pose2d(tagPose3d.getZ()-0.4, -tagPose3d.getX() -Units.inchesToMeters(6.0),
-                        //new Rotation2d(tagPose3d.getRotation().getY()));
+                        Constants.forwardOffset, Constants.leftOffset);
+                // tagRel2d = new Pose2d(tagPose3d.getZ()-0.4, -tagPose3d.getX()
+                // -Units.inchesToMeters(6.0),
+                // new Rotation2d(tagPose3d.getRotation().getY()));
 
-                // tagRel2d = new Pose2d(-robotPoseTargetSpacePose3d.getX(), robotPoseTargetSpacePose3d.getY(),
-                //         new Rotation2d(robotPoseTargetSpacePose3d.getRotation().getZ()));
-                //tagPose2d = Pose3Dto2D(tagPose3d);
-                //robotToTag = new Transform2d(tagRel2d.getTranslation(), tagRel2d.getRotation().unaryMinus());
-
-
+                // tagRel2d = new Pose2d(-robotPoseTargetSpacePose3d.getX(),
+                // robotPoseTargetSpacePose3d.getY(),
+                // new Rotation2d(robotPoseTargetSpacePose3d.getRotation().getZ()));
+                // tagPose2d = Pose3Dto2D(tagPose3d);
+                // robotToTag = new Transform2d(tagRel2d.getTranslation(),
+                // tagRel2d.getRotation().unaryMinus());
 
             }
-          //  Pose2d whereTo = RobotContainer.drivetrain.botPose2d                    .transformBy(robotToTag);
-         //Pose2d whereTo = robotPose.plus( robotToTag);
+            algae = RobotContainer.Algae.getAsBoolean();
+            if (algae) {
+                where = Utilitys.shiftPoseRight(Utilitys.getAprilTagPose(tagId),
+                        Constants.forwardOffset, 0.0);// 12//6.5); // 0.164285833);
+            }
+            // Pose2d whereTo = RobotContainer.drivetrain.botPose2d
+            // .transformBy(robotToTag);
+            // Pose2d whereTo = robotPose.plus( robotToTag);
 
             whereToPublisher.set(where);
-        //     tagRel2DPublisher.set(tagRel2d);
-        //     ignorePublisher.set(tagPose2d);
-        //    transPublisher.set(robotToTag);
+            // tagRel2DPublisher.set(tagRel2d);
+            // ignorePublisher.set(tagPose2d);
+            // transPublisher.set(robotToTag);
 
             Command driveit = AutoBuilder.pathfindToPose(where, constraints, 0.0);
             return driveit;

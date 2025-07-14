@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.773,
-        "y": 2.796
+        "x": 3.75,
+        "y": 3.0
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.1201746575342466,
-        "y": 1.0830719178082198
+        "x": 2.0971746575342465,
+        "y": 1.28707191780822
       },
       "isLocked": false,
       "linkedName": "Right Auto 3"
@@ -33,8 +33,8 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 3.0,
-    "maxAcceleration": 5.0,
+    "maxVelocity": 2.5,
+    "maxAcceleration": 1.3,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
@@ -50,5 +50,5 @@
     "velocity": 0,
     "rotation": 59.751827633165206
   },
-  "useDefaultConstraints": false
+  "useDefaultConstraints": true
 }

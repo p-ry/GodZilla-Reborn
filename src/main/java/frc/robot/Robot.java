@@ -108,9 +108,10 @@ public class Robot extends TimedRobot {
      double axis = RobotContainer.controller.getLeftTriggerAxis(); // 0 → 1
                                         SmartDashboard.putNumber("lTrigger", axis);
     var alliance = DriverStation.getAlliance();
-    if (!allianceSet) {
+    //if (!allianceSet) {
       if (alliance.isPresent()) {
-        allianceSet = true;
+       // allianceSet = true;
+       
         if (alliance.get() == DriverStation.Alliance.Red) {
           RobotContainer.BlueAlliance = -1;
          // RobotContainer.candle.setLEDs(255, 127, 102);
@@ -128,7 +129,10 @@ public class Robot extends TimedRobot {
 
         }
       }
-    }
+      //RobotContainer.drivetrain.m_poseEstimator.update(RobotContainer.drivetrain.getGyroRotation2D(),RobotContainer.drivetrain.getModulePositions());
+      //RobotContainer.drivetrain.botPose2d = RobotContainer.drivetrain.m_poseEstimator.getEstimatedPosition();
+      
+    //}
     // Utilitys.addLimelightVisionMeasurements("limelight-left");
     // Utilitys.addLimelightVisionMeasurements("limelight-right");
     // LaserCan.Measurement measurement = laserCan.getMeasurement();
@@ -161,55 +165,11 @@ public class Robot extends TimedRobot {
   @Override
   public void disabledInit() {
     //RobotContainer.drivetrain.gyro.setYaw(0);
-    var alliance = DriverStation.getAlliance();
-
-    if (alliance.isPresent()) {
-      allianceSet = true;
-      if (alliance.get() == DriverStation.Alliance.Red) {
-        RobotContainer.BlueAlliance = -1;
-       // RobotContainer.candle.setLEDs(255, 27, 12);
-
-        // m_robotContainer.s_Candle.setColourProperties(255, 0, 0, 0.75);
-        // m_robotContainer.s_Candle.colorLEDs();
-      } else if (alliance.get() == DriverStation.Alliance.Blue) {
-        RobotContainer.BlueAlliance = 1;
-       // RobotContainer.candle.setLEDs(5, 27, 252);
-       // RobotContainer.candle.animate(new FireAnimation(1, 0.2, 1, 1, 1, false, 0));
-        // RobotContainer.candle.fireLEDs(); // Method not defined in CANdle class
-
-        // m_robotContainer.s_Candle.setColourProperties(0, 0, 255, 0.75);
-        // m_robotContainer.s_Candle.colorLEDs();
-
-      }
-    }
   }
 
   @Override
   public void disabledPeriodic() {
 
-    if(!allianceSet){
-    var alliance = DriverStation.getAlliance();
-
-    if (alliance.isPresent()) {
-      allianceSet = true;
-      if (alliance.get() == DriverStation.Alliance.Red) {
-        RobotContainer.BlueAlliance = -1;
-       // RobotContainer.candle.setLEDs(255, 27, 12);
-
-        // m_robotContainer.s_Candle.setColourProperties(255, 0, 0, 0.75);
-        // m_robotContainer.s_Candle.colorLEDs();
-      } else if (alliance.get() == DriverStation.Alliance.Blue) {
-        RobotContainer.BlueAlliance = 1;
-        //RobotContainer.candle.setLEDs(5, 27, 252);
-        //RobotContainer.candle.animate(new FireAnimation(1, 0.2, 1, 1, 1, false, 0));
-        // RobotContainer.candle.fireLEDs(); // Method not defined in CANdle class
-
-        // m_robotContainer.s_Candle.setColourProperties(0, 0, 255, 0.75);
-        // m_robotContainer.s_Candle.colorLEDs();
-
-      }
-    }
-  }
     RobotContainer.drivetrain.updateCameraPose();
    
   }

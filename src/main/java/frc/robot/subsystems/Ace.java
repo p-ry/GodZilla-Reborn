@@ -126,13 +126,16 @@ public class Ace extends SubsystemBase {
 
   public void setPos(double position) {
     requestedPosition = getPos() + position;
+    SmartDashboard.putNumber("currentPOS", getPos());
+    SmartDashboard.putNumber("position", requestedPosition);
     ace.setControl(motorPosRequest.withPosition(requestedPosition));
+
   }
 
   @Override
   public void periodic() {
     LaserCan.Measurement measurement = laserCan.getMeasurement();
-    SmartDashboard.putNumber("LaserDistance", measurement.distance_mm);
+   
 
     if (RobotContainer.loading) {
 
@@ -147,6 +150,8 @@ public class Ace extends SubsystemBase {
         if (coralPresent && distance > 100) {
           setSpeed(0);
           gotIt = true;
+          
+          
 
         }
       }

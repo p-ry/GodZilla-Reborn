@@ -60,8 +60,8 @@ public class Slider extends SubsystemBase implements Sendable{
  boolean updatePID = false;
 
  public static double fastVel = 300;
- public static double fastAcc = 900;
- public static double fastJerk = 4000;
+ public static double fastAcc = 600;//900
+ public static double fastJerk = 2000;//4000
  public static double slowVel = 60;
  public static double slowAcc = 900;
  public static double slowJerk = 1800;//1800
@@ -83,8 +83,8 @@ public class Slider extends SubsystemBase implements Sendable{
     pidConfigs2 = sliderConfigs.Slot1;
     pidConfigs.kP = 2.5;
     pidConfigs2.kP = 0.02;
-    pidConfigs.kS=0.65;// maybe change to 0.6  was 0.5
-    pidConfigs.kV=0.35;// was 0.2
+    pidConfigs.kS=0.6;// maybe change to 0.6  was 0.5
+    pidConfigs.kV=0.25;// was 0.2
 
     mmConfigs= sliderConfigs.MotionMagic;
     mmConfigs.MotionMagicCruiseVelocity = fastVel; // Target cruise velocity of 80 rps

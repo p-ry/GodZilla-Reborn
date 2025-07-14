@@ -109,7 +109,7 @@ public class MoveArmFix extends Command {
         } else {
           RobotContainer.loading = true;
           myArm.lowerArm.setPos(18.00); //19
-          myArm.upperArm.setPos(3.5, true);// 0.0 load  //3.7
+          myArm.upperArm.setPos(1.5, true);// 0.0 load  //3.7
           myArm.wrist.setPos(0.1 );
           myArm.slider.setPos(0.5);
         }
@@ -118,7 +118,7 @@ public class MoveArmFix extends Command {
       case 2:
         if (algae) {
           myArm.lowerArm.setPos(12.0); // 16.10 load
-          myArm.upperArm.setPos(3.5, true);
+          myArm.upperArm.setPos(5.0, true);//3.5
           myArm.slider.setPos(0.50);
           myArm.wrist.setPos(3.0);
 
@@ -147,7 +147,8 @@ public class MoveArmFix extends Command {
       case 3:
         if (algae) {
           myArm.lowerArm.setPos(28.0);//25.0
-          myArm.upperArm.setPos(20.0, false);
+          myArm.upperArm.setPos(22.0, false);//20.0
+          
           myArm.slider.setPos(1.5);
           myArm.wrist.setPos(6.0);
         } else {
@@ -161,12 +162,12 @@ public class MoveArmFix extends Command {
         break;
 
       case 4:
-        myArm.lowerArm.setPos(28.0, true);// myArm.lowerArm.setPos(27.2);// 28.2
-        myArm.upperArm.setPos(33.0, true);//33.0
+        myArm.lowerArm.setPos(26.5, true);// myArm.lowerArm.setPos(27.2);// 28.2
+        myArm.upperArm.setPos(34.0, true);//33.0
         myArm.slider.setPos(30.5,false);//31.8  //30
 
          myArm.wrist.setPos(9.4);//9.8 //9.4
-         RobotContainer.ace.setPos(1.5);//adjust grip
+         //RobotContainer.ace.setPos(1.5);//adjust grip
 
         // System.out.println("Level 4");
         break;
@@ -217,7 +218,7 @@ public class MoveArmFix extends Command {
 
       case 44: // lower from position 4 MOVE THAT SLIDER FAST
         myArm.lowerArm.setPos(18.00);  //19
-        myArm.upperArm.setPos(3.5, false);// 0.0 load  //3.7
+        myArm.upperArm.setPos(1.5, false);// 0.0 load  //3.7
          myArm.wrist.setPos(0.1);
         myArm.slider.setPos(0.5, true);
         // new WaitCommand(0.2).andThen(new InstantCommand(()->{
