@@ -105,8 +105,9 @@ public class Robot extends TimedRobot {
   @Override
   public void robotPeriodic() {
     CommandScheduler.getInstance().run();
-     double axis = RobotContainer.controller.getLeftTriggerAxis(); // 0 → 1
-                                        SmartDashboard.putNumber("lTrigger", axis);
+    //  double axis = RobotContainer.controller.getLeftTriggerAxis(); // 0 → 1
+    //                                     SmartDashboard.putNumber("lTrigger", axis);
+    //  ***  July 12
     var alliance = DriverStation.getAlliance();
     //if (!allianceSet) {
       if (alliance.isPresent()) {
