@@ -46,8 +46,8 @@ public class Ace extends SubsystemBase {
   public LaserCan Sens1;
   public LaserCan Sens2;
   int level;
-  double distance,distance2;
-  LaserCan.Measurement measurement;
+  double distance, distance2;
+  LaserCan.Measurement measurement, measurement2;
   public static boolean gotIt;
   public static boolean coralPresent;
   public static boolean backup = false;
@@ -88,15 +88,16 @@ public class Ace extends SubsystemBase {
     Sens1 = new LaserCan(10);
     Sens2 = new LaserCan(11);
 
-    try {
-      Sens1.setRangingMode(LaserCan.RangingMode.SHORT);
-      Sens2.setRangingMode(LaserCan.RangingMode.SHORT);
-      // laserCan.setRegionOfInterest(new LaserCan.RegionOfInterest(4, 6, 9, 7));
-      Sens1.setRegionOfInterest(new LaserCan.RegionOfInterest(4, 4, 8, 8));
-      Sens2.setTimingBudget(LaserCan.TimingBudget.TIMING_BUDGET_50MS);
-    } catch (ConfigurationFailedException e) {
-      e.printStackTrace();
-    }
+    // try {
+    // // Sens1.setRangingMode(LaserCan.RangingMode.SHORT);
+    // // Sens2.setRangingMode(LaserCan.RangingMode.SHORT);
+    // // laserCan.setRegionOfInterest(new LaserCan.RegionOfInterest(4, 6, 9, 7));
+    // // Sens1.setRegionOfInterest(new LaserCan.RegionOfInterest(8,8,4,4));// x, y,
+    // width, height
+    // // Sens2.setTimingBudget(LaserCan.TimingBudget.TIMING_BUDGET_50MS);
+    // } catch (ConfigurationFailedException e) {
+    // e.printStackTrace();
+    // }
     gotIt = false;
     coralPresent = false;
 
@@ -114,8 +115,8 @@ public class Ace extends SubsystemBase {
   }
 
   public void LaserCANStop() {
-    if (Sens1 == null && Sens2 == null)
-    
+    if (measurement == null && measurement2 == null)
+
       setSpeed(0);
   }
 
@@ -138,95 +139,101 @@ public class Ace extends SubsystemBase {
 
   @Override
   public void periodic() {
-    LaserCan.Measurement measurement = Sens1.getMeasurement();
-    LaserCan.Measurement measurement2 = Sens2.getMeasurement();
-   
+    measurement = Sens1.getMeasurement();
+    measurement2 = Sens2.getMeasurement();
 
     if (RobotContainer.loading) {
 
-      if (measurement != null && measurement.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT && measurement2 != null && measurement2.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT) {
+      if (measurement != null && measurement.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT) {
         distance = measurement.distance_mm;
+
+      } else {
+        distance = 1000;
+
+      }
+      if (measurement2 != null && measurement2.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT) {
         distance2 = measurement2.distance_mm;
-        SmartDashboard.putNumber("ValidLASERDistance", distance);
-        SmartDashboard.putNumber("ValidLASERDistance2", distance2);
 
+      } else {
+        distance2 = 1000;
 
-        if ((distance < 100 || distance2 < 100)) {
-          coralPresent = true;
-        }
+      }
+      SmartDashboard.putNumber("LASERDistance", distance);
+      SmartDashboard.putNumber("LASERDistance2", distance2);
 
-        if ((distance < 100 && distance2 < 100)) {
-          setSpeed(0.9);
-        }
-        if ((distance > 100 && distance2 < 100)) {
-          setSpeed(0.0);
-        }
+      // if (measurement != null && measurement.status ==
+      // LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT && measurement2 != null &&
+      // measurement2.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT) {
 
-        if (coralPresent){
+      if ((distance < 100 || distance2 < 100)) {
+        coralPresent = true;
+      }
 
-          if(distance > 100 && distance2 > 100) {
+      if ((distance < 100 && distance2 < 100)) {
+        setSpeed(0.9);
+      }
+      if ((distance > 100 && distance2 < 100)) {
+        setSpeed(0.0);
+      }
+
+      if (coralPresent) {
+
+        if (distance > 100 && distance2 > 100) {
           setSpeed(-.4);
-          }
-        
+        }
 
         if (distance < 100 && distance2 > 100) {
           setSpeed(0.9);
         }
 
-       
-
         if (distance < 100 && distance2 < 100) {
           setSpeed(0.9);
         }
 
-        if ( distance > 100 && distance2 < 100) {
+        if (distance > 100 && distance2 < 100) {
           setSpeed(0);
           gotIt = true;
         }
-      }// endif coral present
+      } // endif coral present
 
-        if (!coralPresent){
+      if (!coralPresent) {
 
-      //     if(distance < 100 && distance2 < 100) {
-      //     setSpeed(-.4);
-      //     }
-        
+        // if(distance < 100 && distance2 < 100) {
+        // setSpeed(-.4);
+        // }
 
-      //   if (distance > 100 && distance2 < 100) {
-      //     setSpeed(0.9);
-      //   }
+        // if (distance > 100 && distance2 < 100) {
+        // setSpeed(0.9);
+        // }
 
-      //  if ((distance < 100 && distance2 > 100)) {
-      //     setSpeed(.9);
-      //  }
+        // if ((distance < 100 && distance2 > 100)) {
+        // setSpeed(.9);
+        // }
 
-          
-          
-
-        }
       }
+      // }
       // if (!backup && gotIt) {
-      //   backup = true;
-      //   setPos(-3.0);// adjust in grip
+      // backup = true;
+      // setPos(-3.0);// adjust in grip
 
-      //   // if (distance > 100) {
+      // // if (distance > 100) {
 
-      //   // setSpeed(-0.4);
+      // // setSpeed(-0.4);
 
-      //   // } else {
-      //   // // setSpeed(0.4);
-      //   // // startTime = Timer.getTimestamp();
-      //   // // wait(10);
+      // // } else {
+      // // // setSpeed(0.4);
+      // // // startTime = Timer.getTimestamp();
+      // // // wait(10);
 
-      //   // setSpeed(0.0);
-      //   // backup = true;
-      //   // setPos(getPos());//adjust in grip
-      //   // }
-      //   // }
-      //   // } else {
-      //   // backup= false;
+      // // setSpeed(0.0);
+      // // backup = true;
+      // // setPos(getPos());//adjust in grip
+      // // }
+      // // }
+      // // } else {
+      // // backup= false;
       // } else {
-      //   backup = false;
+      // backup = false;
       // }
 
       // level = RobotContainer.
