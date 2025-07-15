@@ -21,6 +21,7 @@ import au.grapplerobotics.ConfigurationFailedException;
 import com.ctre.phoenix.led.FireAnimation;
 import com.ctre.phoenix6.hardware.Pigeon2;
 import com.pathplanner.lib.commands.FollowPathCommand;
+import com.pathplanner.lib.commands.PathfindingCommand;
 import com.pathplanner.lib.pathfinding.LocalADStar;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 //import com.pathplanner.lib.pathfinding.LocalGrid; // Ensure LocalGrid is imported
@@ -46,7 +47,14 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotInit() {
+    //RobotContainer.drivetrain.configureAutoBuilder(); // Configure the auto builder for Pathfinding
   
+//  Pathfinding.setPathfinder(new  LocalADStar());  //reversed which comes first 7/15
+
+//     PathfindingCommand.warmupCommand().schedule();
+//     FollowPathCommand.warmupCommand().schedule();  
+
+
     // Ensure LocalGrid is imported or defined
     //     Pathfinding.setPathfinder(new  LocalADStar());  //reversed which comes first 7/15
 

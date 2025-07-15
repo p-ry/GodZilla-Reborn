@@ -174,6 +174,7 @@ public class RobotContainer {
                 NamedCommands.registerCommand("L2", new MoveArmFix(mArm, 2, 0));
                 NamedCommands.registerCommand("L3", new MoveArmFix(mArm, 3, 0));
                 NamedCommands.registerCommand("L4", new MoveArmFix(mArm, 4, 0));
+                NamedCommands.registerCommand("L4No", new MoveArmFix(mArm, 400, 0));
                 NamedCommands.registerCommand("Intake",
                                 new InstantCommand(() -> ace.setSpeed(1))
                                                 .alongWith(new InstantCommand(() -> ace.gotIt = false))
@@ -182,6 +183,8 @@ public class RobotContainer {
                 new EventTrigger("LoadIt").onTrue(new MoveArmFix(mArm, 1, 0)
                                 .alongWith(new InstantCommand(() -> System.out.println("loadit"))
                                                 .alongWith(new InstantCommand(() -> ace.setSpeed(1)))));
+
+                
 
                 AutoChooser = AutoBuilder.buildAutoChooser("none");
                 SmartDashboard.putData("AutoChooser", AutoChooser);
@@ -245,15 +248,14 @@ public class RobotContainer {
                 // })); // Chomp is off
 
                 CoveredSwitch.whileTrue(
-                        new MoveArmFix(mArm, 8, 0)//Need to add isfinished command
-                        
+                                new MoveArmFix(mArm, 8, 0)// Need to add isfinished command
+
                 );
-            
 
                 lTrigger.whileTrue(
                                 new RunCommand(() -> {
                                         double axis = controller.getLeftTriggerAxis(); // 0 → 1
-                                       
+
                                         double vLeft = axis * 0.5;
 
                                         drivetrain.setControl(
@@ -281,7 +283,7 @@ public class RobotContainer {
                                                                         .withRotationalRate(0.0)); // no spin
                                 }, drivetrain));
 
-        rTrigger.onFalse(new InstantCommand(() -> {
+                rTrigger.onFalse(new InstantCommand(() -> {
                         drivetrain.setControl(
                                         robotCentricDrive
                                                         .withVelocityX(0.0) // no fwd/back
@@ -504,10 +506,8 @@ public class RobotContainer {
                                                 new Rotation2d(-controller.getLeftY(), -controller.getLeftX()))));
 
                 controller.y().whileTrue(
-                                new InstantCommand(() ->
-                                mArm.wrist.moveIt(-0.5)));
-                controller.x().whileTrue(new InstantCommand(() ->
-                                mArm.wrist.moveIt(0.5)));
+                                new InstantCommand(() -> mArm.wrist.moveIt(-0.5)));
+                controller.x().whileTrue(new InstantCommand(() -> mArm.wrist.moveIt(0.5)));
 
                 // Run SysId routines when holding back/start and X/Y.
                 // Note that each routine should be run exactly once in a single log.

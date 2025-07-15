@@ -234,7 +234,16 @@ public class MoveArmFix extends Command {
           myArm.wrist.setSpeed(0);
         }
         break;
+        case 400:
+        myArm.lowerArm.setPos(26.5, true);// myArm.lowerArm.setPos(27.2);// 28.2
+        myArm.upperArm.setPos(34.0, true);//33.0
+        myArm.slider.setPos(30.5,false);//31.8  //30
 
+         myArm.wrist.setPos(9.4);//9.8 //9.4
+        // RobotContainer.ace.setPos(5.0);//adjust grip  1.5
+
+        // System.out.println("Level 4");
+        break;
       default:
         if (algae) {
           myArm.lowerArm.setPos(1.0);
