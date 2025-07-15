@@ -22,9 +22,12 @@ import frc.robot.Constants;
 import com.ctre.phoenix6.swerve.SwerveModule;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.commands.FollowPathCommand;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.pathfinding.LocalADStar;
+import com.pathplanner.lib.pathfinding.Pathfinding;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
@@ -134,7 +137,9 @@ StructPublisher<Pose2d> botPublisher =
                 getModulePositions(), getPose(), VecBuilder.fill(0.1, 0.1, Units.degreesToRadians(0.5)),
                 VecBuilder.fill(0.5, 0.5, Units.degreesToRadians(1.0))); // getGyroRotation2D()
 
-               
+          Pathfinding.setPathfinder(new  LocalADStar());  //reversed which comes first 7/15
+
+    FollowPathCommand.warmupCommand().schedule();       
 
         configureAutoBuilder();
        

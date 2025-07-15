@@ -165,12 +165,17 @@ public class Ace extends SubsystemBase {
       // LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT && measurement2 != null &&
       // measurement2.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT) {
 
+      if(!coralPresent){
+        
+      
       if ((distance < 100 || distance2 < 100)) {
         coralPresent = true;
+        setSpeed(0);
       }
+    }
 
       if ((distance < 100 && distance2 < 100)) {
-        setSpeed(0.9);
+        setSpeed(0.7);
       }
       if ((distance > 100 && distance2 < 100)) {
         setSpeed(0.0);
@@ -179,15 +184,15 @@ public class Ace extends SubsystemBase {
       if (coralPresent) {
 
         if (distance > 100 && distance2 > 100) {
-          setSpeed(-.6);
+          setSpeed(-.45);// was -0.4 -0.6
         }
 
         if (distance < 100 && distance2 > 100) {
-          setSpeed(0.9);
+          setSpeed(0.7);
         }
 
         if (distance < 100 && distance2 < 100) {
-          setSpeed(0.9);
+          setSpeed(0.7);
         }
 
         if (distance > 100 && distance2 < 100) {

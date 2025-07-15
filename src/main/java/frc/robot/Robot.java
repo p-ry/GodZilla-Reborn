@@ -23,6 +23,7 @@ import com.ctre.phoenix6.hardware.Pigeon2;
 import com.pathplanner.lib.commands.FollowPathCommand;
 import com.pathplanner.lib.pathfinding.LocalADStar;
 import com.pathplanner.lib.pathfinding.Pathfinding;
+//import com.pathplanner.lib.pathfinding.LocalGrid; // Ensure LocalGrid is imported
 
 import au.grapplerobotics.CanBridge;
 
@@ -46,10 +47,13 @@ public class Robot extends TimedRobot {
   @Override
   public void robotInit() {
   
+    // Ensure LocalGrid is imported or defined
+    //     Pathfinding.setPathfinder(new  LocalADStar());  //reversed which comes first 7/15
 
-    FollowPathCommand.warmupCommand().schedule();
+    // FollowPathCommand.warmupCommand().schedule();
+    
     //Pathfinding.setPathfinder(null);
-    Pathfinding.setPathfinder(new LocalADStar());
+    
 
 
     //RobotContainer.candle.setLEDs(236,0,140);
@@ -171,7 +175,8 @@ public class Robot extends TimedRobot {
   @Override
   public void disabledPeriodic() {
 
-    RobotContainer.drivetrain.updateCameraPose();
+    //RobotContainer.drivetrain.updateCameraPose();
+    // July 13 2025
    
   }
 
