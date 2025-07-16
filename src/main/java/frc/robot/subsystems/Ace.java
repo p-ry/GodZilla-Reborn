@@ -103,7 +103,9 @@ public class Ace extends SubsystemBase {
     
 
   }
-
+  public void setBrakeMode(NeutralModeValue mode) {
+    ace.setNeutralMode(mode);
+    }
   public void setSpeed(double speed) {
     if (RobotContainer.Algae.getAsBoolean()) {
       ace.setControl(motorSpdRequest.withOutput(speed));

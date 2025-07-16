@@ -71,6 +71,9 @@ public class Wrist extends SubsystemBase implements Sendable {
 
   }
 
+  public void setBrakeMode(NeutralModeValue mode) {
+    wrist.setNeutralMode(mode);
+    }
   public void setPos(double position) {
 
     wrist.setControl(wristController.withPosition(position)); // wristController = new PositionDutyCycle(position);

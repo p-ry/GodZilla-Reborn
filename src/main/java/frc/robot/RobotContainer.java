@@ -45,6 +45,13 @@ import frc.robot.subsystems.ArmAssembly;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.LowerArm;
 import frc.robot.subsystems.Wrist;
+import frc.robot.commands.SetArmBrakeMode;
+import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.pathplanner.lib.commands.FollowPathCommand;
+import com.pathplanner.lib.commands.PathfindingCommand;
+import com.pathplanner.lib.pathfinding.LocalADStar;
+import com.pathplanner.lib.pathfinding.Pathfinding;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class RobotContainer {
         // public static Pigeon2 gyro;
@@ -59,6 +66,9 @@ public class RobotContainer {
         public static double driveDeadband = 0.473;
         public static double turnDeadband = 0.47;
         public static double garbage = 0;
+        private final AtomicBoolean pathWarmupComplete = new AtomicBoolean(false);
+        private final AtomicBoolean pathFindingWarmupComplete = new AtomicBoolean(false);
+
         /* Setting up bindings for necessary control of the swerve drive platform */
         /*
          * private final SwerveRequest.FieldCentric drive = new
@@ -91,6 +101,9 @@ public class RobotContainer {
         public static final ArmAssembly mArm = new ArmAssembly(false, 99);
         public static final Ace ace = new Ace(0);
         public static int prevLevel = 0;
+
+
+
         private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
                         .withDeadband(driveDeadband).withRotationalDeadband(turnDeadband)
                         .withDriveRequestType(DriveRequestType.Velocity);
@@ -99,6 +112,9 @@ public class RobotContainer {
                         .withDeadband(0.0)
                         .withRotationalDeadband(turnDeadband)
                         .withDriveRequestType(DriveRequestType.Velocity);
+
+
+
 
         final JoystickButton Dump = new JoystickButton(copilot, 1);
         final JoystickButton Lv2L = new JoystickButton(copilot, 2);
@@ -188,9 +204,38 @@ public class RobotContainer {
 
                 AutoChooser = AutoBuilder.buildAutoChooser("none");
                 SmartDashboard.putData("AutoChooser", AutoChooser);
+ drivetrain.configureAutoBuilder(); // Configure the auto builder for Pathfinding
+  
+  Pathfinding.setPathfinder(new  LocalADStar());  //reversed which comes first 7/15
+
+     PathfindingCommand.warmupCommand()
+     .andThen(() -> {
+      System.out.println("[Warmup] PathfindingCommand warmup complete.");
+        pathFindingWarmupComplete.set(true);
+        })
+        .schedule();
+
+  // Schedule warmup and track completion
+  FollowPathCommand.warmupCommand()
+  .andThen(() -> {
+      pathWarmupComplete.set(true);
+      System.out.println("[Warmup] FollowPathCommand warmup complete.");
+  })
+  .schedule();
+
+
 
                 configureBindings();
         }
+
+        public boolean isFollowPathWarmupComplete() {
+                return pathWarmupComplete.get();
+            }
+
+            public boolean isPathFindingWarmupComplete() {
+                return pathFindingWarmupComplete.get();
+                
+            }
 
         private void configureBindings() {
 
@@ -508,6 +553,11 @@ public class RobotContainer {
                 controller.y().whileTrue(
                                 new InstantCommand(() -> mArm.wrist.moveIt(-0.5)));
                 controller.x().whileTrue(new InstantCommand(() -> mArm.wrist.moveIt(0.5)));
+
+
+                controller.a()
+                .whileTrue(new SetArmBrakeMode(mArm, NeutralModeValue.Coast))
+                .onFalse(new SetArmBrakeMode(mArm, NeutralModeValue.Brake));
 
                 // Run SysId routines when holding back/start and X/Y.
                 // Note that each routine should be run exactly once in a single log.

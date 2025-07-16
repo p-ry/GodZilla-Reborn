@@ -117,6 +117,8 @@ public class Robot extends TimedRobot {
   @Override
   public void robotPeriodic() {
     CommandScheduler.getInstance().run();
+    SmartDashboard.putBoolean("FollowPath Warmup Complete", m_robotContainer.isFollowPathWarmupComplete());
+    SmartDashboard.putBoolean("Pathfinding Warmup Complete", m_robotContainer.isPathFindingWarmupComplete());
     //  double axis = RobotContainer.controller.getLeftTriggerAxis(); // 0 → 1
     //                                     SmartDashboard.putNumber("lTrigger", axis);
     //  ***  July 12
@@ -182,6 +184,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void disabledPeriodic() {
+    CommandScheduler.getInstance().run();
 
     //RobotContainer.drivetrain.updateCameraPose();
     // July 13 2025

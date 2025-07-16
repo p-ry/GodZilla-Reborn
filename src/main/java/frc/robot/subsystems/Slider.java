@@ -100,6 +100,12 @@ public class Slider extends SubsystemBase implements Sendable{
 
   }
 
+ 
+  public void setBrakeMode(NeutralModeValue mode) {
+    slider.setNeutralMode(mode);
+    }
+
+
   public void setPos(double position) {
     setPos(position, true);
   }

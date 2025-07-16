@@ -110,6 +110,14 @@ var rightMotorConfigs = new MotorOutputConfigs();
 
   }
 
+
+  public void setBrakeMode(NeutralModeValue mode) {
+    UpperArmLeft.setNeutralMode(mode);
+    UpperArmRight.setNeutralMode(mode);
+}
+
+
+
   public void setPos(double position) {
     setPos(position,fast);
   }

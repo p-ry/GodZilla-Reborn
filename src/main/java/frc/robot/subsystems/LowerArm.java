@@ -168,10 +168,12 @@ public void setPos(double position, boolean fast){
 public void updatePID(){
   LowerArmLeft.getConfigurator().apply(pidConfigs);
   LowerArmRight.getConfigurator().apply(pidConfigs);
-  
- 
-  
-}
+  }
+
+  public void setBrakeMode(NeutralModeValue mode) {
+    LowerArmLeft.setNeutralMode(mode);
+    LowerArmRight.setNeutralMode(mode);
+  }
 
   @Override
   public void periodic() {
