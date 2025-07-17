@@ -25,7 +25,9 @@ import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ProxyCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -66,8 +68,8 @@ public class RobotContainer {
         public static double driveDeadband = 0.473;
         public static double turnDeadband = 0.47;
         public static double garbage = 0;
-        private final AtomicBoolean pathWarmupComplete = new AtomicBoolean(false);
-        private final AtomicBoolean pathFindingWarmupComplete = new AtomicBoolean(false);
+        public static final AtomicBoolean pathWarmupComplete = new AtomicBoolean(false);
+        public static final AtomicBoolean pathFindingWarmupComplete = new AtomicBoolean(false);
 
         /* Setting up bindings for necessary control of the swerve drive platform */
         /*
@@ -102,8 +104,6 @@ public class RobotContainer {
         public static final Ace ace = new Ace(0);
         public static int prevLevel = 0;
 
-
-
         private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
                         .withDeadband(driveDeadband).withRotationalDeadband(turnDeadband)
                         .withDriveRequestType(DriveRequestType.Velocity);
@@ -112,9 +112,6 @@ public class RobotContainer {
                         .withDeadband(0.0)
                         .withRotationalDeadband(turnDeadband)
                         .withDriveRequestType(DriveRequestType.Velocity);
-
-
-
 
         final JoystickButton Dump = new JoystickButton(copilot, 1);
         final JoystickButton Lv2L = new JoystickButton(copilot, 2);
@@ -200,42 +197,65 @@ public class RobotContainer {
                                 .alongWith(new InstantCommand(() -> System.out.println("loadit"))
                                                 .alongWith(new InstantCommand(() -> ace.setSpeed(1)))));
 
-                
+                drivetrain.configureAutoBuilder();
+                Pathfinding.setPathfinder(new LocalADStar());
+               CommandScheduler.getInstance().schedule(
+    new WaitCommand(0.04).andThen(this::scheduleWarmups));
 
                 AutoChooser = AutoBuilder.buildAutoChooser("none");
                 SmartDashboard.putData("AutoChooser", AutoChooser);
- drivetrain.configureAutoBuilder(); // Configure the auto builder for Pathfinding
-  
-  Pathfinding.setPathfinder(new  LocalADStar());  //reversed which comes first 7/15
-
-     PathfindingCommand.warmupCommand()
-     .andThen(() -> {
-      System.out.println("[Warmup] PathfindingCommand warmup complete.");
-        pathFindingWarmupComplete.set(true);
-        })
-        .schedule();
-
-  // Schedule warmup and track completion
-  FollowPathCommand.warmupCommand()
-  .andThen(() -> {
-      pathWarmupComplete.set(true);
-      System.out.println("[Warmup] FollowPathCommand warmup complete.");
-  })
-  .schedule();
-
-
-
                 configureBindings();
         }
+        public void scheduleWarmups() {
+                scheduleFollowPathWarmup();
+                schedulePathfindingWarmup();
+            }
+            private void scheduleFollowPathWarmup() {
+                System.out.println("[Init] Scheduling FollowPathCommand warmup...");
+            
+                Command warmup = FollowPathCommand.warmupCommand()
+                    .withInterruptBehavior(Command.InterruptionBehavior.kCancelSelf)
+                    .ignoringDisable(true)
+                    .andThen(() -> {
+                        System.out.println("[Warmup] FollowPathCommand warmup complete.");
+                        pathWarmupComplete.set(true);
+                    });
+            
+                Command wrapped = new ProxyCommand(() -> warmup)
+                    .finallyDo(interrupted -> {
+                        System.out.println("[Warmup] FollowPathCommand finished. Interrupted? " + interrupted);
+                    });
+            
+                wrapped.schedule();
+            }
 
+            private void schedulePathfindingWarmup() {
+                System.out.println("[Init] Scheduling PathfindingCommand warmup...");
+            
+                Command warmup = PathfindingCommand.warmupCommand()
+                    .withInterruptBehavior(Command.InterruptionBehavior.kCancelSelf)
+                    .ignoringDisable(true)
+                    .andThen(() -> {
+                        System.out.println("[Warmup] PathfindingCommand warmup complete.");
+                        pathFindingWarmupComplete.set(true);
+                    });
+            
+                Command wrapped = new ProxyCommand(() -> warmup)
+                    .finallyDo(interrupted -> {
+                        System.out.println("[Warmup] PathfindingCommand finished. Interrupted? " + interrupted);
+                    });
+            
+                wrapped.schedule();
+            }
+            
         public boolean isFollowPathWarmupComplete() {
                 return pathWarmupComplete.get();
-            }
+        }
 
-            public boolean isPathFindingWarmupComplete() {
+        public boolean isPathFindingWarmupComplete() {
                 return pathFindingWarmupComplete.get();
-                
-            }
+
+        }
 
         private void configureBindings() {
 
@@ -554,10 +574,9 @@ public class RobotContainer {
                                 new InstantCommand(() -> mArm.wrist.moveIt(-0.5)));
                 controller.x().whileTrue(new InstantCommand(() -> mArm.wrist.moveIt(0.5)));
 
-
                 controller.a()
-                .whileTrue(new SetArmBrakeMode(mArm, NeutralModeValue.Coast))
-                .onFalse(new SetArmBrakeMode(mArm, NeutralModeValue.Brake));
+                                .whileTrue(new SetArmBrakeMode(mArm, NeutralModeValue.Coast))
+                                .onFalse(new SetArmBrakeMode(mArm, NeutralModeValue.Brake));
 
                 // Run SysId routines when holding back/start and X/Y.
                 // Note that each routine should be run exactly once in a single log.

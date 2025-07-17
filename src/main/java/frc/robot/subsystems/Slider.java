@@ -16,6 +16,7 @@ import au.grapplerobotics.LaserCan;
 import static edu.wpi.first.units.Units.Newton;
 
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
+import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.Slot1Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -102,7 +103,9 @@ public class Slider extends SubsystemBase implements Sendable{
 
  
   public void setBrakeMode(NeutralModeValue mode) {
-    slider.setNeutralMode(mode);
+    slider.getConfigurator().refresh(sliderConfigs);
+    sliderConfigs.MotorOutput.NeutralMode = mode;
+    slider.getConfigurator().apply(sliderConfigs);
     }
 
 

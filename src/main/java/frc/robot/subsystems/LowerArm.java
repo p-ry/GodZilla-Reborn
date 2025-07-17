@@ -171,8 +171,17 @@ public void updatePID(){
   }
 
   public void setBrakeMode(NeutralModeValue mode) {
-    LowerArmLeft.setNeutralMode(mode);
-    LowerArmRight.setNeutralMode(mode);
+    MotorOutputConfigs config = new MotorOutputConfigs();
+    LowerArmLeft.getConfigurator().refresh(config); // Load current config
+
+    config.NeutralMode = mode;
+
+    LowerArmLeft.getConfigurator().apply(config);
+
+    LowerArmRight.getConfigurator().refresh(config); // Reuse object is okay
+    config.NeutralMode = mode;
+    LowerArmRight.getConfigurator().apply(config);
+    
   }
 
   @Override

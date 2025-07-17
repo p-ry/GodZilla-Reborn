@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
+import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfigurator;
@@ -65,6 +66,7 @@ public class Ace extends SubsystemBase {
     aceConfigs.CurrentLimits.SupplyCurrentLimitEnable = true;
     aceConfigs.CurrentLimits.SupplyCurrentLimit = 50;
     ace.setNeutralMode(NeutralModeValue.Brake);
+    
     // PID coefficients
     kP = 2.0;
     kI = 0.0;
@@ -83,6 +85,7 @@ public class Ace extends SubsystemBase {
     pidConfigs.kI = kI; // no output for integrated error
     pidConfigs.kD = kD; // A velocity error of 1 rps results in 0.1 V output
     ace.getConfigurator().apply(aceConfigs);
+    
 
     this.level = level;
     Sens1 = new LaserCan(10);
@@ -104,7 +107,11 @@ public class Ace extends SubsystemBase {
 
   }
   public void setBrakeMode(NeutralModeValue mode) {
-    ace.setNeutralMode(mode);
+MotorOutputConfigs config = new MotorOutputConfigs();
+    ace.getConfigurator().refresh(config); // Load current config
+    config.NeutralMode = mode;
+    ace.getConfigurator().apply(config);
+
     }
   public void setSpeed(double speed) {
     if (RobotContainer.Algae.getAsBoolean()) {

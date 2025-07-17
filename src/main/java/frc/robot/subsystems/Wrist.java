@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.opencv.core.Mat;
 
 import com.ctre.phoenix6.configs.CommutationConfigs;
+import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -72,7 +73,10 @@ public class Wrist extends SubsystemBase implements Sendable {
   }
 
   public void setBrakeMode(NeutralModeValue mode) {
-    wrist.setNeutralMode(mode);
+   
+    wrist.getConfigurator().refresh(wristConfigs); // Load current config
+    wristConfigs.MotorOutput.NeutralMode = mode;
+    wrist.getConfigurator().apply(wristConfigs);
     }
   public void setPos(double position) {
 

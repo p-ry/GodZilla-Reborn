@@ -52,6 +52,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.LimelightHelpers;
 import frc.robot.LimelightHelpers.PoseEstimate;
 import frc.robot.Robot;
+import frc.robot.RobotContainer;
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 import frc.robot.Utilitys;
@@ -139,9 +140,27 @@ StructPublisher<Pose2d> botPublisher =
                 VecBuilder.fill(0.5, 0.5, Units.degreesToRadians(1.0))); // getGyroRotation2D()
 
          
-
-        configureAutoBuilder();
-        Pathfinding.setPathfinder(new  LocalADStar());  //reversed which comes first 7/15
+               // configureAutoBuilder(); // Configure the auto builder for Pathfinding
+  
+               // Pathfinding.setPathfinder(new  LocalADStar());  //reversed which comes first 7/15
+              
+                //    PathfindingCommand.warmupCommand()
+                //    .andThen(() -> {
+                //     System.out.println("[Warmup] PathfindingCommand warmup complete.");
+                //       RobotContainer.pathFindingWarmupComplete.set(true);
+                //       })
+                //       .schedule();
+              
+                // // Schedule warmup and track completion
+                // FollowPathCommand.warmupCommand()
+                // .andThen(() -> {
+                //     RobotContainer.pathWarmupComplete.set(true);
+                //     System.out.println("[Warmup] FollowPathCommand warmup complete.");
+                // })
+                // .schedule();
+              
+        //configureAutoBuilder();
+        //Pathfinding.setPathfinder(new  LocalADStar());  //reversed which comes first 7/15
 
     // PathfindingCommand.warmupCommand().schedule();
     // FollowPathCommand.warmupCommand().schedule();  

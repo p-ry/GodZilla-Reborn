@@ -12,6 +12,9 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.FunctionalCommand;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import frc.robot.LimelightHelpers;
 import frc.robot.LimelightHelpers.PoseEstimate;
 import au.grapplerobotics.LaserCan;
@@ -29,10 +32,10 @@ import com.pathplanner.lib.pathfinding.Pathfinding;
 import au.grapplerobotics.CanBridge;
 
 public class Robot extends TimedRobot {
-  //private LaserCan laserCan;
+  // private LaserCan laserCan;
   private Command m_autonomousCommand;
 
-  public final RobotContainer m_robotContainer;
+  public RobotContainer m_robotContainer;
 
   private final boolean kUseLimelight = true;
   private boolean allianceSet = false;
@@ -41,30 +44,43 @@ public class Robot extends TimedRobot {
   public Robot() {
     // enableLiveWindowInTest(true);
 
-    m_robotContainer = new RobotContainer();
+    // m_robotContainer = new RobotContainer();
     CanBridge.runTCP();
   }
 
   @Override
   public void robotInit() {
-    //RobotContainer.drivetrain.configureAutoBuilder(); // Configure the auto builder for Pathfinding
-  
-//  Pathfinding.setPathfinder(new  LocalADStar());  //reversed which comes first 7/15
+    m_robotContainer = new RobotContainer();
 
-//     PathfindingCommand.warmupCommand().schedule();
-//     FollowPathCommand.warmupCommand().schedule();  
 
+    new java.util.Timer().schedule(new java.util.TimerTask() {
+      @Override
+      public void run() {
+          System.out.println("[Timer] Scheduling real warmups...");
+          m_robotContainer.scheduleWarmups();  // calls both warmup schedules
+      }
+  }, 1000);  // delay 1 second to be safe
+
+    
+    // Delay 1 second after robotInit()
+    // RobotContainer.drivetrain.configureAutoBuilder(); // Configure the auto
+    // builder for Pathfinding
+
+    // Pathfinding.setPathfinder(new LocalADStar()); //reversed which comes first
+    // 7/15
+
+    // PathfindingCommand.warmupCommand().schedule();
+    // FollowPathCommand.warmupCommand().schedule();
 
     // Ensure LocalGrid is imported or defined
-    //     Pathfinding.setPathfinder(new  LocalADStar());  //reversed which comes first 7/15
+    // Pathfinding.setPathfinder(new LocalADStar()); //reversed which comes first
+    // 7/15
 
     // FollowPathCommand.warmupCommand().schedule();
-    
-    //Pathfinding.setPathfinder(null);
-    
 
+    // Pathfinding.setPathfinder(null);
 
-    //RobotContainer.candle.setLEDs(236,0,140);
+    // RobotContainer.candle.setLEDs(236,0,140);
 
     // laserCan = new LaserCan(10);
     // m_robotContainer.drivetrain.gyro.setYaw(0);
@@ -86,15 +102,15 @@ public class Robot extends TimedRobot {
     // double omegaRps =
     // Units.radiansToRotations(driveState.Speeds.omegaRadiansPerSecond);
 
+    // var headingDeg =
+    // m_robotContainer.drivetrain.gyro.getYaw().getValueAsDouble();
+    // LimelightHelpers.SetRobotOrientation("limelight-left", headingDeg, 0, 0, 0,
+    // 0, 0);
 
-// var headingDeg = m_robotContainer.drivetrain.gyro.getYaw().getValueAsDouble();
-//     LimelightHelpers.SetRobotOrientation("limelight-left", headingDeg, 0, 0, 0,
-//       0, 0);
-      
-//       LimelightHelpers.SetRobotOrientation("limelight-right", headingDeg, 0, 0, 0,
-//       0, 0);
+    // LimelightHelpers.SetRobotOrientation("limelight-right", headingDeg, 0, 0, 0,
+    // 0, 0);
     /*
-     LimelightHelpers.SetRobotOrientation("limelight-left", headingDeg, 0, 0, 0,
+     * LimelightHelpers.SetRobotOrientation("limelight-left", headingDeg, 0, 0, 0,
      * 0, 0);
      * var llMeasurement =
      * LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-left");
@@ -116,38 +132,42 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotPeriodic() {
+
     CommandScheduler.getInstance().run();
-    SmartDashboard.putBoolean("FollowPath Warmup Complete", m_robotContainer.isFollowPathWarmupComplete());
-    SmartDashboard.putBoolean("Pathfinding Warmup Complete", m_robotContainer.isPathFindingWarmupComplete());
-    //  double axis = RobotContainer.controller.getLeftTriggerAxis(); // 0 → 1
-    //                                     SmartDashboard.putNumber("lTrigger", axis);
-    //  ***  July 12
+    // SmartDashboard.putBoolean("FollowPath Warmup Complete",
+    // m_robotContainer.isFollowPathWarmupComplete());
+    // SmartDashboard.putBoolean("Pathfinding Warmup Complete",
+    // m_robotContainer.isPathFindingWarmupComplete());
+    // double axis = RobotContainer.controller.getLeftTriggerAxis(); // 0 → 1
+    // SmartDashboard.putNumber("lTrigger", axis);
+    // *** July 12
     var alliance = DriverStation.getAlliance();
-    //if (!allianceSet) {
-      if (alliance.isPresent()) {
-       // allianceSet = true;
-       
-        if (alliance.get() == DriverStation.Alliance.Red) {
-          RobotContainer.BlueAlliance = -1;
-         // RobotContainer.candle.setLEDs(255, 127, 102);
+    // if (!allianceSet) {
+    if (alliance.isPresent()) {
+      // allianceSet = true;
 
-          // m_robotContainer.s_Candle.setColourProperties(255, 0, 0, 0.75);
-          // m_robotContainer.s_Candle.colorLEDs();
-        } else if (alliance.get() == DriverStation.Alliance.Blue) {
-          RobotContainer.BlueAlliance = 1;
-         // RobotContainer.candle.setLEDs(255, 127, 102);
-        //  RobotContainer.candle.animate(new FireAnimation(1, 0.2, 1, 1, 1, false, 0));
-          // RobotContainer.candle.fireLEDs(); // Method not defined in CANdle class
+      if (alliance.get() == DriverStation.Alliance.Red) {
+        RobotContainer.BlueAlliance = -1;
+        // RobotContainer.candle.setLEDs(255, 127, 102);
 
-          // m_robotContainer.s_Candle.setColourProperties(0, 0, 255, 0.75);
-          // m_robotContainer.s_Candle.colorLEDs();
+        // m_robotContainer.s_Candle.setColourProperties(255, 0, 0, 0.75);
+        // m_robotContainer.s_Candle.colorLEDs();
+      } else if (alliance.get() == DriverStation.Alliance.Blue) {
+        RobotContainer.BlueAlliance = 1;
+        // RobotContainer.candle.setLEDs(255, 127, 102);
+        // RobotContainer.candle.animate(new FireAnimation(1, 0.2, 1, 1, 1, false, 0));
+        // RobotContainer.candle.fireLEDs(); // Method not defined in CANdle class
 
-        }
+        // m_robotContainer.s_Candle.setColourProperties(0, 0, 255, 0.75);
+        // m_robotContainer.s_Candle.colorLEDs();
+
       }
-      //RobotContainer.drivetrain.m_poseEstimator.update(RobotContainer.drivetrain.getGyroRotation2D(),RobotContainer.drivetrain.getModulePositions());
-      //RobotContainer.drivetrain.botPose2d = RobotContainer.drivetrain.m_poseEstimator.getEstimatedPosition();
-      
-    //}
+    }
+    // RobotContainer.drivetrain.m_poseEstimator.update(RobotContainer.drivetrain.getGyroRotation2D(),RobotContainer.drivetrain.getModulePositions());
+    // RobotContainer.drivetrain.botPose2d =
+    // RobotContainer.drivetrain.m_poseEstimator.getEstimatedPosition();
+
+    // }
     // Utilitys.addLimelightVisionMeasurements("limelight-left");
     // Utilitys.addLimelightVisionMeasurements("limelight-right");
     // LaserCan.Measurement measurement = laserCan.getMeasurement();
@@ -179,16 +199,22 @@ public class Robot extends TimedRobot {
 
   @Override
   public void disabledInit() {
-    //RobotContainer.drivetrain.gyro.setYaw(0);
+    CommandScheduler.getInstance().run();
+    // RobotContainer.drivetrain.gyro.setYaw(0);
   }
 
   @Override
   public void disabledPeriodic() {
-    CommandScheduler.getInstance().run();
 
-    //RobotContainer.drivetrain.updateCameraPose();
+    CommandScheduler.getInstance().run();
+    // SmartDashboard.putBoolean("FollowPath Warmup Complete",
+    // m_robotContainer.isFollowPathWarmupComplete());
+    // SmartDashboard.putBoolean("Pathfinding Warmup Complete",
+    // m_robotContainer.isPathFindingWarmupComplete());
+
+    // RobotContainer.drivetrain.updateCameraPose();
     // July 13 2025
-   
+
   }
 
   @Override
@@ -203,7 +229,7 @@ public class Robot extends TimedRobot {
       m_autonomousCommand.schedule();
     }
 
-   // m_robotContainer.resetGyro();
+    // m_robotContainer.resetGyro();
   }
 
   @Override
@@ -217,14 +243,16 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopInit() {
     // if (m_autonomousCommand != null) {
-    //   m_autonomousCommand.cancel();
+    // m_autonomousCommand.cancel();
     // }
     // try {
-    //   RobotContainer.ace.laserCan.setRangingMode(LaserCan.RangingMode.SHORT);
-    //   RobotContainer.ace.laserCan.setRegionOfInterest(new LaserCan.RegionOfInterest(4,6,1,3));     // LaserCan.RegionOfInterest(4, 6, 9, 7));
-    //   RobotContainer.ace.laserCan.setTimingBudget(LaserCan.TimingBudget.TIMING_BUDGET_33MS);
+    // RobotContainer.ace.laserCan.setRangingMode(LaserCan.RangingMode.SHORT);
+    // RobotContainer.ace.laserCan.setRegionOfInterest(new
+    // LaserCan.RegionOfInterest(4,6,1,3)); // LaserCan.RegionOfInterest(4, 6, 9,
+    // 7));
+    // RobotContainer.ace.laserCan.setTimingBudget(LaserCan.TimingBudget.TIMING_BUDGET_33MS);
     // } catch (ConfigurationFailedException e) {
-    //   e.printStackTrace();
+    // e.printStackTrace();
     // }
   }
 

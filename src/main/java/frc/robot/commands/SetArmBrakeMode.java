@@ -5,6 +5,7 @@ package frc.robot.commands;
 
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import frc.robot.RobotContainer;
 import frc.robot.subsystems.ArmAssembly;
 public class SetArmBrakeMode extends InstantCommand {
     public SetArmBrakeMode(ArmAssembly arm, NeutralModeValue mode) {
@@ -12,7 +13,9 @@ public class SetArmBrakeMode extends InstantCommand {
         arm.upperArm.setBrakeMode(mode));
         arm.lowerArm.setBrakeMode(mode);
         arm.slider.setBrakeMode(mode);
-        arm.ace.setBrakeMode(mode);
+       
         arm.wrist.setBrakeMode(mode);
+        RobotContainer.ace.setBrakeMode(mode);
+
     }
 }

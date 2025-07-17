@@ -76,6 +76,7 @@ public class UpperArm extends SubsystemBase implements Sendable{
     
     
     
+    
     pidConfigs.kS = kS; // Add 0.25 V output to overcome static friction
     pidConfigs.kV = 0.12; // A velocity target of 1 rps results in 0.12 V output
     pidConfigs.kA = 0.01; // An acceleration of 1 rps/s requires 0.01 V output
@@ -112,8 +113,14 @@ var rightMotorConfigs = new MotorOutputConfigs();
 
 
   public void setBrakeMode(NeutralModeValue mode) {
-    UpperArmLeft.setNeutralMode(mode);
-    UpperArmRight.setNeutralMode(mode);
+    MotorOutputConfigs config = new MotorOutputConfigs();
+    UpperArmLeft.getConfigurator().refresh(config); // Load current config
+    config.NeutralMode = mode;
+    UpperArmLeft.getConfigurator().apply(config);
+
+    UpperArmRight.getConfigurator().refresh(config); // Reuse object is okay
+    config.NeutralMode = mode;
+    UpperArmRight.getConfigurator().apply(config);
 }
 
 
