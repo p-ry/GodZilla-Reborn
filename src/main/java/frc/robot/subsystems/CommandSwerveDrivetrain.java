@@ -324,11 +324,11 @@ StructPublisher<Pose2d> botPublisher =
         {
             doRejectUpdate = true;
         }
-        SmartDashboard.putBoolean("RejectUpdate", doRejectUpdate);
+      //  SmartDashboard.putBoolean("RejectUpdate", doRejectUpdate);
         if (!doRejectUpdate) {
-            SmartDashboard.putNumber("bestcamera",bestCamera);
-            SmartDashboard.putNumberArray("CameraPose", new double[] { cameraPoses[bestCamera].pose.getTranslation().getX(), cameraPoses[bestCamera].pose.getTranslation().getY(),
-                cameraPoses[bestCamera].pose.getRotation().getRadians() });
+          //  SmartDashboard.putNumber("bestcamera",bestCamera);
+            // SmartDashboard.putNumberArray("CameraPose", new double[] { cameraPoses[bestCamera].pose.getTranslation().getX(), cameraPoses[bestCamera].pose.getTranslation().getY(),
+            //     cameraPoses[bestCamera].pose.getRotation().getRadians() });
             m_poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(.7, .7, 9999));
             m_poseEstimator.addVisionMeasurement(
                     cameraPoses[bestCamera].pose,
