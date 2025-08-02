@@ -67,7 +67,7 @@ public class Ace extends SubsystemBase {
     aceConfigs.CurrentLimits.SupplyCurrentLimitEnable = true;
     aceConfigs.CurrentLimits.SupplyCurrentLimit = 50;
     ace.setNeutralMode(NeutralModeValue.Brake);
-    
+
     // PID coefficients
     kP = 2.0;
     kI = 0.0;
@@ -86,7 +86,6 @@ public class Ace extends SubsystemBase {
     pidConfigs.kI = kI; // no output for integrated error
     pidConfigs.kD = kD; // A velocity error of 1 rps results in 0.1 V output
     ace.getConfigurator().apply(aceConfigs);
-    
 
     this.level = level;
     Sens1 = new LaserCan(10);
@@ -104,16 +103,17 @@ public class Ace extends SubsystemBase {
     // }
     gotIt = false;
     coralPresent = false;
-    
 
   }
+
   public void setBrakeMode(NeutralModeValue mode) {
-MotorOutputConfigs config = new MotorOutputConfigs();
+    MotorOutputConfigs config = new MotorOutputConfigs();
     ace.getConfigurator().refresh(config); // Load current config
     config.NeutralMode = mode;
     ace.getConfigurator().apply(config);
 
-    }
+  }
+
   public void setSpeed(double speed) {
     if (Constants.algaeMode.get()) {
       ace.setControl(motorSpdRequest.withOutput(speed));
@@ -169,21 +169,22 @@ MotorOutputConfigs config = new MotorOutputConfigs();
         distance2 = 1000;
 
       }
-      SmartDashboard.putNumber("LASERDistance", distance);
-      SmartDashboard.putNumber("LASERDistance2", distance2);
+      if (Timer.getFPGATimestamp() % 0.5 < 0.02) {
 
+        SmartDashboard.putNumber("LASERDistance", distance);
+        SmartDashboard.putNumber("LASERDistance2", distance2);
+      }
       // if (measurement != null && measurement.status ==
       // LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT && measurement2 != null &&
       // measurement2.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT) {
 
-      if(!coralPresent){
-        
-      
-      if ((distance < 100 || distance2 < 100)) {
-        coralPresent = true;
-        setSpeed(0);
+      if (!coralPresent) {
+
+        if ((distance < 100 || distance2 < 100)) {
+          coralPresent = true;
+          setSpeed(0);
+        }
       }
-    }
 
       if ((distance < 100 && distance2 < 100)) {
         setSpeed(0.7);
