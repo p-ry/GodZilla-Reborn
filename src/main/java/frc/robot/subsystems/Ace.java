@@ -1,267 +1,135 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
-
 package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.config.SparkMaxConfig;
-import com.ctre.phoenix6.configs.MotionMagicConfigs;
-import com.ctre.phoenix6.configs.MotorOutputConfigs;
-import com.ctre.phoenix6.configs.Slot0Configs;
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.configs.TalonFXConfigurator;
-import com.ctre.phoenix6.controls.DutyCycleOut;
-import com.ctre.phoenix6.controls.DynamicMotionMagicVoltage;
-import com.ctre.phoenix6.controls.MotionMagicVoltage;
-import com.ctre.phoenix6.controls.PositionDutyCycle;
-import com.ctre.phoenix6.controls.VelocityVoltage;
+
+import com.ctre.phoenix6.configs.*;
+import com.ctre.phoenix6.controls.*;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.revrobotics.spark.SparkBase.ControlType;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.SparkClosedLoopController;
+
 import au.grapplerobotics.LaserCan;
-import au.grapplerobotics.interfaces.LaserCanInterface.RangingMode;
-import frc.robot.RobotContainer;
-import frc.robot.Robot;
-import frc.robot.subsystems.ArmAssembly;
-import au.grapplerobotics.ConfigurationFailedException;
+//import au.grapplerobotics.LaserCan.Measurement;
+
 import frc.robot.Constants;
+import frc.robot.RobotContainer;
 
 public class Ace extends SubsystemBase {
-  TalonFX ace;
-  MotionMagicVoltage controlace;
-  TalonFXConfigurator aceConfigurator;
-  VelocityVoltage aceController;
+  private final TalonFX ace = new TalonFX(37, "Canivore2");
+  private final PositionDutyCycle motorPosRequest = new PositionDutyCycle(0);
+  private final DutyCycleOut motorSpdRequest = new DutyCycleOut(0);
 
-  TalonFXConfiguration aceConfigs;
-  double requestedPosition;
-  boolean atPosition;
-  SparkMaxConfig config;
-  public double kP, kI, kD, kIz, kFF, kMaxOutput, kMinOutput, maxRPM, maxVel, minVel, maxAcc, allowedErr;
-  public double i, d, ff, aFF;
-  public LaserCan Sens1;
-  public LaserCan Sens2;
-  int level;
-  double distance, distance2;
-  LaserCan.Measurement measurement, measurement2;
-  public static boolean gotIt;
-  public static boolean coralPresent;
+  private final LaserCan funnelSensor = new LaserCan(10);
+  private final LaserCan aceSensor = new LaserCan(11);
+
+  private double requestedPosition;
+  private double distFunnel = 1000, distAce = 1000;
+
+  public static boolean gotIt = false;
+  public static boolean coralPresent = false;
   public static boolean backup = false;
 
-  PositionDutyCycle motorPosRequest;
-  DutyCycleOut motorSpdRequest;
+  private static final double DEFAULT_DISTANCE = 1000.0;
+  private static final double DETECT_THRESHOLD = 100.0;
+  private static final double BACKDRIVE_SPEED = -0.45;
+  private static final double INTAKE_SPEED = 0.7;
+  public static boolean funnelSensorDetected=false;
+  public static boolean aceSensorDetected=false;
 
-  TalonFXConfiguration talonFXConfigs;
-  private Slot0Configs pidConfigs;
-
-  /** Creates a new Ace. */
   public Ace(int level) {
-    ace = new TalonFX(37, "Canivore2");
-    aceConfigs = new TalonFXConfiguration();
-    aceConfigs.CurrentLimits.SupplyCurrentLimitEnable = true;
-    aceConfigs.CurrentLimits.SupplyCurrentLimit = 50;
-    ace.setNeutralMode(NeutralModeValue.Brake);
+    TalonFXConfiguration config = new TalonFXConfiguration();
+    config.CurrentLimits.SupplyCurrentLimitEnable = true;
+    config.CurrentLimits.SupplyCurrentLimit = 50;
+    config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
-    // PID coefficients
-    kP = 2.0;
-    kI = 0.0;
-    kD = 0.000;
-    // double kS = .25;
-    motorPosRequest = new PositionDutyCycle(0);
-    motorSpdRequest = new DutyCycleOut(0);
+    Slot0Configs pid = config.Slot0;
+    pid.kP = 2.0;
+    pid.kI = 0.0;
+    pid.kD = 0.0;
+    pid.kS = 0.0;
+    pid.kV = 0.12;
+    pid.kA = 0.01;
 
-    pidConfigs = new Slot0Configs();
-
-    pidConfigs = aceConfigs.Slot0;
-    pidConfigs.kS = 0.0; // Add 0.25 V output to overcome static friction
-    pidConfigs.kV = 0.12; // A velocity target of 1 rps results in 0.12 V output
-    pidConfigs.kA = 0.01; // An acceleration of 1 rps/s requires 0.01 V output
-    pidConfigs.kP = kP; // A position error of 2.5 rotations results in 12 V output
-    pidConfigs.kI = kI; // no output for integrated error
-    pidConfigs.kD = kD; // A velocity error of 1 rps results in 0.1 V output
-    ace.getConfigurator().apply(aceConfigs);
-
-    this.level = level;
-    Sens1 = new LaserCan(10);
-    Sens2 = new LaserCan(11);
-
-    // try {
-    // // Sens1.setRangingMode(LaserCan.RangingMode.SHORT);
-    // // Sens2.setRangingMode(LaserCan.RangingMode.SHORT);
-    // // laserCan.setRegionOfInterest(new LaserCan.RegionOfInterest(4, 6, 9, 7));
-    // // Sens1.setRegionOfInterest(new LaserCan.RegionOfInterest(8,8,4,4));// x, y,
-    // width, height
-    // // Sens2.setTimingBudget(LaserCan.TimingBudget.TIMING_BUDGET_50MS);
-    // } catch (ConfigurationFailedException e) {
-    // e.printStackTrace();
-    // }
-    gotIt = false;
-    coralPresent = false;
-
+    ace.getConfigurator().apply(config);
   }
 
   public void setBrakeMode(NeutralModeValue mode) {
     MotorOutputConfigs config = new MotorOutputConfigs();
-    ace.getConfigurator().refresh(config); // Load current config
+    ace.getConfigurator().refresh(config);
     config.NeutralMode = mode;
     ace.getConfigurator().apply(config);
-
   }
 
   public void setSpeed(double speed) {
-    if (Constants.algaeMode.get()) {
-      ace.setControl(motorSpdRequest.withOutput(speed));
-
-    } else {
-      ace.setControl(motorSpdRequest.withOutput(speed / 2));
-
-    }
-    // aceController.setReference(speed,ControlType.kVelocity);
-  }
-
-  public void LaserCANStop() {
-    if (measurement == null && measurement2 == null)
-
-      setSpeed(0);
+    double output = Constants.algaeMode.get() ? speed : speed / 2;
+    ace.setControl(motorSpdRequest.withOutput(output));
   }
 
   public double getSpeed() {
     return ace.getRotorVelocity().getValueAsDouble();
-
   }
 
   public double getPos() {
     return ace.getPosition().getValueAsDouble();
   }
 
-  public void setPos(double position) {
-    requestedPosition = getPos() + position;
-    SmartDashboard.putNumber("currentPOS", getPos());
-    SmartDashboard.putNumber("position", requestedPosition);
+  public void setPos(double offset) {
+    requestedPosition = getPos() + offset;
     ace.setControl(motorPosRequest.withPosition(requestedPosition));
+    SmartDashboard.putNumber("ACE Current Pos", getPos());
+    SmartDashboard.putNumber("ACE Target Pos", requestedPosition);
+  }
 
+  private void updateLaserDistances() {
+    LaserCan.Measurement mFunnel = funnelSensor.getMeasurement();
+    LaserCan.Measurement mAce = aceSensor.getMeasurement();
+
+    distFunnel = (mFunnel != null && mFunnel.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT)
+        ? mFunnel.distance_mm : DEFAULT_DISTANCE;
+
+    distAce = (mAce != null && mAce.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT)
+        ? mAce.distance_mm : DEFAULT_DISTANCE;
+    funnelSensorDetected = distFunnel < DETECT_THRESHOLD;
+    aceSensorDetected = distAce < DETECT_THRESHOLD;
+
+    if (Timer.getFPGATimestamp() % 0.1 < 0.02) {
+      SmartDashboard.putNumber("Laser Distance Funnel", distFunnel);
+      SmartDashboard.putNumber("Laser Distance Ace", distAce);
+    }
   }
 
   @Override
   public void periodic() {
-    measurement = Sens1.getMeasurement();
-    measurement2 = Sens2.getMeasurement();
-
-    if (RobotContainer.loading) {
-
-      if (measurement != null && measurement.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT) {
-        distance = measurement.distance_mm;
-
-      } else {
-        distance = 1000;
-
-      }
-      if (measurement2 != null && measurement2.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT) {
-        distance2 = measurement2.distance_mm;
-
-      } else {
-        distance2 = 1000;
-
-      }
-      if (Timer.getFPGATimestamp() % 0.5 < 0.02) {
-
-        SmartDashboard.putNumber("LASERDistance", distance);
-        SmartDashboard.putNumber("LASERDistance2", distance2);
-      }
-      // if (measurement != null && measurement.status ==
-      // LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT && measurement2 != null &&
-      // measurement2.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT) {
-
-      if (!coralPresent) {
-
-        if ((distance < 100 || distance2 < 100)) {
-          coralPresent = true;
-          setSpeed(0);
-        }
-      }
-
-      if ((distance < 100 && distance2 < 100)) {
-        setSpeed(0.7);
-      }
-      if ((distance > 100 && distance2 < 100)) {
-        setSpeed(0.0);
-      }
-
-      if (coralPresent) {
-
-        if (distance > 100 && distance2 > 100) {
-          setSpeed(-.45);// was -0.4 -0.6
-        }
-
-        if (distance < 100 && distance2 > 100) {
-          setSpeed(0.7);
-        }
-
-        if (distance < 100 && distance2 < 100) {
-          setSpeed(0.7);
-        }
-
-        if (distance > 100 && distance2 < 100) {
-          setSpeed(0);
-          gotIt = true;
-        }
-      } // endif coral present
-
-      if (!coralPresent) {
-
-        // if(distance < 100 && distance2 < 100) {
-        // setSpeed(-.4);
-        // }
-
-        // if (distance > 100 && distance2 < 100) {
-        // setSpeed(0.9);
-        // }
-
-        // if ((distance < 100 && distance2 > 100)) {
-        // setSpeed(.9);
-        // }
-
-      }
-      // }
-      // if (!backup && gotIt) {
-      // backup = true;
-      // setPos(-3.0);// adjust in grip
-
-      // // if (distance > 100) {
-
-      // // setSpeed(-0.4);
-
-      // // } else {
-      // // // setSpeed(0.4);
-      // // // startTime = Timer.getTimestamp();
-      // // // wait(10);
-
-      // // setSpeed(0.0);
-      // // backup = true;
-      // // setPos(getPos());//adjust in grip
-      // // }
-      // // }
-      // // } else {
-      // // backup= false;
-      // } else {
-      // backup = false;
-      // }
-
-      // level = RobotContainer.
-
-      // if ((ace.getTorqueCurrent().getValueAsDouble()>35.0) && (level==1)){
-      // setSpeed(0);
-      // }
-      // This method will be called once per scheduler run
-
-    } else {
+    if (!RobotContainer.loading) {
       backup = false;
+      return;
+    }
+
+    updateLaserDistances();
+
+
+    if (!coralPresent && (funnelSensorDetected || aceSensorDetected)) {
+      // If either sensor detects something, we assume coral is present
+      coralPresent = true;
+      setSpeed(0);
+    }
+
+    if (coralPresent) {
+      if (!funnelSensorDetected && !aceSensorDetected) {
+        // If neither sensor detects anything, we backdrive the ace
+        setSpeed(BACKDRIVE_SPEED);
+      } else if (funnelSensorDetected && !aceSensorDetected) {
+        // If only the funnel sensor detects, we set the speed to intake speed
+        setSpeed(INTAKE_SPEED);
+      } else if (funnelSensorDetected && aceSensorDetected) {
+        // If both sensors detect, we set the speed to intake speed
+        setSpeed(INTAKE_SPEED);
+      } else if (!funnelSensorDetected && aceSensorDetected) {
+        // If only the ace sensor detects, we stop the ace
+        setSpeed(0);
+        gotIt = true;
+      }
     }
   }
 }
