@@ -1,214 +1,206 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
-
 package frc.robot.subsystems;
 
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.InvertedValue;
-import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.ctre.phoenix6.configs.MotionMagicConfigs;
-import com.ctre.phoenix6.configs.MotorOutputConfigs;
-import com.ctre.phoenix6.configs.Slot0Configs;
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.configs.TalonFXConfigurator;
+
+import com.ctre.phoenix6.configs.*;
 import com.ctre.phoenix6.controls.DynamicMotionMagicVoltage;
-import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
-import com.ctre.phoenix6.controls.PositionDutyCycle;
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.*;
 
-public class UpperArm extends SubsystemBase implements Sendable{
+public class UpperArm extends SubsystemBase implements Sendable {
 
-  public static TalonFX UpperArmLeft;
-  public static  TalonFX UpperArmRight;
-  Follower UpperArmRightFollower;
-  PositionDutyCycle motorRequest;
-  double requestedPosition;
-  boolean atPosition;
-  MotionMagicVoltage controlUpper;
-  TalonFXConfiguration talonFXConfigs;
-  // MotionMagicVoltage controlUpperRight;
-  // PID coefficients
-  double kP = 10.0;
+  private final TalonFX upperLeft = new TalonFX(33, "Canivore2");
+  private final TalonFX upperRight = new TalonFX(34, "Canivore2");
 
-  double kI = 0.0;
-  double kD = 0.000;
-  double kS = .25;
-  public static double maxVel = 30;
-  public static double maxAcc = 30;
-  public static double minVel = 0;
-  public static double kJerk = 400;
-  boolean change = false;
-  boolean updatePID = false;
-  boolean fast;
-  public static double fastVel = 300;
-  public static double fastAcc = 300;
-  public static double fastJerk = 800;
-  public static double slowVel = 150;
-  public static double slowAcc = 300;
-  public static double slowJerk = 300;
-  
-  
-  public static DynamicMotionMagicVoltage dynamic = new DynamicMotionMagicVoltage(0, 80, 300, 800);
-  private Slot0Configs pidConfigs = new Slot0Configs();
-  private MotionMagicConfigs mmConfigs = new MotionMagicConfigs();
+  private final TalonFXConfiguration talonFXConfigs = new TalonFXConfiguration();
+  private final Slot0Configs pidConfigs;
+  private final MotionMagicConfigs mmConfigs;
+
+  private static final DynamicMotionMagicVoltage dynamic = new DynamicMotionMagicVoltage(0, 80, 300, 800);
+  private final MotionMagicVoltage leftRequest = new MotionMagicVoltage(0);
+  private final MotionMagicVoltage rightRequest = new MotionMagicVoltage(0);
+
+  private double cachedLeftPos = 0;
+  private double cachedRightPos = 0;
+  private double requestedPosition = 0;
+  private boolean atPosition = false;
+  private boolean updatePending = false;
+  private boolean fast = false;
+
+  private static final double SWITCH_TO_FAST_THRESHOLD = 12.0;
+  private static final double SWITCH_TO_SLOW_THRESHOLD = 8.0;
   
 
-  // TalonFXConfigurator leftConfigurator;
+  // PID Constants
 
-  /** Creates a new UpperArm. */
+  public double kP = 10.0, kI = 0.0, kD = 0.0, kS = 0.25;
+
+  // Motion Magic Profiles
+  public static double fastVel = 300, fastAcc = 300, fastJerk = 800;
+  public static double slowVel = 150, slowAcc = 300, slowJerk = 300;
+
   public UpperArm() {
-
-    this.fast = false;
-    
-    talonFXConfigs = new TalonFXConfiguration();
-    controlUpper = new MotionMagicVoltage(0);
-    UpperArmLeft = new TalonFX(33,"Canivore2");
-    UpperArmRight = new TalonFX(34,"Canivore2");
     pidConfigs = talonFXConfigs.Slot0;
+    mmConfigs = talonFXConfigs.MotionMagic;
+
+    // Motor and PID configuration
     talonFXConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    
-    
-    
-    
-    pidConfigs.kS = kS; // Add 0.25 V output to overcome static friction
-    pidConfigs.kV = 0.12; // A velocity target of 1 rps results in 0.12 V output
-    pidConfigs.kA = 0.01; // An acceleration of 1 rps/s requires 0.01 V output
-    pidConfigs.kP = kP; // A position error of 2.5 rotations results in 12 V output
-    pidConfigs.kI = kI; // no output for integrated error
-    pidConfigs.kD = kD; // A velocity error of 1 rps results in 0.1 V output
-    
+    pidConfigs.kP = kP;
+    pidConfigs.kI = kI;
+    pidConfigs.kD = kD;
+    pidConfigs.kS = kS;
+    pidConfigs.kV = 0.12;
+    pidConfigs.kA = 0.01;
 
-    // set Motion Magic settings
-    mmConfigs= talonFXConfigs.MotionMagic;
-    mmConfigs.MotionMagicCruiseVelocity = maxVel; // Target cruise velocity of 80 rps
-    mmConfigs.MotionMagicAcceleration = maxAcc; // Target acceleration of 160 rps/s (0.5 seconds)
-    mmConfigs.MotionMagicJerk = kJerk; // Target jerk of 1600 rps/s/s (0.1 seconds)
-    
+    mmConfigs.MotionMagicCruiseVelocity = slowVel;
+    mmConfigs.MotionMagicAcceleration = slowAcc;
+    mmConfigs.MotionMagicJerk = slowJerk;
 
-    UpperArmLeft.getConfigurator().apply(talonFXConfigs);
-    UpperArmRight.getConfigurator().apply(talonFXConfigs);
+    upperLeft.getConfigurator().apply(talonFXConfigs);
+    upperRight.getConfigurator().apply(talonFXConfigs);
 
-var rightMotorConfigs = new MotorOutputConfigs();
-    rightMotorConfigs.Inverted = InvertedValue.Clockwise_Positive;
-    
-    // LowerArmRightFollower = new Follower(31, true);
-    // LowerArmRight.setControl(LowerArmRightFollower);
-    
-    UpperArmRight.getConfigurator().apply(rightMotorConfigs);
-    
-    UpperArmLeft.setNeutralMode(NeutralModeValue.Brake);
-    UpperArmRight.setNeutralMode(NeutralModeValue.Brake);
+    MotorOutputConfigs rightConfigs = new MotorOutputConfigs();
+    rightConfigs.Inverted = InvertedValue.Clockwise_Positive;
+    upperRight.getConfigurator().apply(rightConfigs);
 
- ShuffleboardTab tab = Shuffleboard.getTab("Arms");
+    upperLeft.setNeutralMode(NeutralModeValue.Brake);
+    upperRight.setNeutralMode(NeutralModeValue.Brake);
+
+    ShuffleboardTab tab = Shuffleboard.getTab("Arms");
     tab.add("UpperArm", this);
-
   }
-
 
   public void setBrakeMode(NeutralModeValue mode) {
     MotorOutputConfigs config = new MotorOutputConfigs();
-    UpperArmLeft.getConfigurator().refresh(config); // Load current config
+    upperLeft.getConfigurator().refresh(config);
     config.NeutralMode = mode;
-    UpperArmLeft.getConfigurator().apply(config);
-
-    UpperArmRight.getConfigurator().refresh(config); // Reuse object is okay
-    config.NeutralMode = mode;
-    UpperArmRight.getConfigurator().apply(config);
-}
-
-
+    upperLeft.getConfigurator().apply(config);
+    upperRight.getConfigurator().apply(config);
+  }
 
   public void setPos(double position) {
-    setPos(position,fast);
+    setPos(position, fast);
   }
 
   public void setPos(double position, boolean fast) {
-   
-   
     this.fast = fast;
     requestedPosition = position;
-    if (fast){
-      UpperArmLeft.setControl(dynamic.withVelocity(fastVel).withAcceleration(fastAcc).withJerk(fastJerk).withPosition(position));
-      UpperArmRight.setControl(dynamic.withVelocity(fastVel).withAcceleration(fastAcc).withJerk(fastJerk).withPosition(position));
-    }else {
-    UpperArmLeft.setControl(dynamic.withVelocity(slowVel).withAcceleration(slowAcc).withJerk(slowJerk).withPosition(position));
-      UpperArmRight.setControl(dynamic.withVelocity(slowVel).withAcceleration(slowAcc).withJerk(slowJerk).withPosition(position));
+
+    double vel = fast ? fastVel : slowVel;
+    double acc = fast ? fastAcc : slowAcc;
+    double jerk = fast ? fastJerk : slowJerk;
+
+    upperLeft.setControl(dynamic.withVelocity(vel).withAcceleration(acc).withJerk(jerk).withPosition(position));
+    upperRight.setControl(dynamic.withVelocity(vel).withAcceleration(acc).withJerk(jerk).withPosition(position));
+  }
+  public void setPosAutoSpeed(double position) {
+    double avgPos = 0.5 * (cachedLeftPos + cachedRightPos);
+    double distance = Math.abs(position - avgPos);
+  
+    // Only switch if distance crosses outside the hysteresis band
+    if (!fast && distance > SWITCH_TO_FAST_THRESHOLD) {
+      fast = true;
+    } else if (fast && distance < SWITCH_TO_SLOW_THRESHOLD) {
+      fast = false;
     }
+  
+    setPos(position, fast);
+  }
+  
 
+public double getPos() {
+    return 0.5*(cachedLeftPos + cachedRightPos);
   }
-  public void setSpeed(double speed) {
-   // UpperArmLeft.set(speed);
+  public double getPosLeft() {
+    return cachedLeftPos;
   }
 
-  public double getPos() {
-    return UpperArmLeft.getPosition().getValueAsDouble();
+  public double getPosRight() {
+    return cachedRightPos;
   }
-  public double getRightPos(){
-    return UpperArmRight.getPosition().getValueAsDouble();
-  }
-  public boolean atPos(TalonFX talon) {
-    return Math.abs(talon.getPosition().getValueAsDouble() - requestedPosition) < 1.0;
-  }
+
   public boolean atPos() {
     return atPosition;
   }
-public void updatePID(){
- // UpperArmLeft.getConfigurator().apply(pidConfigs);
- // UpperArmRight.getConfigurator().apply(pidConfigs);
-  
-  
-}
+
+  public void updatePID() {
+    pidConfigs.kP = kP;
+    pidConfigs.kI = kI;
+    pidConfigs.kD = kD;
+    pidConfigs.kS = kS;
+    upperLeft.getConfigurator().apply(pidConfigs);
+    upperRight.getConfigurator().apply(pidConfigs);
+  }
+
   @Override
   public void periodic() {
-    
-    
-    if(atPos(UpperArmLeft) && atPos(UpperArmRight)){
-      atPosition = true;  
-     } else {
-      atPosition = false;
+    cachedLeftPos = upperLeft.getPosition().getValueAsDouble();
+    cachedRightPos = upperRight.getPosition().getValueAsDouble();
+
+    atPosition = Math.abs(cachedLeftPos - requestedPosition) < 1.0 &&
+                 Math.abs(cachedRightPos - requestedPosition) < 1.0;
+
+    if (updatePending) {
+      updatePID();
+      updatePending = false;
     }
-    // This method will be called once per scheduler run
   }
 
-   @Override
+  @Override
   public void initSendable(SendableBuilder builder) {
     builder.setSmartDashboardType("UpperArm");
-    // builder.addDoubleProperty("Velocity RPM", () ->
-    // wrist.getVelocity().getValueAsDouble() * 60, null);
-    builder.addDoubleProperty("Position - Left", () -> UpperArmLeft.getPosition().getValueAsDouble(), null);
-    builder.addDoubleProperty("Position - Right",()-> UpperArmRight.getPosition().getValueAsDouble(), null);
-    builder.addDoubleProperty("Setpoint", () -> requestedPosition, this::setPos);
-    builder.publishConstDouble("Velocity", slowVel);
-    
-    // builder.addDoubleProperty("Output Voltage", () ->
-    // wrist.getMotorVoltage().getValueAsDouble(), null);
-    // PID Tuning
-    builder.publishConstBoolean("Fast", fast);
-    builder.publishConstBoolean("AtPosition", atPosition);
-    
-    
-    builder.addDoubleProperty("kP", () -> kP, (value) -> { kP = value; });
-    builder.addDoubleProperty("kI", () -> kI, (value) -> { kI = value; });
-    builder.addDoubleProperty("kD", () -> kD, (value) -> { kD = value; });
-    builder.addDoubleProperty("kS", () -> kS, (value) -> { kS= value;  });
-    builder.addDoubleProperty("MMVel", () -> slowVel, (value) -> {
-      slowVel = value;});
-      
-    builder.addDoubleProperty("MMAccel", () -> slowAcc, (val) -> {
-      slowAcc= val;});
 
+    builder.addDoubleProperty("Position - Left", this::getPosLeft, null);
+    builder.addDoubleProperty("Position - Right", this::getPosRight, null);
+    builder.addDoubleProperty("Setpoint", () -> requestedPosition, this::setPos);
+    builder.addBooleanProperty("Fast", () -> fast, null);
+    builder.addBooleanProperty("AtPosition", this::atPos, null);
+
+    // PID tuning
+    builder.addDoubleProperty("kP", () -> kP, (val) -> {
+      if (kP != val) {
+        kP = val;
+        updatePending = true;
+      }
+    });
+    builder.addDoubleProperty("kI", () -> kI, (val) -> {
+      if (kI != val) {
+        kI = val;
+        updatePending = true;
+      }
+    });
+    builder.addDoubleProperty("kD", () -> kD, (val) -> {
+      if (kD != val) {
+        kD = val;
+        updatePending = true;
+      }
+    });
+    builder.addDoubleProperty("kS", () -> kS, (val) -> {
+      if (kS != val) {
+        kS = val;
+        updatePending = true;
+      }
+    });
+
+    // MM tuning
+    builder.addDoubleProperty("MMVel", () -> slowVel, (val) -> {
+      if (slowVel != val) slowVel = val;
+    });
+    builder.addDoubleProperty("MMAccel", () -> slowAcc, (val) -> {
+      if (slowAcc != val) slowAcc = val;
+    });
     builder.addDoubleProperty("MMJerk", () -> slowJerk, (val) -> {
-      slowJerk = val;});
-       // Update PID dynamically
-       builder.addBooleanProperty("Update", () -> false, (pressed) -> updatePID());
-    
+      if (slowJerk != val) slowJerk = val;
+    });
+
+    // Manual apply
+    builder.addBooleanProperty("Update", () -> false, (pressed) -> {
+      if (pressed) updatePending = true;
+    });
   }
-  
 }
