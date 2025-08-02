@@ -52,7 +52,7 @@ public class FindTag extends Command {
   PathConstraints constraints;
   Command driveit;
   boolean whereSet;
-  public FindTag(double shiftDirection) {
+  public FindTag(CommandSwerveDrivetrain drivetrain,double shiftDirection) {
 
     // this.drivetrain = drivetrain;
     this.shiftDirection = shiftDirection;
@@ -67,7 +67,7 @@ public class FindTag extends Command {
     constraints = new PathConstraints(
       1.0, 4.0,
       Units.degreesToRadians(540), Units.degreesToRadians(720));
-      botPose2d = RobotContainer.drivetrain.getPose();
+      botPose2d = drivetrain.getPose();
       where = botPose2d.transformBy(new Transform2d(new Translation2d(2.0,1.0), new Rotation2d(0)));
       
       driveit =  AutoBuilder.pathfindToPose(where, constraints);
@@ -157,7 +157,7 @@ public class FindTag extends Command {
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    var botPose2d = RobotContainer.drivetrain.getPose();
+    var botPose2d = drivetrain.getPose();
     double distance = where.getTranslation().getDistance(botPose2d.getTranslation());
     
     if (distance < 0.1) {

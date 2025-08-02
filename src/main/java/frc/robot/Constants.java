@@ -30,6 +30,7 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.math.geometry.Rotation3d;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
 /**
@@ -38,6 +39,9 @@ import java.util.function.Supplier;
  * (log replay from a file).
  */
 public final class Constants {
+
+  public static final AtomicBoolean algaeMode = new AtomicBoolean(false);
+
   public static final Mode simMode = Mode.SIM;
   public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
   public static AprilTagFieldLayout fieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2025Reefscape);

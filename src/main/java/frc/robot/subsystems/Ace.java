@@ -31,6 +31,7 @@ import frc.robot.RobotContainer;
 import frc.robot.Robot;
 import frc.robot.subsystems.ArmAssembly;
 import au.grapplerobotics.ConfigurationFailedException;
+import frc.robot.Constants;
 
 public class Ace extends SubsystemBase {
   TalonFX ace;
@@ -114,7 +115,7 @@ MotorOutputConfigs config = new MotorOutputConfigs();
 
     }
   public void setSpeed(double speed) {
-    if (RobotContainer.Algae.getAsBoolean()) {
+    if (Constants.algaeMode.get()) {
       ace.setControl(motorSpdRequest.withOutput(speed));
 
     } else {

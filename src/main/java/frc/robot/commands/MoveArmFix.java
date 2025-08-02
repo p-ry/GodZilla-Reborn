@@ -16,6 +16,7 @@ import frc.robot.RobotContainer;
 import frc.robot.Utilitys;
 import frc.robot.subsystems.Ace;
 import frc.robot.subsystems.ArmAssembly;
+import frc.robot.Constants;
 //import frc.robot.commands.Retract;
 //import frc.robot.subsystems.LowerArm;
 //import frc.robot.subsystems.Slider;
@@ -31,6 +32,7 @@ public class MoveArmFix extends Command {
   int tagId;
 
   ArmAssembly myArm;
+  Ace ace;
   int shiftDirection;
 
   boolean algae;
@@ -41,13 +43,15 @@ public class MoveArmFix extends Command {
   public static boolean applyDynamic;
   public static boolean slow;
 
-  public MoveArmFix(ArmAssembly myArm, int level, int direction) {
+  public MoveArmFix(ArmAssembly myArm, Ace ace, int level, int direction) {
 
     this.level = level;
     this.shiftDirection = direction;
 
     this.myArm = myArm;
+    this.ace = ace;
     aprilTag = new Pose2d();
+    this.algae = Constants.algaeMode.get();
     //slow = true;
   }
 
@@ -76,7 +80,7 @@ public class MoveArmFix extends Command {
   public void execute() {
 
     // SmartDashboard.putNumber("Wristpos", wrist.getPos());
-    algae = RobotContainer.Algae.getAsBoolean();
+   // algae = RobotContainer.Algae.getAsBoolean();
     applyDynamic = false;
     RobotContainer.loading = false;
 
@@ -167,7 +171,7 @@ public class MoveArmFix extends Command {
         myArm.slider.setPos(30.5,false);//31.8  //30
 
          myArm.wrist.setPos(9.4);//9.8 //9.4
-         RobotContainer.ace.setPos(5.0);//adjust grip  1.5
+         ace.setPos(5.0);//adjust grip  1.5
 
         // System.out.println("Level 4");
         break;

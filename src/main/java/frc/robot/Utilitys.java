@@ -22,12 +22,14 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import frc.robot.LimelightHelpers.PoseEstimate;
 import frc.robot.LimelightHelpers.RawFiducial;
+import frc.robot.subsystems.CommandSwerveDrivetrain;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.Constants;
 
 /** Add your docs here. */
 public class Utilitys {
@@ -75,7 +77,7 @@ public class Utilitys {
         return new Pose2d(xNew, yNew, invTheta);
     }
 
-    public static Command driveToIt(boolean right) {
+    public static Command driveToIt(CommandSwerveDrivetrain drivetrain, boolean right) {
 
         StructPublisher<Pose2d> whereToPublisher = NetworkTableInstance.getDefault()
                 .getStructTopic("WhereTo", Pose2d.struct)
@@ -104,7 +106,7 @@ public class Utilitys {
         LimelightHelpers.LimelightResults resultsRight = LimelightHelpers.getLatestResults("limelight-right");
         LimelightHelpers.LimelightResults results = LimelightHelpers.getLatestResults("limelight-left");
         Pose3d targetPose3D;
-        Pose2d robotPose = RobotContainer.drivetrain.getPose();
+        Pose2d robotPose =  drivetrain.getPose();
         where = robotPose;
         double leftAmbiguity = 0;
         double rightAmbiguity = 0;
@@ -191,7 +193,7 @@ public class Utilitys {
                 // tagRel2d.getRotation().unaryMinus());
 
             }
-            algae = RobotContainer.Algae.getAsBoolean();
+            algae =Constants.algaeMode.get();
             if (algae) {
                 where = Utilitys.shiftPoseRight(Utilitys.getAprilTagPose(tagId),
                         Constants.forwardOffset, 0.0);// 12//6.5); // 0.164285833);
@@ -237,9 +239,9 @@ public class Utilitys {
         }
     }
 
-    public static double distanceToTag(int tagID) {
+    public static double distanceToTag(CommandSwerveDrivetrain drivetrain,int tagID) {
         Optional<Pose2d> tagPose = Constants.fieldLayout.getTagPose(tagID).map(pose3d -> pose3d.toPose2d());
-        Pose2d botPose = RobotContainer.drivetrain.botPose2d;
+        Pose2d botPose = drivetrain.botPose2d;
         Translation2d targetTranslation = tagPose.get().getTranslation();
         Translation2d botTranslation = botPose.getTranslation();
         return botTranslation.getDistance(targetTranslation);
@@ -390,8 +392,8 @@ public class Utilitys {
         return Rotation2d.fromDegrees(gyro.getYaw().getValueAsDouble());
     }
 
-    public PoseEstimate grabPose(String camera) {
-        LimelightHelpers.SetRobotOrientation(camera, RobotContainer.drivetrain.gyro.getYaw().getValueAsDouble(), 0, 0,
+    public PoseEstimate grabPose(CommandSwerveDrivetrain drivetrain, String camera) {
+        LimelightHelpers.SetRobotOrientation(camera, drivetrain.gyro.getYaw().getValueAsDouble(), 0, 0,
                 0, 0, 0);
         // LimelightHelpers.SetRobotOrientation("limelight-left",getGyroYaw().getDegrees(),
         // 0, 0, 0, 0, 0);

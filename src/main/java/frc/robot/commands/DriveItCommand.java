@@ -54,7 +54,7 @@ public class DriveItCommand extends Command {
   boolean whereSet;
   boolean rightTree;
 
-  public DriveItCommand(boolean rightTree) {
+  public DriveItCommand(CommandSwerveDrivetrain drivetrain,boolean rightTree) {
 
     // this.drivetrain = drivetrain;
     this.rightTree = rightTree;
@@ -67,7 +67,7 @@ public class DriveItCommand extends Command {
   @Override
   public void initialize() {
 
-    driveIt = Utilitys.driveToIt(rightTree);
+    driveIt = Utilitys.driveToIt(drivetrain,rightTree);
     if (driveIt != null) {
       driveIt.schedule();
     }
