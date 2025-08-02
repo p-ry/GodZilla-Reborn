@@ -30,90 +30,70 @@ import com.pathplanner.lib.pathfinding.Pathfinding;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.Timer;
 
-//import com.pathplanner.lib.pathfinding.LocalGrid; // Ensure LocalGrid is imported
-
 import au.grapplerobotics.CanBridge;
 
 public class Robot extends TimedRobot {
-  // private LaserCan laserCan;
   private Command m_autonomousCommand;
 
-  public RobotContainer m_robotContainer;
+  private RobotContainer m_robotContainer;
 
   private final boolean kUseLimelight = true;
   private boolean allianceSet = false;
-  // public PoseEstimate best = new PoseEstimate();
 
   public Robot() {
-    // enableLiveWindowInTest(true);
-
-    // m_robotContainer = new RobotContainer();
     CanBridge.runTCP();
+  }
+
+  private void ensureRobotContainerInitialized() {
+    if (m_robotContainer == null) {
+      InitLogger.time("RobotContainerInit", () -> {
+        DataLogManager.log("Initializing RobotContainer...");
+        m_robotContainer = new RobotContainer();
+        DataLogManager.log("Finished RobotContainer init");
+      });
+
+
+      new java.util.Timer().schedule(new java.util.TimerTask() {
+        @Override
+        public void run() {
+         InitLogger.time("schedule Warmps",() -> {
+          m_robotContainer.scheduleWarmups();
+          });
+        }
+      }, 1000);
+    }
   }
 
   @Override
   public void robotInit() {
     InitLogger.startLogging();
-    InitLogger.logMessage("robot","RobotInit/Start");
-    m_robotContainer = new RobotContainer();
-
-
-    new java.util.Timer().schedule(new java.util.TimerTask() {
-      @Override
-      public void run() {
-          System.out.println("[Timer] Scheduling real warmups...");
-          m_robotContainer.scheduleWarmups();  // calls both warmup schedules
-      }
-  }, 1000);  // delay 1 second to be safe
-
-    
+    InitLogger.logMessage("robot", "RobotInit/Start");
   }
 
   @Override
   public void robotPeriodic() {
-
+    ensureRobotContainerInitialized();
     CommandScheduler.getInstance().run();
-    
-    // *** July 12
-    var alliance = DriverStation.getAlliance();
-    // if (!allianceSet) {
-    if (alliance.isPresent()) {
-      // allianceSet = true;
 
+    var alliance = DriverStation.getAlliance();
+    if (alliance.isPresent()) {
       if (alliance.get() == DriverStation.Alliance.Red) {
         RobotContainer.BlueAlliance = -1;
-        // RobotContainer.candle.setLEDs(255, 127, 102);
-
-        // m_robotContainer.s_Candle.setColourProperties(255, 0, 0, 0.75);
-        // m_robotContainer.s_Candle.colorLEDs();
       } else {
         RobotContainer.BlueAlliance = 1;
-        // RobotContainer.candle.setLEDs(255, 127, 102);
-        // RobotContainer.candle.animate(new FireAnimation(1, 0.2, 1, 1, 1, false, 0));
-        // RobotContainer.candle.fireLEDs(); // Method not defined in CANdle class
-
-        // m_robotContainer.s_Candle.setColourProperties(0, 0, 255, 0.75);
-        // m_robotContainer.s_Candle.colorLEDs();
-
       }
     }
   }
 
   @Override
   public void disabledInit() {
-    CommandScheduler.getInstance().run();
-    // RobotContainer.drivetrain.gyro.setYaw(0);
+    ensureRobotContainerInitialized();
+    //CommandScheduler.getInstance().run();
   }
 
   @Override
   public void disabledPeriodic() {
-
     CommandScheduler.getInstance().run();
-   
-
-    // RobotContainer.drivetrain.updateCameraPose();
-    // July 13 2025
-
   }
 
   @Override
@@ -122,13 +102,11 @@ public class Robot extends TimedRobot {
 
   @Override
   public void autonomousInit() {
+    ensureRobotContainerInitialized();
     m_autonomousCommand = m_robotContainer.getAutonomousCommand();
-
     if (m_autonomousCommand != null) {
       m_autonomousCommand.schedule();
     }
-
-    // m_robotContainer.resetGyro();
   }
 
   @Override
@@ -141,13 +119,11 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopInit() {
-    
+    ensureRobotContainerInitialized();
   }
 
   @Override
   public void teleopPeriodic() {
-    // Utilitys.addLimelightVisionMeasurements("limelight-left");
-    // Utilitys.addLimelightVisionMeasurements("limelight-right");
   }
 
   @Override
@@ -156,6 +132,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void testInit() {
+    ensureRobotContainerInitialized();
     CommandScheduler.getInstance().cancelAll();
   }
 
