@@ -12,14 +12,19 @@ import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.*;
 
-public class UpperArm extends SubsystemBase implements Sendable {
+public class UpperArm extends SubsystemBase {
 
   private final TalonFX upperLeft = new TalonFX(33, "Canivore2");
   private final TalonFX upperRight = new TalonFX(34, "Canivore2");
 
-  private final TalonFXConfiguration talonFXConfigs = new TalonFXConfiguration();
-  private final Slot0Configs pidConfigs;
-  private final MotionMagicConfigs mmConfigs;
+  private final TalonFXConfiguration talonFXConfigsLeft = new TalonFXConfiguration();
+  private final TalonFXConfiguration talonFXConfigsRight = new TalonFXConfiguration();
+
+
+  private final Slot0Configs pidConfigsLeft;
+  private final Slot0Configs pidConfigsRight;
+  private final MotionMagicConfigs mmConfigsLeft;
+  private final MotionMagicConfigs mmConfigsRight;
 
   private static final DynamicMotionMagicVoltage dynamic = new DynamicMotionMagicVoltage(0, 80, 300, 800);
   private final MotionMagicVoltage leftRequest = new MotionMagicVoltage(0);
@@ -34,7 +39,7 @@ public class UpperArm extends SubsystemBase implements Sendable {
 
   private static final double SWITCH_TO_FAST_THRESHOLD = 12.0;
   private static final double SWITCH_TO_SLOW_THRESHOLD = 8.0;
-  
+
 
   // PID Constants
 
@@ -45,43 +50,78 @@ public class UpperArm extends SubsystemBase implements Sendable {
   public static double slowVel = 150, slowAcc = 300, slowJerk = 300;
 
   public UpperArm() {
-    pidConfigs = talonFXConfigs.Slot0;
-    mmConfigs = talonFXConfigs.MotionMagic;
+
+    upperLeft.getConfigurator().refresh(talonFXConfigsLeft);
+    upperRight.getConfigurator().refresh(talonFXConfigsRight);
+
+   talonFXConfigsLeft.MotorOutput.Inverted=InvertedValue.CounterClockwise_Positive;
+   talonFXConfigsRight.MotorOutput.Inverted=InvertedValue.Clockwise_Positive;
+
+    pidConfigsLeft = talonFXConfigsLeft.Slot0;
+    pidConfigsRight = talonFXConfigsRight.Slot0;
+
+    mmConfigsLeft = talonFXConfigsLeft.MotionMagic;
+    mmConfigsRight = talonFXConfigsRight.MotionMagic;
+
 
     // Motor and PID configuration
-    talonFXConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    pidConfigs.kP = kP;
-    pidConfigs.kI = kI;
-    pidConfigs.kD = kD;
-    pidConfigs.kS = kS;
-    pidConfigs.kV = 0.12;
-    pidConfigs.kA = 0.01;
+    talonFXConfigsLeft.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    talonFXConfigsRight.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    pidConfigsLeft.kP = kP;
+    pidConfigsLeft.kI = kI;
+    pidConfigsLeft.kD = kD;
+    pidConfigsLeft.kS = kS;
+    pidConfigsLeft.kV = 0.12;
+    pidConfigsLeft.kA = 0.01;
+    pidConfigsRight.kP = kP;
+    pidConfigsRight.kI = kI;
+    pidConfigsRight.kD = kD;
+    pidConfigsRight.kS = kS;
+    pidConfigsRight.kV = 0.12;
+    pidConfigsRight.kA = 0.01;
+    // Motion Magic configuration
+    mmConfigsLeft.MotionMagicCruiseVelocity = fastVel;
+    mmConfigsLeft.MotionMagicAcceleration = fastAcc;
+    mmConfigsLeft.MotionMagicJerk = fastJerk;
+    mmConfigsRight.MotionMagicCruiseVelocity = fastVel;
+    mmConfigsRight.MotionMagicAcceleration = fastAcc;
+    mmConfigsRight.MotionMagicJerk = fastJerk;
+    // Slow Motion Magic configuration
+    talonFXConfigsLeft.MotionMagic.MotionMagicCruiseVelocity = slowVel;
+    talonFXConfigsLeft.MotionMagic.MotionMagicAcceleration = slowAcc;
+    talonFXConfigsLeft.MotionMagic.MotionMagicJerk = slowJerk;
+    talonFXConfigsRight.MotionMagic.MotionMagicCruiseVelocity = slowVel;
+    talonFXConfigsRight.MotionMagic.MotionMagicAcceleration = slowAcc;
+    talonFXConfigsRight.MotionMagic.MotionMagicJerk = slowJerk;
 
-    mmConfigs.MotionMagicCruiseVelocity = slowVel;
-    mmConfigs.MotionMagicAcceleration = slowAcc;
-    mmConfigs.MotionMagicJerk = slowJerk;
 
-    upperLeft.getConfigurator().apply(talonFXConfigs);
-    upperRight.getConfigurator().apply(talonFXConfigs);
 
-    MotorOutputConfigs rightConfigs = new MotorOutputConfigs();
-    rightConfigs.Inverted = InvertedValue.Clockwise_Positive;
-    upperRight.getConfigurator().apply(rightConfigs);
 
-    upperLeft.setNeutralMode(NeutralModeValue.Brake);
-    upperRight.setNeutralMode(NeutralModeValue.Brake);
+
+
+    mmConfigsLeft.MotionMagicCruiseVelocity = slowVel;
+    mmConfigsLeft.MotionMagicAcceleration = slowAcc;
+    mmConfigsLeft.MotionMagicJerk = slowJerk;
+    talonFXConfigsLeft.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+    talonFXConfigsRight.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+    upperLeft.getConfigurator().apply(talonFXConfigsLeft);
+    upperRight.getConfigurator().apply(talonFXConfigsRight);
+   
+
+    // upperLeft.setNeutralMode(NeutralModeValue.Brake);
+    // upperRight.setNeutralMode(NeutralModeValue.Brake);
 
     ShuffleboardTab tab = Shuffleboard.getTab("Arms");
     tab.add("UpperArm", this);
   }
 
-  public void setBrakeMode(NeutralModeValue mode) {
-    MotorOutputConfigs config = new MotorOutputConfigs();
-    upperLeft.getConfigurator().refresh(config);
-    config.NeutralMode = mode;
-    upperLeft.getConfigurator().apply(config);
-    upperRight.getConfigurator().apply(config);
-  }
+  // public void setBrakeMode(NeutralModeValue mode) {
+  //   MotorOutputConfigs config = new MotorOutputConfigs();
+  //   upperLeft.getConfigurator().refresh(config);
+  //   config.NeutralMode = mode;
+  //   upperLeft.getConfigurator().apply(config);
+  //   upperRight.getConfigurator().apply(config);
+  // }
 
   public void setPos(double position) {
     setPos(position, fast);
@@ -101,17 +141,17 @@ public class UpperArm extends SubsystemBase implements Sendable {
   public void setPosAutoSpeed(double position) {
     double avgPos = 0.5 * (cachedLeftPos + cachedRightPos);
     double distance = Math.abs(position - avgPos);
-  
+
     // Only switch if distance crosses outside the hysteresis band
     if (!fast && distance > SWITCH_TO_FAST_THRESHOLD) {
       fast = true;
     } else if (fast && distance < SWITCH_TO_SLOW_THRESHOLD) {
       fast = false;
     }
-  
+
     setPos(position, fast);
   }
-  
+
 
 public double getPos() {
     return 0.5*(cachedLeftPos + cachedRightPos);
@@ -129,13 +169,23 @@ public double getPos() {
   }
 
   public void updatePID() {
-    pidConfigs.kP = kP;
-    pidConfigs.kI = kI;
-    pidConfigs.kD = kD;
-    pidConfigs.kS = kS;
-    upperLeft.getConfigurator().apply(pidConfigs);
-    upperRight.getConfigurator().apply(pidConfigs);
+    upperLeft.getConfigurator().apply(pidConfigsLeft);
+    upperRight.getConfigurator().apply(pidConfigsRight);
   }
+
+  public void updateMotionMagic() {
+    mmConfigsLeft.MotionMagicCruiseVelocity = slowVel;
+    mmConfigsLeft.MotionMagicAcceleration = slowAcc;
+    mmConfigsLeft.MotionMagicJerk = slowJerk;
+
+    mmConfigsRight.MotionMagicCruiseVelocity = slowVel;
+    mmConfigsRight.MotionMagicAcceleration = slowAcc;
+    mmConfigsRight.MotionMagicJerk = slowJerk;
+
+    upperLeft.getConfigurator().apply(mmConfigsLeft);
+    upperRight.getConfigurator().apply(mmConfigsRight);
+  }
+
 
   @Override
   public void periodic() {
@@ -198,9 +248,13 @@ public double getPos() {
       if (slowJerk != val) slowJerk = val;
     });
 
-    // Manual apply
     builder.addBooleanProperty("Update", () -> false, (pressed) -> {
-      if (pressed) updatePending = true;
+      if (pressed) {
+        updatePending = true;
+        updateMotionMagic();  // Apply MM tuning
+      }
     });
-  }
-}
+
+ }}
+
+

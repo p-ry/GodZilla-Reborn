@@ -27,6 +27,9 @@ import com.pathplanner.lib.commands.FollowPathCommand;
 import com.pathplanner.lib.commands.PathfindingCommand;
 import com.pathplanner.lib.pathfinding.LocalADStar;
 import com.pathplanner.lib.pathfinding.Pathfinding;
+import edu.wpi.first.wpilibj.DataLogManager;
+import edu.wpi.first.wpilibj.Timer;
+
 //import com.pathplanner.lib.pathfinding.LocalGrid; // Ensure LocalGrid is imported
 
 import au.grapplerobotics.CanBridge;
@@ -50,6 +53,8 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotInit() {
+    InitLogger.startLogging();
+    InitLogger.logMessage("robot","RobotInit/Start");
     m_robotContainer = new RobotContainer();
 
 

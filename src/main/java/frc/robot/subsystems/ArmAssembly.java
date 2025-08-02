@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.InitLogger;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
 import frc.robot.Utilitys;
@@ -45,10 +46,19 @@ public class ArmAssembly extends SubsystemBase {
     kupperarm = 45;
     kwrist = 13;
     kslider = -48;
-    lowerArm = new LowerArm();
-    upperArm = new UpperArm();
-    slider = new Slider();
-    wrist = new Wrist();
+    InitLogger.time("lowerARm",()-> {
+          lowerArm = new LowerArm();
+    });
+    InitLogger.time("upperARm",()-> {
+          upperArm = new UpperArm();
+    });
+    InitLogger.time("slider",()-> {
+          slider = new Slider();
+    });
+    InitLogger.time("wrist",()-> {
+          wrist = new Wrist();
+    });
+    
     this.level = level;
     prevLevel = level;
     // this.shiftDirection = shiftDirection;

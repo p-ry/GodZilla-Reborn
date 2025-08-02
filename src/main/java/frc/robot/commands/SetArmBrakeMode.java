@@ -10,13 +10,13 @@ import frc.robot.subsystems.Ace;
 import frc.robot.subsystems.ArmAssembly;
 public class SetArmBrakeMode extends InstantCommand {
     public SetArmBrakeMode(ArmAssembly arm,Ace ace, NeutralModeValue mode) {
-        super(() -> 
-        arm.upperArm.setBrakeMode(mode));
-        arm.lowerArm.setBrakeMode(mode);
-        arm.slider.setBrakeMode(mode);
+        // super(() -> 
+        // arm.upperArm.setBrakeMode(mode));
+        // arm.lowerArm.setBrakeMode(mode);
+        // arm.slider.setBrakeMode(mode);
        
-        arm.wrist.setBrakeMode(mode);
-        ace.setBrakeMode(mode);
+        // arm.wrist.setBrakeMode(mode);
+        // ace.setBrakeMode(mode);
 
     }
 }
