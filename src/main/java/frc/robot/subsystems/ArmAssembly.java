@@ -25,15 +25,8 @@ public class ArmAssembly extends SubsystemBase {
   public Wrist wrist;
   public Ace ace;
   public int level;
-  ShuffleboardTab tab = Shuffleboard.getTab("Arm");
-  public boolean updatePID = false;
-  double klowerarm;
-  double kupperarm;
-  double kwrist;
-  double kslider;
-  public double shiftDirection;
-  boolean algae;
-  public static boolean retract;
+  
+  
   public int prevLevel;
 
   // public Ace ace;
@@ -41,11 +34,13 @@ public class ArmAssembly extends SubsystemBase {
   /** Creates a new TheArms. */
   public ArmAssembly(Boolean algae, int level) {
 
-    retract = false;
-    klowerarm = 41.0;
-    kupperarm = 45;
-    kwrist = 13;
-    kslider = -48;
+    // maximum range with current gearing
+    // retract = false;
+    // klowerarm = 41.0;
+    // kupperarm = 45;
+    // kwrist = 13;
+    // kslider = -48;
+
     InitLogger.time("lowerARm",()-> {
           lowerArm = new LowerArm();
     });
@@ -61,39 +56,16 @@ public class ArmAssembly extends SubsystemBase {
     
     this.level = level;
     prevLevel = level;
-    // this.shiftDirection = shiftDirection;
-    // ace = new Ace(level);
-
-    // Shuffleboard.selectTab("Arm");
-    SmartDashboard.putBoolean("update", updatePID);
-    SmartDashboard.putNumber("kLowerArm", klowerarm);
-    SmartDashboard.putBoolean("lowerARM", lowerArm.atPos());
-    SmartDashboard.putNumber("kUpperArm", kupperarm);
-    SmartDashboard.putNumber("kSlider", kslider);
-    SmartDashboard.putNumber("kWrist", kwrist);
-
-    // GenericEntry
-    // tab.add("Ace", ace);
-
   }
 
   @Override
   public void periodic() {
     
-//     SmartDashboard.putBoolean("lowerARM", lowerArm.atPos());
-//     SmartDashboard.putBoolean("upperARM", upperArm.atPos());
-//     SmartDashboard.putBoolean("slider", slider.atPos());
-//     SmartDashboard.putBoolean("wrist", wrist.atPos());
-//  SmartDashboard.putNumber("Wristpos", wrist.getPos());
-// SmartDashboard.putNumber("slider",slider.getPos());
-// SmartDashboard.putNumber("UpperArm",upperArm.getPos());
-// SmartDashboard.putNumber("LowerArm", lowerArm.getPos());
-
 
   }
 
   public boolean isAtLevel() {
-    SmartDashboard.putBoolean("Godzilla Be Ready", (lowerArm.atPos() && upperArm.atPos() && slider.atPos() ));
+   // SmartDashboard.putBoolean("Godzilla Be Ready", (lowerArm.atPos() && upperArm.atPos() && slider.atPos() ));
     return lowerArm.atPos() && upperArm.atPos() && slider.atPos() ;
 
   }

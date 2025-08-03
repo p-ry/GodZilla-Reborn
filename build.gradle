@@ -1,11 +1,27 @@
 plugins {
-    id "java"
-    id "edu.wpi.first.GradleRIO" version "2025.2.1"
+    id 'java'
+    id 'edu.wpi.first.GradleRIO' version '2025.3.2'
+}
+
+repositories {
+    mavenCentral()
+}
+
+wpi {
+    frc {
+        version = '2025.3.2'
+    }
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(17)
+        }
+    }
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
 }
 
 def ROBOT_MAIN_CLASS = "frc.robot.Main"
@@ -58,6 +74,14 @@ dependencies {
     implementation wpi.java.deps.wpilib()
     implementation wpi.java.vendor.java()
    
+
+
+
+    // Other dependencies
+
+    implementation 'edu.wpi.first.wpilibj:wpilibj-java:2023.+'
+
+
 
     
     

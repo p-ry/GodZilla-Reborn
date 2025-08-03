@@ -1,292 +1,310 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
-
 package frc.robot.commands;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
-import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
-import frc.robot.RobotContainer;
+import edu.wpi.first.wpilibj2.command.Subsystem;
+import frc.robot.Constants;
+import frc.robot.InitLogger;
 import frc.robot.Utilitys;
 import frc.robot.subsystems.Ace;
 import frc.robot.subsystems.ArmAssembly;
-import frc.robot.Constants;
-//import frc.robot.commands.Retract;
-//import frc.robot.subsystems.LowerArm;
-//import frc.robot.subsystems.Slider;
-//import frc.robot.subsystems.UpperArm;
-//import frc.robot.subsystems.Wrist;
 
-/* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 public class MoveArmFix extends Command {
-  /** Creates a new Retract. */
+  public enum Level {
+    HOME(0),
+    LOAD(1),
+    LEVEL2(2),
+    LEVEL3(3),
+    LEVEL4(4),
+    LEVEL5(5),
+    LEVEL6(6),
+    OLD_MOVE(7),
+    CLIMB(8),
+    ADJUST_PLUS(12),
+    RAISE_KICKSTAND(42),
+    LOWER_FROM_4(44),
+    CHOMP(50),
+    LEVEL4_NO(400),
+    UNKNOWN(-1);
 
-  double position;
-  int level;
-  int tagId;
+    public final int id;
 
-  ArmAssembly myArm;
-  Ace ace;
-  int shiftDirection;
+    Level(int id) {
+      this.id = id;
+    }
 
-  boolean algae;
-  public static boolean retract;
-  public int prevLevel;
-  double startTime;
-  Pose2d aprilTag;
-  public static boolean applyDynamic;
-  public static boolean slow;
+    public static Level fromInt(int v) {
+      for (Level l : values()) {
+        if (l.id == v) {
+          return l;
+        }
+      }
+      return UNKNOWN;
+    }
 
-  public MoveArmFix(ArmAssembly myArm, Ace ace, int level, int direction) {
-
-    this.level = level;
-    this.shiftDirection = direction;
-
-    this.myArm = myArm;
-    this.ace = ace;
-    aprilTag = new Pose2d();
-    this.algae = Constants.algaeMode.get();
-    //slow = true;
+    @Override
+    public String toString() {
+      return name() + "(" + id + ")";
+    }
   }
 
-  /** Creates a new MoveArm. */
+  private final ArmAssembly arm;
+  private final Ace ace;
+  private final Level levelEnum;
+  private final int shiftDirection;
 
-  // Called when the command is initially scheduled.
+  private double position;
+  private int tagId;
+  private double startTime;
+  private Pose2d aprilTag = new Pose2d();
+  private boolean applyDynamic = false;
+  private boolean algae = false;
+
+  private int prevLevel;
+  private Level lastLevelEnum = null;
+  private double levelStartTime = 0;
+  private boolean reachedThisLevel = false;
+
+  public static boolean retract;
+  public static boolean slow;
+
+  private final Set<Subsystem> requirements = new HashSet<>();
+
+  public MoveArmFix(ArmAssembly arm, Ace ace, int level, int shiftDirection) {
+    this(arm, ace, Level.fromInt(level), shiftDirection);
+  }
+
+  public MoveArmFix(ArmAssembly arm, Ace ace, Level levelEnum, int shiftDirection) {
+    this.arm = arm;
+    this.ace = ace;
+    this.levelEnum = levelEnum;
+    this.shiftDirection = shiftDirection;
+    addRequirements(arm, ace);
+  }
+
+
+  @Override
+  public Set<Subsystem> getRequirements() {
+    return requirements;
+  }
+
   @Override
   public void initialize() {
-    position = myArm.upperArm.getPos();
-    prevLevel = myArm.level;
+    startTime = Timer.getFPGATimestamp();
+    position = arm.upperArm.getPos();
+    prevLevel = arm.level;
+
     tagId = Utilitys.grabTagID();
-    // this.direction = direction;
     SmartDashboard.putNumber("TagID", tagId);
     if (tagId > 0) {
       aprilTag = Utilitys.getAprilTagPose(tagId);
-      SmartDashboard.putNumberArray("AprilTag",
-          new double[] { aprilTag.getX(), aprilTag.getY(), aprilTag.getRotation().getRadians() });
-
+      SmartDashboard.putNumberArray(
+          "AprilTag",
+          new double[] {
+            aprilTag.getX(), aprilTag.getY(), aprilTag.getRotation().getRadians()
+          });
     }
 
-    startTime = Timer.getFPGATimestamp();
+    applyDynamic = false;
+    AtomicBoolean mode = Constants.algaeMode;
+    algae = mode != null ? mode.get() : false;
+    slow = false;
+    retract = false;
+
+    lastLevelEnum = levelEnum;
+    levelStartTime = Timer.getFPGATimestamp();
+    reachedThisLevel = false;
+
+    InitLogger.logMessage("MoveArmFix", "Initialized. Level=" + levelEnum + " shiftDirection=" + shiftDirection);
+    SmartDashboard.putString("MoveArmFix/Level", levelEnum.toString());
   }
 
-  // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
+    AtomicBoolean mode = Constants.algaeMode;
+    algae = mode != null ? mode.get() : false;
 
-    // SmartDashboard.putNumber("Wristpos", wrist.getPos());
-   // algae = RobotContainer.Algae.getAsBoolean();
-    applyDynamic = false;
-    RobotContainer.loading = false;
+    if (lastLevelEnum != levelEnum) {
+      InitLogger.logMessage("MoveArmFix", "Level transition detected from " + lastLevelEnum + " to " + levelEnum);
+      levelStartTime = Timer.getFPGATimestamp();
+      reachedThisLevel = false;
+      lastLevelEnum = levelEnum;
+    }
 
-    switch (level) {
-      case 0:
-
-        myArm.lowerArm.setPos(1.0); // 16.10 load
-        if (algae) { // upperArm.dynamic.Velocity = 1;
-                     // upperArm.dynamic.Acceleration = 1;
-                     // upperArm.dynamic.Jerk = 50;
-          myArm.upperArm.setPos(5, true);
-          myArm.wrist.setPos(3.0);
-        } else {
-          myArm.upperArm.setPos(0, true);
-          myArm.wrist.setPos(0.7);
-        } // upperArm.UpperArmRight.setControl(upperArm.dynamic.withPosition(1.0));
-        // upperArm.setPos(0.5);//0.0 load
-        myArm.slider.setPos(0.50);
-
-        // ace.setSpeed(0);
-
-        // System.out.println("home");
-        break;
-      case 1:  //Load
+    switch (levelEnum) {
+      case HOME:
+        arm.lowerArm.setPos(1.0);
         if (algae) {
-          myArm.lowerArm.setPos(18.0);
-          myArm.upperArm.setPos(1.0, true);
-          myArm.slider.setPos(1.5);
-          myArm.wrist.setPos(0.7);
+          arm.upperArm.setPos(5, true);
+          arm.wrist.setPos(3.0);
         } else {
-          RobotContainer.loading = true;
-          myArm.lowerArm.setPos(18.00); //19
-          myArm.upperArm.setPos(1.5, true);// 0.0 load  //3.7
-          myArm.wrist.setPos(0.1 );
-          myArm.slider.setPos(0.5);
+          arm.upperArm.setPos(0, true);
+          arm.wrist.setPos(0.7);
         }
-        // System.out.println("Level 1");
+        arm.slider.setPos(0.50);
         break;
-      case 2:
+
+      case LOAD:
         if (algae) {
-          myArm.lowerArm.setPos(12.0); // 16.10 load
-          myArm.upperArm.setPos(5.0, true);//3.5
-          myArm.slider.setPos(0.50);
-          myArm.wrist.setPos(3.0);
-
-          // myArm.lowerArm.setPos(22.0);
-          // myArm.upperArm.setPos(13.0, applyDynamic);
-          // myArm.slider.setPos(-2.0);
-          // myArm.wrist.setPos(3.0);
+          arm.lowerArm.setPos(18.0);
+          arm.upperArm.setPos(1.0, true);
+          arm.slider.setPos(1.5);
+          arm.wrist.setPos(0.7);
         } else {
-
-          myArm.lowerArm.setPos(1.0);
-          myArm.upperArm.setPos(6.0, true);
-          myArm.slider.setPos(6.0);
-          myArm.wrist.setPos(5.0);
-          break;
-          /*
-           * myArm.lowerArm.setPos(13.5);
-           * upperArm.setPos(11.5);
-           * myArm.slider.setPos(-0.5);
-           * myArm.wrist.setPos(6.5);
-           */
-          // System.out.println("Level 2");
-          // m_rob .setSpeed(1);
+          arm.lowerArm.setPos(18.00);
+          arm.upperArm.setPos(1.5, true);
+          arm.wrist.setPos(0.1);
+          arm.slider.setPos(0.5);
         }
-
         break;
-      case 3:
+
+      case LEVEL2:
         if (algae) {
-          myArm.lowerArm.setPos(28.0);//25.0
-          myArm.upperArm.setPos(22.0, false);//20.0
-          
-          myArm.slider.setPos(1.5);
-          myArm.wrist.setPos(6.0);
+          arm.lowerArm.setPos(12.0);
+          arm.upperArm.setPos(5.0, true);
+          arm.slider.setPos(0.50);
+          arm.wrist.setPos(3.0);
         } else {
-          myArm.lowerArm.setPos(20);
-          myArm.upperArm.setPos(21, true);
-          myArm.slider.setPos(0.5);
-          myArm.wrist.setPos(6.5);
+          arm.lowerArm.setPos(1.0);
+          arm.upperArm.setPos(6.0, true);
+          arm.slider.setPos(6.0);
+          arm.wrist.setPos(5.0);
         }
-
-        // System.out.println("Level 3");
         break;
 
-      case 4:
-        myArm.lowerArm.setPos(26.5, true);// myArm.lowerArm.setPos(27.2);// 28.2
-        myArm.upperArm.setPos(34.0, true);//33.0
-        myArm.slider.setPos(30.5,false);//31.8  //30
-
-         myArm.wrist.setPos(9.4);//9.8 //9.4
-         ace.setPos(5.0);//adjust grip  1.5
-
-        // System.out.println("Level 4");
+      case LEVEL3:
+        if (algae) {
+          arm.lowerArm.setPos(28.0);
+          arm.upperArm.setPos(22.0, false);
+          arm.slider.setPos(1.5);
+          arm.wrist.setPos(6.0);
+        } else {
+          arm.lowerArm.setPos(20);
+          arm.upperArm.setPos(21, true);
+          arm.slider.setPos(0.5);
+          arm.wrist.setPos(6.5);
+        }
         break;
 
-      case 5:
-
-        myArm.lowerArm.setPos(30.0);
-        myArm.upperArm.setPos(4.0, applyDynamic);
-        myArm.slider.setPos(0.50);
-        myArm.wrist.setPos(3.0);
-
-        // System.out.println("Level 2");
-        // m_rob .setSpeed(1);
-        break;
-      case 6: // Level 1
-
-        myArm.lowerArm.setPos(27.30);
-        myArm.upperArm.setPos(8.9, applyDynamic);
-        myArm.slider.setPos(0.50);
-        myArm.wrist.setPos(0.7);
+      case LEVEL4:
+        arm.lowerArm.setPos(26.5, true);
+        arm.upperArm.setPos(34.0, true);
+        arm.slider.setPos(30.5, false);
+        arm.wrist.setPos(9.4);
+        ace.setPos(5.0);
         break;
 
-      case 7: // going from L4 to L0
+      case LEVEL5:
+        arm.lowerArm.setPos(30.0);
+        arm.upperArm.setPos(4.0, applyDynamic);
+        arm.slider.setPos(0.50);
+        arm.wrist.setPos(3.0);
+        break;
 
+      case LEVEL6:
+        arm.lowerArm.setPos(27.30);
+        arm.upperArm.setPos(8.9, applyDynamic);
+        arm.slider.setPos(0.50);
+        arm.wrist.setPos(0.7);
+        break;
+
+      case OLD_MOVE:
         applyDynamic = true;
-        myArm.lowerArm.setPos(1.0); // 16.10 load
-        myArm.upperArm.setPos(position, applyDynamic);
-
-        // upperArm.setPos(0.5);//0.0 load
-        myArm.slider.setPos(0.50);
-        myArm.wrist.setPos(0.7);
-
-        // ace.setSpeed(0);
-
+        arm.lowerArm.setPos(1.0);
+        arm.upperArm.setPos(position, applyDynamic);
+        arm.slider.setPos(0.50);
+        arm.wrist.setPos(0.7);
         System.out.println("WARNING!!!!  OLD MOVE!!!!!!!");
         break;
 
-        case 8: //Climb pos
-
-        //myArm.lowerArm.setPos();
-
-      case 12:
-        myArm.wrist.setPos(myArm.wrist.getPos() + 1.0);
-        break;
-      case 42: // raise upperArm to release kickstand
-        myArm.upperArm.setPos(16, applyDynamic);
+      case CLIMB:
+        // no-op
         break;
 
-      case 44: // lower from position 4 MOVE THAT SLIDER FAST
-        myArm.lowerArm.setPos(18.00);  //19
-        myArm.upperArm.setPos(1.5, false);// 0.0 load  //3.7
-         myArm.wrist.setPos(0.1);
-        myArm.slider.setPos(0.5, true);
-        // new WaitCommand(0.2).andThen(new InstantCommand(()->{
-        //   RobotContainer.MaxSpeed = RobotContainer.maxSpeedConstant;
-
-        //         RobotContainer.MaxAngularRate = RobotContainer.maxAngularRateConstant;}));
+      case ADJUST_PLUS:
+        arm.wrist.setPos(arm.wrist.getPos() + 1.0);
         break;
 
-      case 50: // chomp
+      case RAISE_KICKSTAND:
+        arm.upperArm.setPos(16, applyDynamic);
+        break;
+
+      case LOWER_FROM_4:
+        arm.lowerArm.setPos(18.00);
+        arm.upperArm.setPos(1.5, false);
+        arm.wrist.setPos(0.1);
+        arm.slider.setPos(0.5, true);
+        break;
+
+      case CHOMP:
         if (shiftDirection == 1) {
-          myArm.wrist.setSpeed(0.2);
+          arm.wrist.setSpeed(0.2);
         } else {
-          myArm.wrist.setSpeed(0);
+          arm.wrist.setSpeed(0);
         }
         break;
-        case 400:
-        myArm.lowerArm.setPos(26.5, true);// myArm.lowerArm.setPos(27.2);// 28.2
-        myArm.upperArm.setPos(34.0, true);//33.0
-        myArm.slider.setPos(30.5,false);//31.8  //30
 
-         myArm.wrist.setPos(9.4);//9.8 //9.4
-        // RobotContainer.ace.setPos(5.0);//adjust grip  1.5
-
-        // System.out.println("Level 4");
+      case LEVEL4_NO:
+        arm.lowerArm.setPos(26.5, true);
+        arm.upperArm.setPos(34.0, true);
+        arm.slider.setPos(30.5, false);
+        arm.wrist.setPos(9.4);
         break;
+
+      case UNKNOWN:
       default:
         if (algae) {
-          myArm.lowerArm.setPos(1.0);
-          myArm.upperArm.setPos(1.0, applyDynamic);
-          myArm.slider.setPos(1.50);
-          myArm.wrist.setPos(3.0);
+          arm.lowerArm.setPos(1.0);
+          arm.upperArm.setPos(1.0, applyDynamic);
+          arm.slider.setPos(1.50);
+          arm.wrist.setPos(3.0);
         } else {
-
-          myArm.lowerArm.setPos(1.0); // 16.10 load
-          myArm.upperArm.setPos(1.0, applyDynamic);
-
-          // myArm.upperArm.dynamic.Velocity = 1;
-          // myArm.upperArm.dynamic.Acceleration = 1;
-          // myArm.upperArm.dynamic.Jerk = 50;
-          // myArm.upperArm.myArm.upperArmLeft.setControl(myArm.upperArm.dynamic.withPosition(1.0));
-          // myArm.upperArm.myArm.upperArmRight.setControl(myArm.upperArm.dynamic.withPosition(1.0));
-          // myArm.upperArm.setPos(0.5);//0.0 load
-          myArm.slider.setPos(0.50, false);
-          myArm.wrist.setPos(0.7);
+          arm.lowerArm.setPos(1.0);
+          arm.upperArm.setPos(1.0, applyDynamic);
+          arm.slider.setPos(0.50, false);
+          arm.wrist.setPos(0.7);
         }
-
-        // myArm.shiftDirection=shiftDirection;
-
+        break;
     }
 
+    boolean atLevel = arm.isAtLevel();
+    if (atLevel && !reachedThisLevel) {
+      reachedThisLevel = true;
+      double sinceLevelStart = Timer.getFPGATimestamp() - levelStartTime;
+      InitLogger.logMessage("MoveArmFix", "Reached level " + levelEnum + " in " + String.format("%.3f", sinceLevelStart) + "s");
+    }
+
+    double timeSinceLevel = Timer.getFPGATimestamp() - levelStartTime;
+    if (!reachedThisLevel && timeSinceLevel > 1.0) {
+      InitLogger.logMessage("MoveArmFix", "WARNING: Level " + levelEnum + " not achieved after " + String.format("%.2f", timeSinceLevel) + "s");
+      reachedThisLevel = true; // avoid repeat spam
+    }
+
+    SmartDashboard.putString("MoveArmFix/Level", levelEnum.toString());
   }
 
-  // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
+    InitLogger.logMessage("MoveArmFix", "Ended. Level=" + levelEnum + " interrupted=" + interrupted);
   }
 
-  // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    double elaspedTime = Timer.getTimestamp() - startTime;
-    SmartDashboard.putBoolean("AtLevel", myArm.isAtLevel());
-    return (myArm.isAtLevel()
-        || (elaspedTime > 0.7));
+    double elapsedTime = Timer.getFPGATimestamp() - startTime;
+    boolean atLevel = arm.isAtLevel();
+    SmartDashboard.putBoolean("AtLevel", atLevel);
+    return atLevel || (elapsedTime > 0.7);
+  }
 
+  @Override
+  public boolean runsWhenDisabled() {
+    return false; // or true if you want it to run while disabled
   }
 }

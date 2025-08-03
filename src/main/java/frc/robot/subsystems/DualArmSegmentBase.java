@@ -1,0 +1,338 @@
+package frc.robot.subsystems;
+
+import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.DataLogManager;
+
+import com.ctre.phoenix6.controls.DynamicMotionMagicVoltage;
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.configs.*;
+import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.signals.InvertedValue;
+
+public abstract class DualArmSegmentBase extends SubsystemBase implements edu.wpi.first.util.sendable.Sendable {
+  protected final TalonFX left;
+  protected final TalonFX right;
+
+  protected final TalonFXConfiguration leftConfig = new TalonFXConfiguration();
+  protected final TalonFXConfiguration rightConfig = new TalonFXConfiguration();
+
+  protected final Slot0Configs leftPID;
+  protected final Slot0Configs rightPID;
+  protected final MotionMagicConfigs leftMM;
+  protected final MotionMagicConfigs rightMM;
+
+  protected final DynamicMotionMagicVoltage dynamic;
+
+  protected double cachedLeftPos = 0;
+  protected double cachedRightPos = 0;
+  protected double requestedPosition = 0;
+  protected boolean atPosition = false;
+  protected boolean fast = false;
+
+  // Tuning parameters (mutable)
+  protected double kP = 10.0;
+  protected double kI = 0.0;
+  protected double kD = 0.0;
+  protected double kS = 0.25;
+
+  protected double fastVel;
+  protected double fastAcc;
+  protected double fastJerk;
+  protected double slowVel;
+  protected double slowAcc;
+  protected double slowJerk;
+
+  protected double switchToFastThreshold = 12.0;
+  protected double switchToSlowThreshold = 8.0;
+
+  // Logging rate-limiter
+  private double lastLogTime = 0;
+
+  public DualArmSegmentBase(
+      int leftId,
+      int rightId,
+      String canBusName,
+      DynamicMotionMagicVoltage dynamic,
+      double fastVel,
+      double fastAcc,
+      double fastJerk,
+      double slowVel,
+      double slowAcc,
+      double slowJerk,
+      boolean invertLeft,
+      boolean invertRight
+  ) {
+    this.left = new TalonFX(leftId, canBusName);
+    this.right = new TalonFX(rightId, canBusName);
+    this.dynamic = dynamic;
+
+    this.fastVel = fastVel;
+    this.fastAcc = fastAcc;
+    this.fastJerk = fastJerk;
+    this.slowVel = slowVel;
+    this.slowAcc = slowAcc;
+    this.slowJerk = slowJerk;
+
+    // Refresh to get existing (current) configuration so unspecified fields are preserved
+    left.getConfigurator().refresh(leftConfig);
+    right.getConfigurator().refresh(rightConfig);
+
+    leftPID = leftConfig.Slot0;
+    rightPID = rightConfig.Slot0;
+    leftMM = leftConfig.MotionMagic;
+    rightMM = rightConfig.MotionMagic;
+
+    // Motor output defaults
+    leftConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    rightConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+
+    leftConfig.MotorOutput.Inverted = invertLeft ? InvertedValue.CounterClockwise_Positive
+                                                : InvertedValue.Clockwise_Positive;
+    rightConfig.MotorOutput.Inverted = invertRight ? InvertedValue.CounterClockwise_Positive
+                                                  : InvertedValue.Clockwise_Positive;
+
+    // PID initial values from mutable fields
+    leftPID.kP = kP;
+    leftPID.kI = kI;
+    leftPID.kD = kD;
+    leftPID.kS = kS;
+    leftPID.kV = 0.12;
+    leftPID.kA = 0.01;
+
+    rightPID.kP = kP;
+    rightPID.kI = kI;
+    rightPID.kD = kD;
+    rightPID.kS = kS;
+    rightPID.kV = 0.12;
+    rightPID.kA = 0.01;
+
+    // Fast motion magic profile
+    leftMM.MotionMagicCruiseVelocity = fastVel;
+    leftMM.MotionMagicAcceleration = fastAcc;
+    leftMM.MotionMagicJerk = fastJerk;
+
+    rightMM.MotionMagicCruiseVelocity = fastVel;
+    rightMM.MotionMagicAcceleration = fastAcc;
+    rightMM.MotionMagicJerk = fastJerk;
+
+    // Apply initial config
+    left.getConfigurator().apply(leftConfig);
+    right.getConfigurator().apply(rightConfig);
+  }
+
+  public void setBrakeMode(NeutralModeValue mode) {
+    MotorOutputConfigs leftOut = new MotorOutputConfigs();
+    left.getConfigurator().refresh(leftOut);
+    leftOut.NeutralMode = mode;
+    left.getConfigurator().apply(leftOut);
+
+    MotorOutputConfigs rightOut = new MotorOutputConfigs();
+    right.getConfigurator().refresh(rightOut);
+    rightOut.NeutralMode = mode;
+    right.getConfigurator().apply(rightOut);
+  }
+
+  public void setPos(double position) {
+    setPos(position, fast);
+  }
+
+  public void setPos(double position, boolean fast) {
+    this.fast = fast;
+    this.requestedPosition = position;
+
+    double vel = fast ? fastVel : slowVel;
+    double acc = fast ? fastAcc : slowAcc;
+    double jerk = fast ? fastJerk : slowJerk;
+
+    left.setControl(dynamic.withVelocity(vel).withAcceleration(acc).withJerk(jerk).withPosition(position));
+    right.setControl(dynamic.withVelocity(vel).withAcceleration(acc).withJerk(jerk).withPosition(position));
+  }
+
+  public void setPosAutoSpeed(double position) {
+    double avgPos = 0.5 * (cachedLeftPos + cachedRightPos);
+    double distance = Math.abs(position - avgPos);
+
+    if (!fast && distance > switchToFastThreshold) {
+      fast = true;
+    } else if (fast && distance < switchToSlowThreshold) {
+      fast = false;
+    }
+    setPos(position, fast);
+  }
+
+  public double getPos() {
+    return 0.5 * (cachedLeftPos + cachedRightPos);
+  }
+
+  public double getPosLeft() {
+    return cachedLeftPos;
+  }
+
+  public double getPosRight() {
+    return cachedRightPos;
+  }
+
+  public boolean atPos() {
+    return atPosition;
+  }
+
+  /** Apply current PID fields to the hardware. */
+  public void updatePID() {
+    leftPID.kP = kP;
+    leftPID.kI = kI;
+    leftPID.kD = kD;
+    leftPID.kS = kS;
+
+    rightPID.kP = kP;
+    rightPID.kI = kI;
+    rightPID.kD = kD;
+    rightPID.kS = kS;
+
+    left.getConfigurator().apply(leftConfig);
+    right.getConfigurator().apply(rightConfig);
+  }
+
+  /** Apply an explicit motion magic profile (overrides fast/slow values). */
+  public void updateMotionMagic(double cruiseVel, double accel, double jerk) {
+    leftMM.MotionMagicCruiseVelocity = cruiseVel;
+    leftMM.MotionMagicAcceleration = accel;
+    leftMM.MotionMagicJerk = jerk;
+
+    rightMM.MotionMagicCruiseVelocity = cruiseVel;
+    rightMM.MotionMagicAcceleration = accel;
+    rightMM.MotionMagicJerk = jerk;
+
+    left.getConfigurator().apply(leftConfig);
+    right.getConfigurator().apply(rightConfig);
+  }
+
+  @Override
+  public void periodic() {
+    cachedLeftPos = left.getPosition().getValueAsDouble();
+    cachedRightPos = right.getPosition().getValueAsDouble();
+
+    atPosition =
+        Math.abs(cachedLeftPos - requestedPosition) < 1.0 &&
+        Math.abs(cachedRightPos - requestedPosition) < 1.0;
+
+    double now = Timer.getFPGATimestamp();
+    if (now - lastLogTime >= 0.5) { // log up to twice a second
+      DataLogManager.log(String.format(
+          "[%s] LeftPos=%.2f RightPos=%.2f Setpoint=%.2f Fast=%b",
+          this.getClass().getSimpleName(), cachedLeftPos, cachedRightPos, requestedPosition, fast));
+      lastLogTime = now;
+    }
+  }
+
+  protected void configureSendable(SendableBuilder builder) {
+    builder.setSmartDashboardType(this.getClass().getSimpleName());
+
+    builder.addDoubleProperty("Position - Left", this::getPosLeft, null);
+    builder.addDoubleProperty("Position - Right", this::getPosRight, null);
+    builder.addDoubleProperty("Setpoint", () -> requestedPosition, this::setPos);
+    builder.addBooleanProperty("Fast", () -> fast, null);
+    builder.addBooleanProperty("AtPosition", this::atPos, null);
+
+    // PID tuning
+    builder.addDoubleProperty("kP", () -> kP, (val) -> {
+      if (kP != val) {
+        kP = val;
+        updatePID();
+      }
+    });
+    builder.addDoubleProperty("kI", () -> kI, (val) -> {
+      if (kI != val) {
+        kI = val;
+        updatePID();
+      }
+    });
+    builder.addDoubleProperty("kD", () -> kD, (val) -> {
+      if (kD != val) {
+        kD = val;
+        updatePID();
+      }
+    });
+    builder.addDoubleProperty("kS", () -> kS, (val) -> {
+      if (kS != val) {
+        kS = val;
+        updatePID();
+      }
+    });
+
+    // Motion Magic tuning (fast)
+    builder.addDoubleProperty("FastVel", () -> fastVel, (val) -> {
+      if (fastVel != val) {
+        this.fastVel = val;
+        if (fast) {
+          updateMotionMagic(fastVel, fastAcc, fastJerk);
+        }
+      }
+    });
+    builder.addDoubleProperty("FastAcc", () -> fastAcc, (val) -> {
+      if (fastAcc != val) {
+        this.fastAcc = val;
+        if (fast) {
+          updateMotionMagic(fastVel, fastAcc, fastJerk);
+        }
+      }
+    });
+    builder.addDoubleProperty("FastJerk", () -> fastJerk, (val) -> {
+      if (fastJerk != val) {
+        this.fastJerk = val;
+        if (fast) {
+          updateMotionMagic(fastVel, fastAcc, fastJerk);
+        }
+      }
+    });
+
+    // Motion Magic tuning (slow)
+    builder.addDoubleProperty("SlowVel", () -> slowVel, (val) -> {
+      if (slowVel != val) {
+        this.slowVel = val;
+        if (!fast) {
+          updateMotionMagic(slowVel, slowAcc, slowJerk);
+        }
+      }
+    });
+    builder.addDoubleProperty("SlowAcc", () -> slowAcc, (val) -> {
+      if (slowAcc != val) {
+        this.slowAcc = val;
+        if (!fast) {
+          updateMotionMagic(slowVel, slowAcc, slowJerk);
+        }
+      }
+    });
+    builder.addDoubleProperty("SlowJerk", () -> slowJerk, (val) -> {
+      if (slowJerk != val) {
+        this.slowJerk = val;
+        if (!fast) {
+          updateMotionMagic(slowVel, slowAcc, slowJerk);
+        }
+      }
+    });
+
+    // Manual apply buttons if needed
+    builder.addBooleanProperty("Apply PID", () -> false, pressed -> {
+      if (pressed) {
+        updatePID();
+      }
+    });
+    builder.addBooleanProperty("Apply Fast MM", () -> false, pressed -> {
+      if (pressed) {
+        updateMotionMagic(fastVel, fastAcc, fastJerk);
+      }
+    });
+    builder.addBooleanProperty("Apply Slow MM", () -> false, pressed -> {
+      if (pressed) {
+        updateMotionMagic(slowVel, slowAcc, slowJerk);
+      }
+    });
+  }
+
+  @Override
+  public void initSendable(SendableBuilder builder) {
+    configureSendable(builder);
+  }
+}
