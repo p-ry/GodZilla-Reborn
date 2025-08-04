@@ -66,7 +66,7 @@ public class ArmAssembly extends SubsystemBase {
 
   public boolean isAtLevel() {
    // SmartDashboard.putBoolean("Godzilla Be Ready", (lowerArm.atPos() && upperArm.atPos() && slider.atPos() ));
-    return lowerArm.atPos() && upperArm.atPos() && slider.atPos() ;
+    return lowerArm.atPos() && upperArm.atPos() && slider.atPos() && wrist.atPos();
 
   }
 }

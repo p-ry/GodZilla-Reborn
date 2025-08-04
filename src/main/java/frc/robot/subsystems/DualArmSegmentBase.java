@@ -220,9 +220,10 @@ public abstract class DualArmSegmentBase extends SubsystemBase implements edu.wp
 
     double now = Timer.getFPGATimestamp();
     if (now - lastLogTime >= 0.5) { // log up to twice a second
-      DataLogManager.log(String.format(
-          "[%s] LeftPos=%.2f RightPos=%.2f Setpoint=%.2f Fast=%b AtPosition=%b",
-          this.getClass().getSimpleName(), cachedLeftPos, cachedRightPos, requestedPosition, fast,atPosition));
+      String periodicMsg = String.format(
+          "LeftPos=%.2f RightPos=%.2f Setpoint=%.2f Fast=%b AtPosition=%b",
+           cachedLeftPos, cachedRightPos, requestedPosition, fast,atPosition);
+    InitLogger.logMessage(this.getClass().getSimpleName(), periodicMsg);
             InitLogger.logDouble("LowerArm", "LeftPos", cachedLeftPos);
     InitLogger.logDouble(this.getClass().getSimpleName(), "LeftPos", cachedLeftPos);
     InitLogger.logDouble(this.getClass().getSimpleName(), "RightPos", cachedRightPos);

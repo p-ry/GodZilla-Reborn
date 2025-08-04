@@ -18,8 +18,6 @@ import edu.wpi.first.wpilibj.DataLogManager;
 
 import edu.wpi.first.wpilibj.Timer;
 
-
-
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.events.EventTrigger;
@@ -62,7 +60,7 @@ import com.pathplanner.lib.pathfinding.Pathfinding;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class RobotContainer {
-  
+
   // public static Pigeon2 gyro;
   public static double MaxSpeed = 4.73;// TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts
                                        // desired
@@ -93,9 +91,9 @@ public class RobotContainer {
 
   public CommandSwerveDrivetrain drivetrain;
   // = TunerConstants.createDrivetrain();
-  public  ArmAssembly mArm;
+  public ArmAssembly mArm;
   // = new ArmAssembly(false, 99);
-  public  Ace ace;
+  public Ace ace;
   // = new Ace(0);
   public static int prevLevel = 0;
 
@@ -142,18 +140,18 @@ public class RobotContainer {
   private final SendableChooser<Command> AutoChooser;
 
   public RobotContainer() {
-    
-InitLogger.time("ArmAssemblyInit", () -> {  
+
+    InitLogger.time("ArmAssemblyInit", () -> {
       mArm = new ArmAssembly(false, 99);
-});
+    });
 
-InitLogger.time("AceInit", () -> {
-    ace = new Ace(0);
-});
+    InitLogger.time("AceInit", () -> {
+      ace = new Ace(0);
+    });
 
-InitLogger.time("DriveTrainInit",() -> {
-  drivetrain = TunerConstants.createDrivetrain();
-});
+    InitLogger.time("DriveTrainInit", () -> {
+      drivetrain = TunerConstants.createDrivetrain();
+    });
 
     // gyro = new Pigeon2(0, "Canivore");
     SmartDashboard.putNumber("prevHeading", prevHeading);
@@ -299,14 +297,16 @@ InitLogger.time("DriveTrainInit",() -> {
     }));
 
     Load
-        .whileTrue(new MoveArmFix(mArm, ace, 1, 0));
-    Load.onTrue(new InstantCommand(() -> ace.setSpeed(0.9)));
+        .onTrue(
 
-    Load
-        .onTrue(new InstantCommand(() -> ace.gotIt = false));
-    Load
-        .onTrue(new InstantCommand(() -> ace.coralPresent = false));
-    Load.onTrue(new InstantCommand(() -> loading = true));
+            new MoveArmFix(mArm, ace, 1, 0)
+                .alongWith(
+                    new InstantCommand(() -> {
+                      ace.setSpeed(0.9);
+                      ace.gotIt = false;
+                      ace.coralPresent = false;
+                      loading = true;
+                    })));
 
     Load
         .onFalse(new MoveArmFix(mArm, ace, 0, 0));
@@ -448,7 +448,7 @@ InitLogger.time("DriveTrainInit",() -> {
           MaxSpeed = maxSpeedConstant;
 
           MaxAngularRate = maxAngularRateConstant;
-          mArm.wrist.setPos(0.7);
+
         })));
 
     // .andThen(new InstantCommand(() -> ace.setSpeed(1))));
@@ -458,7 +458,7 @@ InitLogger.time("DriveTrainInit",() -> {
         .andThen(new InstantCommand(() -> {
           MaxSpeed = maxSpeedConstant;
           MaxAngularRate = maxAngularRateConstant;
-          mArm.wrist.setPos(0.7);
+
         })));
 
     Intake

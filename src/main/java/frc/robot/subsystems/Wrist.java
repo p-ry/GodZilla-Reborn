@@ -9,12 +9,12 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.configs.TalonFXConfigurator;
-import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.controls.PositionDutyCycle;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.Timer;
 
@@ -24,13 +24,15 @@ public class Wrist extends SubsystemBase implements Sendable {
   private static final String TAG = "Wrist";
 
   private final TalonFX wrist;
-  private final TalonFXConfigurator wristConfigurator;
-  private final MotionMagicVoltage motionMagicRequest;
-  private final TalonFXConfiguration wristConfigs;
+  private final TalonFXConfiguration wristConfigs = new TalonFXConfiguration();
   private final Slot0Configs pidConfigs;
+  private final PositionDutyCycle positionDutyCycle;
+
+  // slew limiter on the commanded position setpoint (units/sec)
+  private final SlewRateLimiter positionLimiter = new SlewRateLimiter(7.0);
 
   // State tracking
-  private double requestedPosition = 0.0;
+  private double requestedPosition = 0.0; // desired by caller
   private double cachedPos = 0.0;
   private boolean atPosition = false;
   private double lastFaultLogTime = 0.0;
@@ -39,55 +41,43 @@ public class Wrist extends SubsystemBase implements Sendable {
 
   public Wrist() {
     wrist = new TalonFX(36, "Canivore2");
-    wristConfigurator = wrist.getConfigurator();
-    motionMagicRequest = new MotionMagicVoltage(0);
-    wristConfigs = new TalonFXConfiguration();
+
+    positionDutyCycle = new PositionDutyCycle(0);
+
+    wrist.getConfigurator().refresh(wristConfigs);
     pidConfigs = wristConfigs.Slot0;
 
     // PID coefficients for slot 0
     pidConfigs.kP = 0.05;
     pidConfigs.kI = 0.0;
     pidConfigs.kD = 0.0;
-    pidConfigs.kV = 0.0;
-
-    // Motion Magic settings
-    wristConfigs.MotionMagic.MotionMagicCruiseVelocity = 25.0;
-    wristConfigs.MotionMagic.MotionMagicAcceleration = 80.0;
+    pidConfigs.kS = 0.02;
 
     // Limit switches and neutral mode
     wristConfigs.ClosedLoopGeneral.ContinuousWrap = false;
     wristConfigs.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-    wristConfigs.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+    wristConfigs.SoftwareLimitSwitch.ReverseSoftLimitEnable = false;
     wristConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 10.0;
-    wristConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -0.1;
+    // wristConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -0.1; // intentionally disabled
     wristConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
     // Apply initial configuration
-    wristConfigurator.apply(wristConfigs);
+    wrist.getConfigurator().apply(wristConfigs);
 
-    // Shuffleboard
+    // Shuffleboard grouping
     ShuffleboardTab tab = Shuffleboard.getTab("Arms");
     tab.add("Wrist", this);
 
     InitLogger.logMessage(TAG, InitLogger.Level.INFO, "Constructed and initial config applied. kP=" + pidConfigs.kP);
-    DataLogManager.log("[Wrist] Constructor: initial configuration applied.");
   }
 
-  public void setBrakeMode(NeutralModeValue mode) {
-    wristConfigurator.refresh(wristConfigs);
-    NeutralModeValue previous = wristConfigs.MotorOutput.NeutralMode;
-    wristConfigs.MotorOutput.NeutralMode = mode;
-    wristConfigurator.apply(wristConfigs);
-    InitLogger.logMessage(TAG, InitLogger.Level.INFO,
-        String.format("Brake mode changed from %s to %s", previous, mode));
-    DataLogManager.log(String.format("[Wrist] setBrakeMode(): %s -> %s", previous, mode));
-  }
-
+  /** Set desired position; internally rate-limited. */
   public void setPos(double position) {
     InitLogger.logMessage(TAG, InitLogger.Level.INFO, String.format("setPos(): new setpoint = %.3f", position));
-    DataLogManager.log(String.format("[Wrist] setPos(): new setpoint = %.3f", position));
-    wrist.setControl(motionMagicRequest.withPosition(position));
     requestedPosition = position;
+    //double limited = positionLimiter.calculate(position);
+   // InitLogger.logMessage(TAG, InitLogger.Level.INFO, String.format("setPos(): limited setpoint = %.3f", limited));
+   // wrist.setControl(positionDutyCycle.withPosition(limited));
   }
 
   public void moveIt(double positionOffset) {
@@ -120,26 +110,30 @@ public class Wrist extends SubsystemBase implements Sendable {
   public void periodic() {
     // Refresh position and determine error/at-target
     cachedPos = wrist.getPosition().refresh().getValueAsDouble();
+    
     double error = requestedPosition - cachedPos;
     atPosition = Math.abs(error) < 0.3;
-
+    if(!atPosition){
+    double limitedSetpoint = positionLimiter.calculate(requestedPosition);
+    wrist.setControl(positionDutyCycle.withPosition(limitedSetpoint));
+    }
     // Telemetry
     double now = Timer.getFPGATimestamp();
 
-    if (now - lastLogTime >= 0.5) { // log up to twice a second
+    if (now - lastLogTime >= 0.05) { // log up to 20Hz
       String periodicMsg = String.format("periodic(): pos=%.3f, setpoint=%.3f, error=%.3f, atTarget=%b",
-        cachedPos, requestedPosition, error, atPosition);
-        InitLogger.logDouble("Wrist","Pos", cachedPos);
-    DataLogManager.log("[Wrist] " + periodicMsg);
-    if (Math.abs(error) > 0.5) {
-      InitLogger.logMessage(TAG, InitLogger.Level.WARN, periodicMsg);
-    }
-      
+          cachedPos, requestedPosition, error, atPosition);
+      // Note: if InitLogger lacks logDouble helper, replace with appropriate logging call
+      InitLogger.logMessage(TAG, InitLogger.Level.INFO, periodicMsg);
+     // InitLogger.logMessage("Wrist POS",String.format("pos=%.3f",cachedPos);
+      InitLogger.logDouble(TAG, "Position", cachedPos);
+      if (Math.abs(error) > 0.5) {
+        InitLogger.logMessage(TAG, InitLogger.Level.WARN, periodicMsg);
+      }
       lastLogTime = now;
     }
 
     InitLogger.logBoolean(TAG, "AtTarget", atPosition);
-    
 
     // High temperature warning (throttled)
     double temp = wrist.getDeviceTemp().refresh().getValueAsDouble();
@@ -153,7 +147,6 @@ public class Wrist extends SubsystemBase implements Sendable {
     }
 
     // Fault monitoring ~ every 200 ms
-    
     if (now - lastFaultLogTime >= 0.2) {
       lastFaultLogTime = now;
 
@@ -195,18 +188,18 @@ public class Wrist extends SubsystemBase implements Sendable {
 
     builder.addDoubleProperty("kP", () -> pidConfigs.kP, (val) -> {
       if (pidConfigs.kP != val) {
-        wristConfigurator.refresh(wristConfigs);
+        wrist.getConfigurator().refresh(wristConfigs);
         pidConfigs.kP = val;
-        wristConfigurator.apply(wristConfigs);
+        wrist.getConfigurator().apply(wristConfigs);
         InitLogger.logMessage(TAG, InitLogger.Level.INFO, "Tuned kP -> " + val);
       }
     });
 
     builder.addDoubleProperty("kF", () -> pidConfigs.kV, (val) -> {
       if (pidConfigs.kV != val) {
-        wristConfigurator.refresh(wristConfigs);
+        wrist.getConfigurator().refresh(wristConfigs);
         pidConfigs.kV = val;
-        wristConfigurator.apply(wristConfigs);
+        wrist.getConfigurator().apply(wristConfigs);
         InitLogger.logMessage(TAG, InitLogger.Level.INFO, "Tuned kV -> " + val);
       }
     });

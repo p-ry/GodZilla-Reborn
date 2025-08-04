@@ -8,9 +8,10 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 
 public class UpperArm extends DualArmSegmentBase {
   // Motion Magic Profiles
-  private static final double FAST_VEL = 300;
+  private static final double FAST_VEL = 400;//300
   private static final double FAST_ACC = 300;
-  private static final double FAST_JERK = 800;
+  private static final double FAST_JERK = 500;//800
+
   private static final double SLOW_VEL = 150;
   private static final double SLOW_ACC = 300;
   private static final double SLOW_JERK = 300;

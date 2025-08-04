@@ -29,7 +29,7 @@ import com.pathplanner.lib.pathfinding.LocalADStar;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.Timer;
-
+import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import au.grapplerobotics.CanBridge;
 
 public class Robot extends TimedRobot {
@@ -93,7 +93,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void disabledPeriodic() {
-    CommandScheduler.getInstance().run();
+    //CommandScheduler.getInstance().run();
   }
 
   @Override
@@ -120,6 +120,7 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopInit() {
     ensureRobotContainerInitialized();
+    
   }
 
   @Override
@@ -128,6 +129,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopExit() {
+    InitLogger.stopLogging();
   }
 
   @Override

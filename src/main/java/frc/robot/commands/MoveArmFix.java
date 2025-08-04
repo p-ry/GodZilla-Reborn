@@ -74,6 +74,9 @@ public class MoveArmFix extends Command {
 
   public static boolean retract;
   public static boolean slow;
+ 
+  private double levelReachedTime = 0;
+private static final double STABLE_DURATION = 0.1;
 
   private final Set<Subsystem> requirements = new HashSet<>();
 
@@ -122,8 +125,8 @@ public class MoveArmFix extends Command {
     levelStartTime = Timer.getFPGATimestamp();
     reachedThisLevel = false;
 
-    InitLogger.logMessage("MoveArmFix", "Initialized. Level=" + levelEnum + " shiftDirection=" + shiftDirection);
-    SmartDashboard.putString("MoveArmFix/Level", levelEnum.toString());
+    InitLogger.logMessage("MoveArmFix", "Initialized. Level=" + levelEnum );
+    //SmartDashboard.putString("MoveArmFix/Level", levelEnum.toString());
   }
 
   @Override
@@ -244,6 +247,7 @@ public class MoveArmFix extends Command {
         break;
 
       case CHOMP:
+      InitLogger.logMessage("WARNING","Chomp called with shiftDirection=" + shiftDirection);
         if (shiftDirection == 1) {
           arm.wrist.setSpeed(0.2);
         } else {
@@ -260,6 +264,7 @@ public class MoveArmFix extends Command {
 
       case UNKNOWN:
       default:
+      InitLogger.logMessage("MoveArmFix", "Unknown level: " + levelEnum);
         if (algae) {
           arm.lowerArm.setPos(1.0);
           arm.upperArm.setPos(1.0, applyDynamic);
@@ -277,6 +282,7 @@ public class MoveArmFix extends Command {
     boolean atLevel = arm.isAtLevel();
     if (atLevel && !reachedThisLevel) {
       reachedThisLevel = true;
+      
       double sinceLevelStart = Timer.getFPGATimestamp() - levelStartTime;
       InitLogger.logMessage("MoveArmFix", "Reached level " + levelEnum + " in " + String.format("%.3f", sinceLevelStart) + "s");
     }
@@ -295,13 +301,23 @@ public class MoveArmFix extends Command {
     InitLogger.logMessage("MoveArmFix", "Ended. Level=" + levelEnum + " interrupted=" + interrupted);
   }
 
-  @Override
-  public boolean isFinished() {
-    double elapsedTime = Timer.getFPGATimestamp() - startTime;
-    boolean atLevel = arm.isAtLevel();
-    SmartDashboard.putBoolean("AtLevel", atLevel);
-    return atLevel || (elapsedTime > 0.7);
+ 
+
+@Override
+public boolean isFinished() {
+  boolean atLevel = arm.isAtLevel();
+  if (atLevel) {
+    if (levelReachedTime == 0) {
+      levelReachedTime = Timer.getFPGATimestamp();
+    }
+    if (Timer.getFPGATimestamp() - levelReachedTime >= STABLE_DURATION) {
+      return true;
+    }
+  } else {
+    levelReachedTime = 0;
   }
+  return false; // no longer using elapsed-time cutoff or combine both if needed
+}
 
   @Override
   public boolean runsWhenDisabled() {

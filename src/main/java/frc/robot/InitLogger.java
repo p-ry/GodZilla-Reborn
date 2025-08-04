@@ -23,7 +23,9 @@ public class InitLogger {
   public static void startLogging() {
     DataLogManager.start();
   }
-
+public static void stopLogging() {
+    DataLogManager.stop();
+  }
   /** Log a double value under a given name/field (e.g., position). */
 public static void logDouble(String name, String field, double value) {
   String key = name + "/" + field;
