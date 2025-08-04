@@ -24,6 +24,15 @@ public class InitLogger {
     DataLogManager.start();
   }
 
+  /** Log a double value under a given name/field (e.g., position). */
+public static void logDouble(String name, String field, double value) {
+  String key = name + "/" + field;
+  DoubleLogEntry entry = doubleEntries.computeIfAbsent(key,
+      k -> new DoubleLogEntry(DataLogManager.getLog(), k));
+  entry.append(value);
+}
+
+
   /** Log a named duration in seconds */
   public static void logDuration(String name, double durationSeconds) {
     String key = INIT_PREFIX + name + "/Duration";

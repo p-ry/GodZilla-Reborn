@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.InitLogger;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.DataLogManager;
 
@@ -88,10 +89,10 @@ public abstract class DualArmSegmentBase extends SubsystemBase implements edu.wp
     leftConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     rightConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
-    leftConfig.MotorOutput.Inverted = invertLeft ? InvertedValue.CounterClockwise_Positive
-                                                : InvertedValue.Clockwise_Positive;
-    rightConfig.MotorOutput.Inverted = invertRight ? InvertedValue.CounterClockwise_Positive
-                                                  : InvertedValue.Clockwise_Positive;
+    leftConfig.MotorOutput.Inverted = invertLeft ? InvertedValue.Clockwise_Positive
+                                                : InvertedValue.CounterClockwise_Positive;
+    rightConfig.MotorOutput.Inverted = invertRight ? InvertedValue.Clockwise_Positive  
+                                                  : InvertedValue.CounterClockwise_Positive;
 
     // PID initial values from mutable fields
     leftPID.kP = kP;
@@ -220,9 +221,13 @@ public abstract class DualArmSegmentBase extends SubsystemBase implements edu.wp
     double now = Timer.getFPGATimestamp();
     if (now - lastLogTime >= 0.5) { // log up to twice a second
       DataLogManager.log(String.format(
-          "[%s] LeftPos=%.2f RightPos=%.2f Setpoint=%.2f Fast=%b",
-          this.getClass().getSimpleName(), cachedLeftPos, cachedRightPos, requestedPosition, fast));
-      lastLogTime = now;
+          "[%s] LeftPos=%.2f RightPos=%.2f Setpoint=%.2f Fast=%b AtPosition=%b",
+          this.getClass().getSimpleName(), cachedLeftPos, cachedRightPos, requestedPosition, fast,atPosition));
+            InitLogger.logDouble("LowerArm", "LeftPos", cachedLeftPos);
+    InitLogger.logDouble(this.getClass().getSimpleName(), "LeftPos", cachedLeftPos);
+    InitLogger.logDouble(this.getClass().getSimpleName(), "RightPos", cachedRightPos);
+    InitLogger.logDouble(this.getClass().getSimpleName(), "AveragePos", 0.5 * (cachedLeftPos + cachedRightPos));
+    lastLogTime = now;
     }
   }
 

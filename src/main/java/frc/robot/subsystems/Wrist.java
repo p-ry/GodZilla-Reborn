@@ -35,6 +35,7 @@ public class Wrist extends SubsystemBase implements Sendable {
   private boolean atPosition = false;
   private double lastFaultLogTime = 0.0;
   private double lastHighTempWarningTime = 0.0;
+  private double lastLogTime = 0;
 
   public Wrist() {
     wrist = new TalonFX(36, "Canivore2");
@@ -123,13 +124,22 @@ public class Wrist extends SubsystemBase implements Sendable {
     atPosition = Math.abs(error) < 0.3;
 
     // Telemetry
-    String periodicMsg = String.format("periodic(): pos=%.3f, setpoint=%.3f, error=%.3f, atTarget=%b",
+    double now = Timer.getFPGATimestamp();
+
+    if (now - lastLogTime >= 0.5) { // log up to twice a second
+      String periodicMsg = String.format("periodic(): pos=%.3f, setpoint=%.3f, error=%.3f, atTarget=%b",
         cachedPos, requestedPosition, error, atPosition);
+        InitLogger.logDouble("Wrist","Pos", cachedPos);
     DataLogManager.log("[Wrist] " + periodicMsg);
-    InitLogger.logBoolean(TAG, "AtTarget", atPosition);
     if (Math.abs(error) > 0.5) {
       InitLogger.logMessage(TAG, InitLogger.Level.WARN, periodicMsg);
     }
+      
+      lastLogTime = now;
+    }
+
+    InitLogger.logBoolean(TAG, "AtTarget", atPosition);
+    
 
     // High temperature warning (throttled)
     double temp = wrist.getDeviceTemp().refresh().getValueAsDouble();
@@ -143,7 +153,7 @@ public class Wrist extends SubsystemBase implements Sendable {
     }
 
     // Fault monitoring ~ every 200 ms
-    double now = Timer.getFPGATimestamp();
+    
     if (now - lastFaultLogTime >= 0.2) {
       lastFaultLogTime = now;
 
