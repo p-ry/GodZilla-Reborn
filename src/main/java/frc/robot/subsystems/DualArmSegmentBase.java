@@ -224,6 +224,7 @@ public abstract class DualArmSegmentBase extends SubsystemBase implements edu.wp
     velocityRequest.Velocity = velocitySetpoint;
     left.setControl(velocityRequest);
     right.setControl(velocityRequest);
+    InitLogger.logDouble(this.getClass().getSimpleName(), "Velocity",velocityRPS);
   }
   /**
    * Stop a given motor immediately.

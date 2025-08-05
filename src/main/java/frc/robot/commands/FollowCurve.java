@@ -131,8 +131,7 @@ public class FollowCurve extends Command {
          // latch once into hold mode to prevent chatter  
          boolean finished = time >= totalTime;  
          boolean slow     = Math.abs(shoulderVel) < 1.0 && Math.abs(elbowVel) < 1.0;
-        
-         if (!holdMode && finished && slow) {  
+         if (!holdMode && finished) {  
             holdMode = true;  
         }  
         if (holdMode) {
@@ -140,8 +139,6 @@ public class FollowCurve extends Command {
         } else {
             arm.setJointVelocities(shoulderVel, elbowVel, sliderRPS);
         }
-
-
         // 12) update state
         lastRawShoulderDeg = shoulderDeg;
         lastElbowDeg       = elbowDeg;

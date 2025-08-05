@@ -354,10 +354,10 @@ public class RobotContainer {
     // System.out.println("Chomp is off");
     // })); // Chomp is off
 
-    CoveredSwitch.whileTrue(
-        new MoveArmFix(mArm, ace, 8, 0)// Need to add isfinished command
+    // CoveredSwitch.whileTrue(
+    //     new MoveArmFix(mArm, ace, 8, 0)// Need to add isfinished command
 
-    );
+    // );
 
     lTrigger.whileTrue(
         new RunCommand(() -> {
