@@ -120,7 +120,7 @@ public class Wrist extends SubsystemBase implements Sendable {
     // Telemetry
     double now = Timer.getFPGATimestamp();
 
-    if (now - lastLogTime >= 0.05) { // log up to 20Hz
+    if (now - lastLogTime >= 0.1) { // log up to 20Hz
       String periodicMsg = String.format("periodic(): pos=%.3f, setpoint=%.3f, error=%.3f, atTarget=%b",
           cachedPos, requestedPosition, error, atPosition);
       // Note: if InitLogger lacks logDouble helper, replace with appropriate logging call

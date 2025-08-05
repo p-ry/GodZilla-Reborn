@@ -24,7 +24,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.ArmAssembly;
 import frc.robot.Vector2D;
 
-public class FollowCurve extends Command {
+public class FollowCurveold extends Command {
     private final ArmAssembly arm;
     private final BezierCurveJava curve;
     private final Point2D.Double base;
@@ -48,7 +48,7 @@ public class FollowCurve extends Command {
 
     private double shoulderDeg, elbowDeg;
 
-    public FollowCurve(
+    public FollowCurveold(
             ArmAssembly arm,
             Point2D.Double p0, Point2D.Double p1,
             Point2D.Double p2, Point2D.Double p3,

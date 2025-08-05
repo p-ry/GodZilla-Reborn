@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.InitLogger;
 import edu.wpi.first.wpilibj.Timer;
@@ -209,6 +210,38 @@ public abstract class DualArmSegmentBase extends SubsystemBase implements edu.wp
     right.getConfigurator().apply(rightConfig);
   }
 
+  // --- New velocity-control helpers ---
+  /**
+   * Command both motors to a target velocity (rotations/sec).
+   */
+  public void setTargetVelocityRPS(double velocityRPS) {
+    SmartDashboard.putNumber(getClass().getSimpleName() + " Velocity", velocityRPS);
+    dynamic.Velocity = velocityRPS;
+    left.setControl(dynamic);
+    right.setControl(dynamic);
+  }
+
+  /**
+   * Stop a given motor immediately.
+   */
+  public void stop(TalonFX motor) {
+    motor.stopMotor();
+  }
+
+  /**
+   * Read the current velocity (RPS) of a motor.
+   */
+  public double getCurrentVelocity(TalonFX motor) {
+    return motor.getVelocity().refresh().getValueAsDouble();
+  }
+
+  /**
+   * Return true if the motor is within tolerance of the target RPS.
+   */
+  public boolean atTargetVelocity(TalonFX motor, double targetRPS, double tolerance) {
+    return Math.abs(getCurrentVelocity(motor) - targetRPS) < tolerance;
+  }
+
   @Override
   public void periodic() {
     cachedLeftPos = left.getPosition().getValueAsDouble();
@@ -223,12 +256,11 @@ public abstract class DualArmSegmentBase extends SubsystemBase implements edu.wp
       String periodicMsg = String.format(
           "LeftPos=%.2f RightPos=%.2f Setpoint=%.2f Fast=%b AtPosition=%b",
            cachedLeftPos, cachedRightPos, requestedPosition, fast,atPosition);
-    InitLogger.logMessage(this.getClass().getSimpleName(), periodicMsg);
-            InitLogger.logDouble("LowerArm", "LeftPos", cachedLeftPos);
-    InitLogger.logDouble(this.getClass().getSimpleName(), "LeftPos", cachedLeftPos);
-    InitLogger.logDouble(this.getClass().getSimpleName(), "RightPos", cachedRightPos);
-    InitLogger.logDouble(this.getClass().getSimpleName(), "AveragePos", 0.5 * (cachedLeftPos + cachedRightPos));
-    lastLogTime = now;
+      InitLogger.logMessage(this.getClass().getSimpleName(), periodicMsg);
+      InitLogger.logDouble(this.getClass().getSimpleName(), "LeftPos", cachedLeftPos);
+      InitLogger.logDouble(this.getClass().getSimpleName(), "RightPos", cachedRightPos);
+      InitLogger.logDouble(this.getClass().getSimpleName(), "AveragePos", 0.5 * (cachedLeftPos + cachedRightPos));
+      lastLogTime = now;
     }
   }
 
