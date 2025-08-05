@@ -20,8 +20,8 @@ public class Ace extends SubsystemBase {
   private final PositionDutyCycle motorPosRequest = new PositionDutyCycle(0);
   private final DutyCycleOut motorSpdRequest = new DutyCycleOut(0);
 
-  private final LaserCan funnelSensor = new LaserCan(10);
-  private final LaserCan aceSensor = new LaserCan(11);
+  public final LaserCan funnelSensor = new LaserCan(10);
+  public final LaserCan aceSensor = new LaserCan(11);
 
   private double requestedPosition;
   private double distFunnel = 1000, distAce = 1000;
@@ -36,6 +36,8 @@ public class Ace extends SubsystemBase {
   private static final double INTAKE_SPEED = 0.7;
   public static boolean funnelSensorDetected=false;
   public static boolean aceSensorDetected=false;
+  LaserCan.Measurement mFunnel = funnelSensor.getMeasurement();
+    LaserCan.Measurement mAce = aceSensor.getMeasurement();
 
   public Ace(int level) {
     TalonFXConfiguration config = new TalonFXConfiguration();
@@ -82,9 +84,12 @@ public class Ace extends SubsystemBase {
   }
 
   private void updateLaserDistances() {
-    LaserCan.Measurement mFunnel = funnelSensor.getMeasurement();
-    LaserCan.Measurement mAce = aceSensor.getMeasurement();
-    SmartDashboard.putNumber("mfunel",mFunnel.distance_mm);
+    mFunnel = funnelSensor.getMeasurement();
+    mAce = aceSensor.getMeasurement();
+    boolean mstatus=(mFunnel!= null);
+    SmartDashboard.putBoolean("mfunel",mstatus);//mFunnel.status== LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT);
+    
+    //SmartDashboard.putNumber("mfunel",mFunnel.distance_mm);
     
     distFunnel = (mFunnel != null && mFunnel.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT)
         ? mFunnel.distance_mm : DEFAULT_DISTANCE;
