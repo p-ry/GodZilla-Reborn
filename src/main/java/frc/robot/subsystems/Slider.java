@@ -68,9 +68,11 @@ public class Slider extends SubsystemBase implements Sendable {
     mmConfigs.MotionMagicJerk = fastJerk;
 
     sliderConfigurator.apply(sliderConfigs);
-
-    ShuffleboardTab tab = Shuffleboard.getTab("Arms");
-    tab.add("Slider", this);
+    if (Constants.enableShuffleboard) {
+      ShuffleboardTab tab = Shuffleboard.getTab("Arms");
+      tab.add("Wrist", this);
+  }
+  
   }
 
   public void setBrakeMode(NeutralModeValue mode) {

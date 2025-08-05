@@ -73,6 +73,16 @@ public final class Constants {
   public static double leftOffset =5;//2  more
   public static double rightOffset =9;//10
   public static double forwardOffset = 15;//19
+
+
+  /**
+   * Flag to control whether subsystems register themselves with Shuffleboard.
+   * When false, no sendables are added to Shuffleboard tabs, which can
+   * significantly reduce network traffic and CPU usage.  Set to true if
+   * interactive tuning via Shuffleboard is required.
+   */
+  public static final boolean enableShuffleboard = false;
+
   // checking
   
   public static final double trackWidth = Units.inchesToMeters(21.75); // TODO: This must be tuned to

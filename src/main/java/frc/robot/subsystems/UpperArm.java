@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import frc.robot.Constants;
 
 import com.ctre.phoenix6.controls.DynamicMotionMagicVoltage;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -34,9 +35,10 @@ public class UpperArm extends DualArmSegmentBase {
 
     // Optional: set initial brake mode (already covered by base but kept for clarity)
     setBrakeMode(NeutralModeValue.Brake);
-
-    // Put on Shuffleboard
+if (Constants.enableShuffleboard) {
     ShuffleboardTab tab = Shuffleboard.getTab("Arms");
-    tab.add("UpperArm", this);
+    tab.add("Wrist", this);
+}
+
   }
 }

@@ -68,6 +68,9 @@ public class Robot extends TimedRobot {
   public void robotInit() {
     InitLogger.startLogging();
     InitLogger.logMessage("robot", "RobotInit/Start");
+    LiveWindow.disableAllTelemetry();
+
+
   }
 
   @Override
