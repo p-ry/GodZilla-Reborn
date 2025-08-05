@@ -39,7 +39,6 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.DriveItCommand;
 import frc.robot.commands.Extend;
-import frc.robot.commands.FollowCurve;
 import frc.robot.commands.MoveArm;
 import frc.robot.commands.MoveArmFix;
 //import frc.robot.commands.MoveArmFix;
@@ -59,7 +58,6 @@ import com.pathplanner.lib.commands.PathfindingCommand;
 import com.pathplanner.lib.pathfinding.LocalADStar;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.awt.geom.Point2D;
 
 public class RobotContainer {
 
@@ -138,14 +136,6 @@ public class RobotContainer {
   public static boolean rightTree = true;
   public static double maxSpeedConstant = 4.73;
   public static double maxAngularRateConstant = RotationsPerSecond.of(0.75).in(RadiansPerSecond);
-  
-  public static Point2D.Double base = new Point2D.Double(176.45,508.9889);//.17645,.50898890);
-  public static Point2D.Double startPoint = new Point2D.Double(-27.77,580.7621);//-.02777, .5207621); 
-  
-
-  public static Point2D.Double controlPoint1 = new Point2D.Double(-20.0,800.0);//-0.4,.5);
-  public static Point2D.Double controlPoint2 = new Point2D.Double(-20.0,1200.0);//.2,0.6);
-  public static Point2D.Double endPoint = new Point2D.Double(-20.1,1160.95);//0.0041,1.85795);
   /* Path follower */
   private final SendableChooser<Command> AutoChooser;
 
@@ -339,9 +329,6 @@ public class RobotContainer {
         .whileTrue(new MoveArmFix(mArm, ace, 6, 0));
     Dump
         .onFalse(new MoveArmFix(mArm, ace, 0, 0));
-
-        
-  Chomp.onTrue(new FollowCurve(mArm, startPoint,controlPoint1,controlPoint2,endPoint,base));
 
     // Chomp.onTrue(new InstantCommand(() -> {
     // // ace.setSpeed(1);
