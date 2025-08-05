@@ -84,7 +84,8 @@ public class Ace extends SubsystemBase {
   private void updateLaserDistances() {
     LaserCan.Measurement mFunnel = funnelSensor.getMeasurement();
     LaserCan.Measurement mAce = aceSensor.getMeasurement();
-
+    SmartDashboard.putNumber("mfunel",mFunnel.distance_mm);
+    
     distFunnel = (mFunnel != null && mFunnel.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT)
         ? mFunnel.distance_mm : DEFAULT_DISTANCE;
 
@@ -101,13 +102,17 @@ public class Ace extends SubsystemBase {
 
   @Override
   public void periodic() {
+    SmartDashboard.putBoolean("loading", RobotContainer.loading);
     if (!RobotContainer.loading) {
       backup = false;
+
       return;
     }
 
     updateLaserDistances();
-
+    SmartDashboard.putBoolean("Funnel Sensor Detected", funnelSensorDetected);
+    SmartDashboard.putBoolean("Ace Sensor Detected", aceSensorDetected);
+    SmartDashboard.putBoolean("Coral Present", coralPresent);
 
     if (!coralPresent && (funnelSensorDetected || aceSensorDetected)) {
       // If either sensor detects something, we assume coral is present
