@@ -27,6 +27,7 @@ public class Slider extends SubsystemBase implements Sendable {
   private static final DynamicMotionMagicVoltage dynamic = new DynamicMotionMagicVoltage(0, 300, 300, 800);
   private static final PositionVoltage sController = new PositionVoltage(0);
 
+  
   private boolean fast = true;
   private double requestedPosition = 0;
   private double cachedPosition = 0;

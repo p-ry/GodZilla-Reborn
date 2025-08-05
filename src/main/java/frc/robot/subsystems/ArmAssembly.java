@@ -85,8 +85,8 @@ SmartDashboard.putNumber("lowerARM!!!!", (shoulderDeg/360)*lowerGearRatio);
 
 public void setJointVelocities(double shoulderVelDegPerSec, double elbowVelDegPerSec, double sliderRPS) {
 // Convert degrees/sec to rotations/sec, then to motor units per 100ms
-double shoulderRPS = shoulderVelDegPerSec / 360.0;
-double elbowRPS = elbowVelDegPerSec / 360.0;
+double shoulderRPS = shoulderVelDegPerSec / 360.0*lowerGearRatio;
+double elbowRPS = elbowVelDegPerSec / 360.0*upperGearRatio;
 
 
 // Slider: convert meters/sec to encoder units/sec (assumes 8.1 revs per 100cm => 0.081 revs/cm => 0.81 revs/m)
@@ -96,7 +96,7 @@ double elbowRPS = elbowVelDegPerSec / 360.0;
 // Send to motor controllers (ControlMode.Velocity expects units per 100ms)
 lowerArm.setTargetVelocityRPS(shoulderRPS);
 upperArm.setTargetVelocityRPS(elbowRPS);
-slider.setTargetVelocityRPS(sliderRPS);
+//slider.setTargetVelocityRPS(sliderRPS);
 
 SmartDashboard.putNumber("ShoulderVelUnits", shoulderRPS);
 SmartDashboard.putNumber("ElbowVelUnits", elbowRPS);

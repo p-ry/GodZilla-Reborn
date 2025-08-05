@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.DataLogManager;
 
 import com.ctre.phoenix6.controls.DynamicMotionMagicVoltage;
+import com.ctre.phoenix6.controls.VelocityDutyCycle;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.configs.*;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -48,6 +49,8 @@ public abstract class DualArmSegmentBase extends SubsystemBase implements edu.wp
 
   protected double switchToFastThreshold = 12.0;
   protected double switchToSlowThreshold = 8.0;
+ private final VelocityDutyCycle velocityRequest = new VelocityDutyCycle(0).withSlot(0);
+ private static double velocitySetpoint = 0;
 
   // Logging rate-limiter
   private double lastLogTime = 0;
@@ -214,13 +217,14 @@ public abstract class DualArmSegmentBase extends SubsystemBase implements edu.wp
   /**
    * Command both motors to a target velocity (rotations/sec).
    */
-  public void setTargetVelocityRPS(double velocityRPS) {
-    SmartDashboard.putNumber(getClass().getSimpleName() + " Velocity", velocityRPS);
-    dynamic.Velocity = velocityRPS;
-    left.setControl(dynamic);
-    right.setControl(dynamic);
-  }
 
+   public void setTargetVelocityRPS(double velocityRPS) {
+    //SmartDashboard.putNumber("LowerArm Velocity", velocityRPS);
+    velocitySetpoint = velocityRPS;
+    velocityRequest.Velocity = velocitySetpoint;
+    left.setControl(velocityRequest);
+    right.setControl(velocityRequest);
+  }
   /**
    * Stop a given motor immediately.
    */
