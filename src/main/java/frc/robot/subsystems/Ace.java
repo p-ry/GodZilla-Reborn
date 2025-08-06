@@ -36,14 +36,24 @@ public class Ace extends SubsystemBase {
   private static final double INTAKE_SPEED = 0.7;
   public static boolean funnelSensorDetected=false;
   public static boolean aceSensorDetected=false;
-  LaserCan.Measurement mFunnel = funnelSensor.getMeasurement();
-    LaserCan.Measurement mAce = aceSensor.getMeasurement();
+  public LaserCan.Measurement mFunnel; //= funnelSensor.getMeasurement();
+    public LaserCan.Measurement mAce ;//= aceSensor.getMeasurement();
 
   public Ace(int level) {
     TalonFXConfiguration config = new TalonFXConfiguration();
     config.CurrentLimits.SupplyCurrentLimitEnable = true;
     config.CurrentLimits.SupplyCurrentLimit = 50;
     config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    
+    try {
+      
+      funnelSensor.setTimingBudget(LaserCan.TimingBudget.TIMING_BUDGET_50MS);
+    
+      aceSensor.setTimingBudget(LaserCan.TimingBudget.TIMING_BUDGET_50MS);
+    } catch (Exception e) {
+      e.printStackTrace();
+      System.out.println("Failed to configure laser can sensors");
+    }
 
     Slot0Configs pid = config.Slot0;
     pid.kP = 2.0;
@@ -79,15 +89,15 @@ public class Ace extends SubsystemBase {
   public void setPos(double offset) {
     requestedPosition = getPos() + offset;
     ace.setControl(motorPosRequest.withPosition(requestedPosition));
-    SmartDashboard.putNumber("ACE Current Pos", getPos());
-    SmartDashboard.putNumber("ACE Target Pos", requestedPosition);
+    // SmartDashboard.putNumber("ACE Current Pos", getPos());
+    // SmartDashboard.putNumber("ACE Target Pos", requestedPosition);
   }
 
   private void updateLaserDistances() {
     mFunnel = funnelSensor.getMeasurement();
     mAce = aceSensor.getMeasurement();
     boolean mstatus=(mFunnel!= null);
-    SmartDashboard.putBoolean("mfunel",mstatus);//mFunnel.status== LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT);
+    // SmartDashboard.putBoolean("mfunel",mstatus);//mFunnel.status== LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT);
     
     //SmartDashboard.putNumber("mfunel",mFunnel.distance_mm);
     
@@ -107,7 +117,7 @@ public class Ace extends SubsystemBase {
 
   @Override
   public void periodic() {
-    SmartDashboard.putBoolean("loading", RobotContainer.loading);
+    // SmartDashboard.putBoolean("loading", RobotContainer.loading);
     if (!RobotContainer.loading) {
       backup = false;
 
@@ -115,9 +125,9 @@ public class Ace extends SubsystemBase {
     }
 
     updateLaserDistances();
-    SmartDashboard.putBoolean("Funnel Sensor Detected", funnelSensorDetected);
-    SmartDashboard.putBoolean("Ace Sensor Detected", aceSensorDetected);
-    SmartDashboard.putBoolean("Coral Present", coralPresent);
+    // SmartDashboard.putBoolean("Funnel Sensor Detected", funnelSensorDetected);
+    // SmartDashboard.putBoolean("Ace Sensor Detected", aceSensorDetected);
+    // SmartDashboard.putBoolean("Coral Present", coralPresent);
 
     if (!coralPresent && (funnelSensorDetected || aceSensorDetected)) {
       // If either sensor detects something, we assume coral is present
