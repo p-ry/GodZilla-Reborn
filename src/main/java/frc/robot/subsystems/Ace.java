@@ -118,11 +118,8 @@ public class Ace extends SubsystemBase {
   @Override
   public void periodic() {
     // SmartDashboard.putBoolean("loading", RobotContainer.loading);
-    if (!RobotContainer.loading) {
-      backup = false;
-
-      return;
-    }
+    if (RobotContainer.loading) {
+     
 
     updateLaserDistances();
     // SmartDashboard.putBoolean("Funnel Sensor Detected", funnelSensorDetected);
@@ -151,5 +148,10 @@ public class Ace extends SubsystemBase {
         gotIt = true;
       }
     }
+  } else{
+    backup = false;
+
+   
+  }
   }
 }
