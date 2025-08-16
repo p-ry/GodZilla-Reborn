@@ -351,8 +351,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             botPublisher.set(botPose2d);
         }
         // SmartDashboard.putNumber("Rotation2D",getGyroRotation2D().getDegrees());
-
-        updateCameraPose();
+        if (Timer.getFPGATimestamp() % 0.1 < 0.02) {
+            updateCameraPose();
+        }
 
         // resetOdometry(botPose2d);
         // SmartDashboard.putNumberArray("BotPose",
@@ -457,12 +458,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      */
 
     public double getCompassHeading() {
-        SmartDashboard.putNumber("CompassHeading", Math.IEEEremainder(gyro.getYaw().getValueAsDouble(), 360));
+        //SmartDashboard.putNumber("CompassHeading", Math.IEEEremainder(gyro.getYaw().getValueAsDouble(), 360));
         return Math.IEEEremainder(gyro.getYaw().getValueAsDouble(), 360.0);
     }
 
     public Rotation2d getGyroRotation2D() {
-        SmartDashboard.putNumber("yaw", gyro.getYaw().getValueAsDouble());
+      //  SmartDashboard.putNumber("yaw", gyro.getYaw().getValueAsDouble());
         return Rotation2d.fromDegrees(getCompassHeading());// gyro.getYaw().getValueAsDouble());
     }
 

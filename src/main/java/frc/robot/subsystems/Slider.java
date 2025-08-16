@@ -11,6 +11,7 @@ import frc.robot.Constants;
 import com.ctre.phoenix6.configs.*;
 import com.ctre.phoenix6.controls.DynamicMotionMagicVoltage;
 import com.ctre.phoenix6.controls.PositionVoltage;
+import com.ctre.phoenix6.controls.VelocityDutyCycle;
 import com.ctre.phoenix6.hardware.TalonFXS;
 import com.ctre.phoenix6.signals.*;
 
@@ -26,11 +27,15 @@ public class Slider extends SubsystemBase implements Sendable {
   private static final DynamicMotionMagicVoltage dynamic = new DynamicMotionMagicVoltage(0, 300, 300, 800);
   private static final PositionVoltage sController = new PositionVoltage(0);
 
+  
   private boolean fast = true;
   private double requestedPosition = 0;
   private double cachedPosition = 0;
   private boolean atPosition = false;
   private boolean updatePending = false;
+  private final VelocityDutyCycle velocityRequest = new VelocityDutyCycle(0).withSlot(0);
+  
+ private static double velocitySetpoint = 0;
 
   // Tunable PID constants
   public double kP = 2.5, kI = 0.0, kD = 0.0, kV = 0.25, kS = 0.6;
@@ -64,9 +69,11 @@ public class Slider extends SubsystemBase implements Sendable {
     mmConfigs.MotionMagicJerk = fastJerk;
 
     sliderConfigurator.apply(sliderConfigs);
-
-    ShuffleboardTab tab = Shuffleboard.getTab("Arms");
-    tab.add("Slider", this);
+    if (Constants.enableShuffleboard) {
+      ShuffleboardTab tab = Shuffleboard.getTab("Arms");
+      tab.add("Wrist", this);
+  }
+  
   }
 
   public void setBrakeMode(NeutralModeValue mode) {
@@ -74,6 +81,27 @@ public class Slider extends SubsystemBase implements Sendable {
     sliderConfigs.MotorOutput.NeutralMode = mode;
     slider.getConfigurator().apply(sliderConfigs);
   }
+
+  public void setTargetVelocityRPS(double velocityRPS) {
+    velocitySetpoint =0;// velocityRPS;
+    velocityRequest.Velocity = velocitySetpoint;
+    slider.setControl(velocityRequest);
+    
+  }
+
+  public void stop(TalonFXS motor) {
+    motor.stopMotor();
+  }
+
+  public double getCurrentVelocity(TalonFXS motor) {
+    return motor.getVelocity().getValueAsDouble();
+  }
+
+  public boolean atTargetVelocity(TalonFXS motor, double targetRPS, double tolerance) {
+    return Math.abs(getCurrentVelocity(motor) - targetRPS) < tolerance;
+  }
+
+
 
   public void setPos(double position) {
     setPos(position, true);

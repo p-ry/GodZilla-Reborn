@@ -1,11 +1,14 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.InitLogger;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.DataLogManager;
 
 import com.ctre.phoenix6.controls.DynamicMotionMagicVoltage;
+import com.ctre.phoenix6.controls.VelocityDutyCycle;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.configs.*;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -46,6 +49,8 @@ public abstract class DualArmSegmentBase extends SubsystemBase implements edu.wp
 
   protected double switchToFastThreshold = 12.0;
   protected double switchToSlowThreshold = 8.0;
+ private final VelocityDutyCycle velocityRequest = new VelocityDutyCycle(0).withSlot(0);
+ private static double velocitySetpoint = 0;
 
   // Logging rate-limiter
   private double lastLogTime = 0;
@@ -88,10 +93,10 @@ public abstract class DualArmSegmentBase extends SubsystemBase implements edu.wp
     leftConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     rightConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
-    leftConfig.MotorOutput.Inverted = invertLeft ? InvertedValue.CounterClockwise_Positive
-                                                : InvertedValue.Clockwise_Positive;
-    rightConfig.MotorOutput.Inverted = invertRight ? InvertedValue.CounterClockwise_Positive
-                                                  : InvertedValue.Clockwise_Positive;
+    leftConfig.MotorOutput.Inverted = invertLeft ? InvertedValue.Clockwise_Positive
+                                                : InvertedValue.CounterClockwise_Positive;
+    rightConfig.MotorOutput.Inverted = invertRight ? InvertedValue.Clockwise_Positive  
+                                                  : InvertedValue.CounterClockwise_Positive;
 
     // PID initial values from mutable fields
     leftPID.kP = kP;
@@ -208,6 +213,40 @@ public abstract class DualArmSegmentBase extends SubsystemBase implements edu.wp
     right.getConfigurator().apply(rightConfig);
   }
 
+  // --- New velocity-control helpers ---
+  /**
+   * Command both motors to a target velocity (rotations/sec).
+   */
+
+   public void setTargetVelocityRPS(double velocityRPS) {
+    //SmartDashboard.putNumber("LowerArm Velocity", velocityRPS);
+    velocitySetpoint = velocityRPS;
+    velocityRequest.Velocity = velocitySetpoint;
+    left.setControl(velocityRequest);
+    right.setControl(velocityRequest);
+    InitLogger.logDouble(this.getClass().getSimpleName(), "Velocity",velocityRPS);
+  }
+  /**
+   * Stop a given motor immediately.
+   */
+  public void stop(TalonFX motor) {
+    motor.stopMotor();
+  }
+
+  /**
+   * Read the current velocity (RPS) of a motor.
+   */
+  public double getCurrentVelocity(TalonFX motor) {
+    return motor.getVelocity().refresh().getValueAsDouble();
+  }
+
+  /**
+   * Return true if the motor is within tolerance of the target RPS.
+   */
+  public boolean atTargetVelocity(TalonFX motor, double targetRPS, double tolerance) {
+    return Math.abs(getCurrentVelocity(motor) - targetRPS) < tolerance;
+  }
+
   @Override
   public void periodic() {
     cachedLeftPos = left.getPosition().getValueAsDouble();
@@ -219,9 +258,13 @@ public abstract class DualArmSegmentBase extends SubsystemBase implements edu.wp
 
     double now = Timer.getFPGATimestamp();
     if (now - lastLogTime >= 0.5) { // log up to twice a second
-      DataLogManager.log(String.format(
-          "[%s] LeftPos=%.2f RightPos=%.2f Setpoint=%.2f Fast=%b",
-          this.getClass().getSimpleName(), cachedLeftPos, cachedRightPos, requestedPosition, fast));
+      String periodicMsg = String.format(
+          "LeftPos=%.2f RightPos=%.2f Setpoint=%.2f Fast=%b AtPosition=%b",
+           cachedLeftPos, cachedRightPos, requestedPosition, fast,atPosition);
+      InitLogger.logMessage(this.getClass().getSimpleName(), periodicMsg);
+      InitLogger.logDouble(this.getClass().getSimpleName(), "LeftPos", cachedLeftPos);
+      InitLogger.logDouble(this.getClass().getSimpleName(), "RightPos", cachedRightPos);
+      InitLogger.logDouble(this.getClass().getSimpleName(), "AveragePos", 0.5 * (cachedLeftPos + cachedRightPos));
       lastLogTime = now;
     }
   }
