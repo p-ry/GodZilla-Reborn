@@ -18,8 +18,6 @@ import edu.wpi.first.wpilibj.DataLogManager;
 
 import edu.wpi.first.wpilibj.Timer;
 
-
-
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.events.EventTrigger;
@@ -54,6 +52,8 @@ import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.LowerArm;
 import frc.robot.subsystems.Wrist;
 import frc.robot.commands.SetArmBrakeMode;
+import frc.robot.commands.WaitForCoral;
+
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.pathplanner.lib.commands.FollowPathCommand;
 import com.pathplanner.lib.commands.PathfindingCommand;
@@ -62,7 +62,7 @@ import com.pathplanner.lib.pathfinding.Pathfinding;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class RobotContainer {
-  
+
   // public static Pigeon2 gyro;
   public static double MaxSpeed = 4.73;// TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts
                                        // desired
@@ -93,9 +93,9 @@ public class RobotContainer {
 
   public CommandSwerveDrivetrain drivetrain;
   // = TunerConstants.createDrivetrain();
-  public  ArmAssembly mArm;
+  public ArmAssembly mArm;
   // = new ArmAssembly(false, 99);
-  public  Ace ace;
+  public Ace ace;
   // = new Ace(0);
   public static int prevLevel = 0;
 
@@ -142,18 +142,18 @@ public class RobotContainer {
   private final SendableChooser<Command> AutoChooser;
 
   public RobotContainer() {
-    
-InitLogger.time("ArmAssemblyInit", () -> {  
+
+    InitLogger.time("ArmAssemblyInit", () -> {
       mArm = new ArmAssembly(false, 99);
-});
+    });
 
-InitLogger.time("AceInit", () -> {
-    ace = new Ace(0);
-});
+    InitLogger.time("AceInit", () -> {
+      ace = new Ace(0);
+    });
 
-InitLogger.time("DriveTrainInit",() -> {
-  drivetrain = TunerConstants.createDrivetrain();
-});
+    InitLogger.time("DriveTrainInit", () -> {
+      drivetrain = TunerConstants.createDrivetrain();
+    });
 
     // gyro = new Pigeon2(0, "Canivore");
     SmartDashboard.putNumber("prevHeading", prevHeading);
@@ -197,8 +197,14 @@ InitLogger.time("DriveTrainInit",() -> {
 
     NamedCommands.registerCommand("raiseArm", new MoveArmFix(mArm, ace, 42, -1));
     NamedCommands.registerCommand("level3", new MoveArmFix(mArm, ace, 3, 1));
-    NamedCommands.registerCommand("Load", new WaitCommand(0.7).andThen(
-        new MoveArmFix(mArm, ace, 1, 0).alongWith(new InstantCommand(() -> ace.setSpeed(1)))));
+    NamedCommands.registerCommand("Load", new MoveArmFix(mArm, ace, 1, 0)
+        .alongWith(new InstantCommand(() -> {
+          ace.setSpeed(0.9);
+          ace.resetStateMachine();
+          Constants.AutonomousMode = true;
+
+        })));
+    NamedCommands.registerCommand("WaitForCoral", new WaitForCoral(ace));
     NamedCommands.registerCommand("L1", new MoveArmFix(mArm, ace, 6, 0));
     NamedCommands.registerCommand("L2", new MoveArmFix(mArm, ace, 2, 0));
     NamedCommands.registerCommand("L3", new MoveArmFix(mArm, ace, 3, 0));
@@ -208,10 +214,15 @@ InitLogger.time("DriveTrainInit",() -> {
         new InstantCommand(() -> ace.setSpeed(1))
             .alongWith(new InstantCommand(() -> ace.gotIt = false))
             .alongWith(new InstantCommand(() -> ace.coralPresent = false)));
-    new EventTrigger("L400").onTrue(new MoveArmFix(mArm, ace, 4, 0));
-    new EventTrigger("LoadIt").onTrue(new MoveArmFix(mArm, ace, 1, 0)
-        .alongWith(new InstantCommand(() -> System.out.println("loadit"))
-            .alongWith(new InstantCommand(() -> ace.setSpeed(1)))));
+
+    // NamedCommands.registerCommand("Intake",
+    // new InstantCommand(() -> ace.setSpeed(1))
+    // .alongWith(new InstantCommand(() -> ace.gotIt = false))
+    // .alongWith(new InstantCommand(() -> ace.coralPresent = false)));
+    // new EventTrigger("L400").onTrue(new MoveArmFix(mArm, ace, 4, 0));
+    // new EventTrigger("LoadIt").onTrue(new MoveArmFix(mArm, ace, 1, 0)
+    // .alongWith(new InstantCommand(() -> System.out.println("loadit"))
+    // .alongWith(new InstantCommand(() -> ace.setSpeed(1)))));
 
     drivetrain.configureAutoBuilder();
     Pathfinding.setPathfinder(new LocalADStar());
@@ -298,19 +309,16 @@ InitLogger.time("DriveTrainInit",() -> {
       Constants.algaeMode.set(false);
     }));
 
-    Load
-        .whileTrue(new MoveArmFix(mArm, ace, 1, 0));
-    Load.onTrue(new InstantCommand(() -> ace.setSpeed(0.9)));
+    Load.onTrue(new MoveArmFix(mArm, ace, 1, 0)
+        .alongWith(new InstantCommand(() -> {
+          ace.setSpeed(0.9);
+          ace.resetStateMachine();
+          loading = true;
+        })));
 
     Load
-        .onTrue(new InstantCommand(() -> ace.gotIt = false));
-    Load
-        .onTrue(new InstantCommand(() -> ace.coralPresent = false));
-    Load.onTrue(new InstantCommand(() -> loading = true));
-
-    Load
-        .onFalse(new MoveArmFix(mArm, ace, 0, 0));
-    Load.onFalse(new InstantCommand(() -> loading = false));
+        .onFalse(new MoveArmFix(mArm, ace, 0, 0)
+            .alongWith(new InstantCommand(() -> loading = false)));
     Process
         .onTrue(new MoveArmFix(mArm, ace, 5, 0));
     // Process.whileTrue(new InstantCommand(() -> ace.setSpeed(0.1)));

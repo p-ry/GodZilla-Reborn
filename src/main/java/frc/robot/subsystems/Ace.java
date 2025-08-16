@@ -34,14 +34,24 @@ public class Ace extends SubsystemBase {
   private static final double DETECT_THRESHOLD = 100.0;
   private static final double BACKDRIVE_SPEED = -0.45;
   private static final double INTAKE_SPEED = 0.7;
-  public static boolean funnelSensorDetected=false;
-  public static boolean aceSensorDetected=false;
+  public static boolean funnelSensorDetected = false;
+  public static boolean aceSensorDetected = false;
+  public enum CoralIntakeState {
+    IDLE,
+    SEARCHING,
+    BACKDRIVE,
+    INTAKE,
+    STOPPED,
+    COMPLETE
+}
+private CoralIntakeState currentState = CoralIntakeState.IDLE;
 
   public Ace(int level) {
     TalonFXConfiguration config = new TalonFXConfiguration();
     config.CurrentLimits.SupplyCurrentLimitEnable = true;
     config.CurrentLimits.SupplyCurrentLimit = 50;
     config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    
 
     Slot0Configs pid = config.Slot0;
     pid.kP = 2.0;
@@ -86,10 +96,12 @@ public class Ace extends SubsystemBase {
     LaserCan.Measurement mAce = aceSensor.getMeasurement();
 
     distFunnel = (mFunnel != null && mFunnel.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT)
-        ? mFunnel.distance_mm : DEFAULT_DISTANCE;
+        ? mFunnel.distance_mm
+        : DEFAULT_DISTANCE;
 
     distAce = (mAce != null && mAce.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT)
-        ? mAce.distance_mm : DEFAULT_DISTANCE;
+        ? mAce.distance_mm
+        : DEFAULT_DISTANCE;
     funnelSensorDetected = distFunnel < DETECT_THRESHOLD;
     aceSensorDetected = distAce < DETECT_THRESHOLD;
 
@@ -99,37 +111,141 @@ public class Ace extends SubsystemBase {
     }
   }
 
+  private void handleIdleState() {
+    if (!coralPresent && (funnelSensorDetected || aceSensorDetected)) {
+        coralPresent = true;
+        currentState = CoralIntakeState.SEARCHING;
+        setSpeed(0);
+    }
+}
+
+private void handleSearchingState() {
+    if (!funnelSensorDetected && !aceSensorDetected) {
+        currentState = CoralIntakeState.BACKDRIVE;
+    } else if (funnelSensorDetected && !aceSensorDetected) {
+        currentState = CoralIntakeState.INTAKE;
+    } else if (funnelSensorDetected && aceSensorDetected) {
+        currentState = CoralIntakeState.INTAKE;
+    } else if (!funnelSensorDetected && aceSensorDetected) {
+        currentState = CoralIntakeState.STOPPED;
+    }
+}
+
+private void handleBackdriveState() {
+    setSpeed(BACKDRIVE_SPEED);
+    
+    // Check for transitions back to other states
+    if (funnelSensorDetected && !aceSensorDetected) {
+        currentState = CoralIntakeState.INTAKE;
+    } else if (funnelSensorDetected && aceSensorDetected) {
+        currentState = CoralIntakeState.INTAKE;
+    } else if (!funnelSensorDetected && aceSensorDetected) {
+        currentState = CoralIntakeState.STOPPED;
+    }
+}
+
+private void handleIntakeState() {
+    setSpeed(INTAKE_SPEED);
+    
+    // Check for transitions to other states
+    if (!funnelSensorDetected && !aceSensorDetected) {
+        currentState = CoralIntakeState.BACKDRIVE;
+    } else if (!funnelSensorDetected && aceSensorDetected) {
+        currentState = CoralIntakeState.STOPPED;
+    }
+}
+
+private void handleStoppedState() {
+    setSpeed(0);
+    gotIt = true;
+    currentState = CoralIntakeState.COMPLETE;
+}
+
+private void handleCompleteState() {
+  if (Constants.AutonomousMode){
+    Constants.autoLoaded = true;
+    Constants.AutonomousMode = false;
+  }
+    // Stay in complete state until reset
+    //setSpeed(0);
+    
+}
+
+// Optional: Method to get current state for debugging
+public CoralIntakeState getCurrentState() {
+    return currentState;
+}
+
+// Optional: Method to manually reset the state machine
+public void resetStateMachine() {
+    currentState = CoralIntakeState.IDLE;
+    coralPresent = false;
+    gotIt = false;
+    Constants.autoLoaded = false;
+}
+
   @Override
   public void periodic() {
-    if (!RobotContainer.loading) {
-      backup = false;
-      return;
-    }
 
-    updateLaserDistances();
-
-
-    if (!coralPresent && (funnelSensorDetected || aceSensorDetected)) {
-      // If either sensor detects something, we assume coral is present
-      coralPresent = true;
-      setSpeed(0);
-    }
-
-    if (coralPresent) {
-      if (!funnelSensorDetected && !aceSensorDetected) {
-        // If neither sensor detects anything, we backdrive the ace
-        setSpeed(BACKDRIVE_SPEED);
-      } else if (funnelSensorDetected && !aceSensorDetected) {
-        // If only the funnel sensor detects, we set the speed to intake speed
-        setSpeed(INTAKE_SPEED);
-      } else if (funnelSensorDetected && aceSensorDetected) {
-        // If both sensors detect, we set the speed to intake speed
-        setSpeed(INTAKE_SPEED);
-      } else if (!funnelSensorDetected && aceSensorDetected) {
-        // If only the ace sensor detects, we stop the ace
-        setSpeed(0);
-        gotIt = true;
+    if (RobotContainer.loading || Constants.AutonomousMode) {
+      updateLaserDistances();
+      
+      switch (currentState) {
+          case IDLE:
+              handleIdleState();
+              break;
+          case SEARCHING:
+              handleSearchingState();
+              break;
+          case BACKDRIVE:
+              handleBackdriveState();
+              break;
+          case INTAKE:
+              handleIntakeState();
+              break;
+          case STOPPED:
+              handleStoppedState();
+              break;
+          case COMPLETE:
+              handleCompleteState();
+              break;
       }
-    }
-  }
-}
+  } else {
+      // Reset state when not in loading or autonomous mode
+      currentState = CoralIntakeState.IDLE;
+      //backup = false;
+
+  }}}
+
+  // }
+
+  //   if (RobotContainer.loading || Constants.AutonomousMode)  {
+  //   updateLaserDistances();
+  //   if (!coralPresent && (funnelSensorDetected || aceSensorDetected)) {
+  //     // If either sensor detects something, we assume coral is present
+  //     coralPresent = true;
+  //     setSpeed(0);
+  //   }
+
+  //   if (coralPresent) {
+  //     if (!funnelSensorDetected && !aceSensorDetected) {
+  //       // If neither sensor detects anything, we backdrive the ace
+  //       setSpeed(BACKDRIVE_SPEED);
+  //     } else if (funnelSensorDetected && !aceSensorDetected) {
+  //       // If only the funnel sensor detects, we set the speed to intake speed
+  //       setSpeed(INTAKE_SPEED);
+  //     } else if (funnelSensorDetected && aceSensorDetected) {
+  //       // If both sensors detect, we set the speed to intake speed
+  //       setSpeed(INTAKE_SPEED);
+  //     } else if (!funnelSensorDetected && aceSensorDetected) {
+  //       // If only the ace sensor detects, we stop the ace
+  //       setSpeed(0);
+  //       gotIt = true;
+  //     }
+  //   }
+  // }
+  // else {
+  //   backup = false;
+  // }
+
+

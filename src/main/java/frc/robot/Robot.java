@@ -103,6 +103,8 @@ public class Robot extends TimedRobot {
   @Override
   public void autonomousInit() {
     ensureRobotContainerInitialized();
+    //Constants.AutonomousMode=true;
+
     m_autonomousCommand = m_robotContainer.getAutonomousCommand();
     if (m_autonomousCommand != null) {
       m_autonomousCommand.schedule();
@@ -120,6 +122,7 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopInit() {
     ensureRobotContainerInitialized();
+    Constants.AutonomousMode = false;
   }
 
   @Override
