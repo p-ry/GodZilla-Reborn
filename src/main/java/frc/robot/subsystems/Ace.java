@@ -38,6 +38,7 @@ public class Ace extends SubsystemBase {
   public static boolean funnelSensorDetected = false;
   public static boolean aceSensorDetected = false;
   private String stateText = "";
+  private double lastLogTime = 0.0; // Initialize lastLogTime to 0
 
   public enum CoralIntakeState {
     IDLE,
@@ -116,6 +117,8 @@ public class Ace extends SubsystemBase {
   }
 
   private void handleIdleState() {
+    setSpeed(0.9);
+
     if (!coralPresent && (funnelSensorDetected || aceSensorDetected)) {
       coralPresent = true;
       currentState = CoralIntakeState.SEARCHING;
@@ -127,14 +130,18 @@ public class Ace extends SubsystemBase {
   private void handleSearchingState() {
     if (!funnelSensorDetected && !aceSensorDetected) {
       currentState = CoralIntakeState.BACKDRIVE;
+      stateChange = true;
     } else if (funnelSensorDetected && !aceSensorDetected) {
       currentState = CoralIntakeState.INTAKE;
+      stateChange = true;
     } else if (funnelSensorDetected && aceSensorDetected) {
       currentState = CoralIntakeState.INTAKE;
+      stateChange = true;
     } else if (!funnelSensorDetected && aceSensorDetected) {
       currentState = CoralIntakeState.STOPPED;
+      stateChange = true;
     }
-    stateChange = true;
+
   }
 
   private void handleBackdriveState() {
@@ -143,12 +150,15 @@ public class Ace extends SubsystemBase {
     // Check for transitions back to other states
     if (funnelSensorDetected && !aceSensorDetected) {
       currentState = CoralIntakeState.INTAKE;
+      stateChange = true;
     } else if (funnelSensorDetected && aceSensorDetected) {
       currentState = CoralIntakeState.INTAKE;
+      stateChange = true;
     } else if (!funnelSensorDetected && aceSensorDetected) {
       currentState = CoralIntakeState.STOPPED;
+      stateChange = true;
     }
-    stateChange = true;
+
   }
 
   private void handleIntakeState() {
@@ -165,8 +175,18 @@ public class Ace extends SubsystemBase {
 
   private void handleStoppedState() {
     setSpeed(0);
-    gotIt = true;
-    currentState = CoralIntakeState.COMPLETE;
+    updateLaserDistances();
+    if (!funnelSensorDetected && !aceSensorDetected) {
+      currentState = CoralIntakeState.BACKDRIVE;
+    } else if (funnelSensorDetected && !aceSensorDetected) {
+      currentState = CoralIntakeState.INTAKE;
+    } else if (funnelSensorDetected && aceSensorDetected) {
+      currentState = CoralIntakeState.INTAKE;
+    } else if (!funnelSensorDetected && aceSensorDetected) {
+
+      gotIt = true;
+      currentState = CoralIntakeState.COMPLETE;
+    }
     stateChange = true;
   }
 
@@ -175,6 +195,12 @@ public class Ace extends SubsystemBase {
       Constants.autoLoaded = true;
       Constants.AutonomousMode = false;
     }
+    updateLaserDistances();
+    if (!funnelSensorDetected && !aceSensorDetected) {
+      currentState = CoralIntakeState.BACKDRIVE;
+      stateChange = true;
+    }
+
     // Stay in complete state until reset
     // setSpeed(0);
 
@@ -191,41 +217,47 @@ public class Ace extends SubsystemBase {
     coralPresent = false;
     gotIt = false;
     Constants.autoLoaded = false;
+    stateChange = true;
   }
 
   @Override
   public void periodic() {
     if (stateChange) {
       stateChange = false;
-      stateText = previousState.name()+"-->"+currentState.name();
-      InitLogger.logMessage("Ace",stateText );
+      stateText = previousState.name() + "-->" + currentState.name();
+      InitLogger.logMessage("Ace", stateText);
       previousState = currentState;
-      
 
     }
+    // double now = Timer.getFPGATimestamp();
+    // if (now - lastLogTime >= 0.1) { // log up to twice a second
+    //   InitLogger.logDouble("Ace", "Speed", getSpeed());
+    //   lastLogTime = now;
+    // }
 
     if (RobotContainer.loading || Constants.AutonomousMode) {
       updateLaserDistances();
 
       switch (currentState) {
-        case IDLE:
-          handleIdleState();
-          break;
-        case SEARCHING:
-          handleSearchingState();
-          break;
-        case BACKDRIVE:
-          handleBackdriveState();
-          break;
-        case INTAKE:
-          handleIntakeState();
+        case COMPLETE:
+          handleCompleteState();
           break;
         case STOPPED:
           handleStoppedState();
           break;
-        case COMPLETE:
-          handleCompleteState();
+        case INTAKE:
+          handleIntakeState();
           break;
+        case BACKDRIVE:
+          handleBackdriveState();
+          break;
+        case SEARCHING:
+          handleSearchingState();
+          break;
+        case IDLE:
+          handleIdleState();
+          break;
+
       }
     } else {
       // Reset state when not in loading or autonomous mode

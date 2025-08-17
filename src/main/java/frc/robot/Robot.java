@@ -117,11 +117,13 @@ public class Robot extends TimedRobot {
 
   @Override
   public void autonomousExit() {
+    InitLogger.stopLogging();
   }
 
   @Override
   public void teleopInit() {
     ensureRobotContainerInitialized();
+    InitLogger.startLogging();
     Constants.AutonomousMode = false;
   }
 
@@ -131,6 +133,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopExit() {
+    InitLogger.stopLogging();
   }
 
   @Override

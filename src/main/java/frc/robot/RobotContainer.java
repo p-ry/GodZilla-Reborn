@@ -311,7 +311,7 @@ public class RobotContainer {
 
     Load.onTrue(new MoveArmFix(mArm, ace, 1, 0)
         .alongWith(new InstantCommand(() -> {
-          ace.setSpeed(0.9);
+          //ace.setSpeed(0.9);
           ace.resetStateMachine();
           loading = true;
         })));

@@ -73,10 +73,10 @@ public class MoveArmFix extends Command {
   private boolean reachedThisLevel = false;
 
   public static boolean retract;
-  public static boolean slow;
- 
+  public static boolean slow, offset;
+
   private double levelReachedTime = 0;
-private static final double STABLE_DURATION = 0.1;
+  private static final double STABLE_DURATION = 0.1;
 
   private final Set<Subsystem> requirements = new HashSet<>();
 
@@ -92,7 +92,6 @@ private static final double STABLE_DURATION = 0.1;
     addRequirements(arm, ace);
   }
 
-
   @Override
   public Set<Subsystem> getRequirements() {
     return requirements;
@@ -103,6 +102,7 @@ private static final double STABLE_DURATION = 0.1;
     startTime = Timer.getFPGATimestamp();
     position = arm.upperArm.getPos();
     prevLevel = arm.level;
+    offset = false;
 
     tagId = Utilitys.grabTagID();
     SmartDashboard.putNumber("TagID", tagId);
@@ -111,7 +111,7 @@ private static final double STABLE_DURATION = 0.1;
       SmartDashboard.putNumberArray(
           "AprilTag",
           new double[] {
-            aprilTag.getX(), aprilTag.getY(), aprilTag.getRotation().getRadians()
+              aprilTag.getX(), aprilTag.getY(), aprilTag.getRotation().getRadians()
           });
     }
 
@@ -125,8 +125,8 @@ private static final double STABLE_DURATION = 0.1;
     levelStartTime = Timer.getFPGATimestamp();
     reachedThisLevel = false;
 
-    InitLogger.logMessage("MoveArmFix", "Initialized. Level=" + levelEnum );
-    //SmartDashboard.putString("MoveArmFix/Level", levelEnum.toString());
+    InitLogger.logMessage("MoveArmFix", "Initialized. Level=" + levelEnum);
+    // SmartDashboard.putString("MoveArmFix/Level", levelEnum.toString());
   }
 
   @Override
@@ -201,7 +201,10 @@ private static final double STABLE_DURATION = 0.1;
         arm.upperArm.setPos(34.0, true);
         arm.slider.setPos(30.5, false);
         arm.wrist.setPos(9.4);
-        ace.setPos(5.0);
+        if (!offset) {
+          ace.setPos(5.0);
+          offset = true;
+        }
         break;
 
       case LEVEL5:
@@ -247,7 +250,7 @@ private static final double STABLE_DURATION = 0.1;
         break;
 
       case CHOMP:
-      InitLogger.logMessage("WARNING","Chomp called with shiftDirection=" + shiftDirection);
+        InitLogger.logMessage("WARNING", "Chomp called with shiftDirection=" + shiftDirection);
         if (shiftDirection == 1) {
           arm.wrist.setSpeed(0.2);
         } else {
@@ -264,7 +267,7 @@ private static final double STABLE_DURATION = 0.1;
 
       case UNKNOWN:
       default:
-      InitLogger.logMessage("MoveArmFix", "Unknown level: " + levelEnum);
+        InitLogger.logMessage("MoveArmFix", "Unknown level: " + levelEnum);
         if (algae) {
           arm.lowerArm.setPos(1.0);
           arm.upperArm.setPos(1.0, applyDynamic);
@@ -282,14 +285,16 @@ private static final double STABLE_DURATION = 0.1;
     boolean atLevel = arm.isAtLevel();
     if (atLevel && !reachedThisLevel) {
       reachedThisLevel = true;
-      
+
       double sinceLevelStart = Timer.getFPGATimestamp() - levelStartTime;
-      InitLogger.logMessage("MoveArmFix", "Reached level " + levelEnum + " in " + String.format("%.3f", sinceLevelStart) + "s");
+      InitLogger.logMessage("MoveArmFix",
+          "Reached level " + levelEnum + " in " + String.format("%.3f", sinceLevelStart) + "s");
     }
 
     double timeSinceLevel = Timer.getFPGATimestamp() - levelStartTime;
     if (!reachedThisLevel && timeSinceLevel > 1.0) {
-      InitLogger.logMessage("MoveArmFix", "WARNING: Level " + levelEnum + " not achieved after " + String.format("%.2f", timeSinceLevel) + "s");
+      InitLogger.logMessage("MoveArmFix",
+          "WARNING: Level " + levelEnum + " not achieved after " + String.format("%.2f", timeSinceLevel) + "s");
       reachedThisLevel = true; // avoid repeat spam
     }
 
@@ -301,23 +306,21 @@ private static final double STABLE_DURATION = 0.1;
     InitLogger.logMessage("MoveArmFix", "Ended. Level=" + levelEnum + " interrupted=" + interrupted);
   }
 
- 
-
-@Override
-public boolean isFinished() {
-  boolean atLevel = arm.isAtLevel();
-  if (atLevel) {
-    if (levelReachedTime == 0) {
-      levelReachedTime = Timer.getFPGATimestamp();
+  @Override
+  public boolean isFinished() {
+    boolean atLevel = arm.isAtLevel();
+    if (atLevel) {
+      if (levelReachedTime == 0) {
+        levelReachedTime = Timer.getFPGATimestamp();
+      }
+      if (Timer.getFPGATimestamp() - levelReachedTime >= STABLE_DURATION) {
+        return true;
+      }
+    } else {
+      levelReachedTime = 0;
     }
-    if (Timer.getFPGATimestamp() - levelReachedTime >= STABLE_DURATION) {
-      return true;
-    }
-  } else {
-    levelReachedTime = 0;
+    return false; // no longer using elapsed-time cutoff or combine both if needed
   }
-  return false; // no longer using elapsed-time cutoff or combine both if needed
-}
 
   @Override
   public boolean runsWhenDisabled() {
