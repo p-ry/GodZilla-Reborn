@@ -60,6 +60,8 @@ import com.pathplanner.lib.commands.PathfindingCommand;
 import com.pathplanner.lib.pathfinding.LocalADStar;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.awt.geom.Point2D;
+import frc.robot.commands.FollowCurve;
 
 public class RobotContainer {
 
@@ -127,8 +129,8 @@ public class RobotContainer {
   final JoystickButton Process = new JoystickButton(copilot2, 1);
   final JoystickButton Load = new JoystickButton(copilot, 12);
   final JoystickButton Barge = new JoystickButton(copilot2, 2);
-  final JoystickButton Chomp = new JoystickButton(copilot, 9);
-  final JoystickButton CoveredSwitch = new JoystickButton(copilot, 8);
+  //final JoystickButton Chomp = new JoystickButton(copilot, 9);
+  final JoystickButton CoveredSwitch = new JoystickButton(copilot, 9);
 
   final Trigger lTrigger = controller.leftTrigger();
   final Trigger rTrigger = controller.rightTrigger();
@@ -138,6 +140,15 @@ public class RobotContainer {
   public static boolean rightTree = true;
   public static double maxSpeedConstant = 4.73;
   public static double maxAngularRateConstant = RotationsPerSecond.of(0.75).in(RadiansPerSecond);
+
+  public static Point2D.Double base = new Point2D.Double(176.45,508.9889);//.17645,.50898890);
+  public static Point2D.Double startPoint = new Point2D.Double(-27.77,580.7621);//-.02777, .5207621); 
+  
+
+  public static Point2D.Double controlPoint1 = new Point2D.Double(-20.0,800.0);//-0.4,.5);
+  public static Point2D.Double controlPoint2 = new Point2D.Double(-20.0,1200.0);//.2,0.6);
+  public static Point2D.Double endPoint = new Point2D.Double(-20.1,1160.95);//0.0041,1.85795);
+
   /* Path follower */
   private final SendableChooser<Command> AutoChooser;
 
@@ -350,9 +361,24 @@ public class RobotContainer {
     // })); // Chomp is off
 
     CoveredSwitch.whileTrue(
-        new MoveArmFix(mArm, ace, 8, 0)// Need to add isfinished command
+        new FollowCurve(mArm, startPoint,controlPoint1,controlPoint2,endPoint,base)//Need to add isfinished command
 
     );
+
+   // Chomp.onTrue(new FollowCurve(mArm, startPoint,controlPoint1,controlPoint2,endPoint,base));
+
+    // Chomp.onTrue(new InstantCommand(() -> {
+    // // ace.setSpeed(1);
+    // mArm.wrist.setSpeed(.3);
+    // System.out.println("Chomp is on");
+    // })); // Chomp is on
+    // Chomp.onFalse(new InstantCommand(() -> {
+    // // ace.setSpeed(0);
+    // mArm.wrist.setSpeed(0);
+    // System.out.println("Chomp is off");
+    // })); // Chomp is off
+
+   
 
     lTrigger.whileTrue(
         new RunCommand(() -> {

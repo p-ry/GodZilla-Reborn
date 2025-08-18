@@ -89,7 +89,7 @@ public class MoveArmFix extends Command {
     this.ace = ace;
     this.levelEnum = levelEnum;
     this.shiftDirection = shiftDirection;
-    addRequirements(arm, ace);
+    //addRequirements(arm, ace);
   }
 
   @Override

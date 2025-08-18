@@ -40,6 +40,9 @@ public class FollowCurve extends Command {
     private double lastElbowDeg;
     private double lastSliderMeters;
     private boolean holdMode = false; 
+    double shoulderDeg ;
+    double elbowDeg    ;
+    double sliderMM ;
 
     public FollowCurve(
             ArmAssembly arm,
@@ -49,7 +52,7 @@ public class FollowCurve extends Command {
         this.arm    = arm;
         this.curve  = new BezierCurveJava(p0, p1, p2, p3);
         this.base   = base;
-        addRequirements(arm);
+       // addRequirements(arm);
     }
 
     @Override
@@ -59,12 +62,14 @@ public class FollowCurve extends Command {
         lastRawShoulderDeg  = computeRawShoulderDeg(startPos);
         lastElbowDeg        = computeElbowDeg(startPos);
         lastSliderMeters    = computeSlider(startPos);
+        System.out.println("FollowCurve initialized with start position: " + startPos);
     }
 
     @Override
     public void execute() {
         if (time > totalTime) {
-            arm.setJointVelocities(0, 0, 0);
+            arm.setJointAngles(shoulderDeg, elbowDeg, sliderMM);
+            //arm.setJointVelocities(0, 0, 0);
             return;
         }
 
@@ -83,9 +88,9 @@ public class FollowCurve extends Command {
         double dydT  = vel.y * scale;
 
         // 4) kinematics
-        double shoulderDeg = computeRawShoulderDeg(pos);
-        double elbowDeg       = computeElbowDeg(pos);
-        double sliderMM       = computeSlider(pos);
+        shoulderDeg = computeRawShoulderDeg(pos);
+        elbowDeg       = computeElbowDeg(pos);
+        sliderMM       = computeSlider(pos);
 
         // 5) slider velocity
         double sliderVelM = (sliderMM - lastSliderMeters) / dt;
@@ -126,7 +131,7 @@ public class FollowCurve extends Command {
         SmartDashboard.putNumber("ElbowDeg",     elbowDeg);
         SmartDashboard.putNumber("CurrentSlider", sliderMM);
 
-        arm.setJointVelocities(shoulderVel, elbowVel, sliderRPS);
+       // arm.setJointVelocities(shoulderVel, elbowVel, sliderRPS);
 
          // latch once into hold mode to prevent chatter  
          boolean finished = time >= totalTime;  
