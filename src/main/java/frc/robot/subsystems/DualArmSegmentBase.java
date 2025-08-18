@@ -153,6 +153,7 @@ public abstract class DualArmSegmentBase extends SubsystemBase implements edu.wp
 
     left.setControl(dynamic.withVelocity(vel).withAcceleration(acc).withJerk(jerk).withPosition(position));
     right.setControl(dynamic.withVelocity(vel).withAcceleration(acc).withJerk(jerk).withPosition(position));
+    SmartDashboard.putNumber(this.getClass().getSimpleName(), position);
   }
 
   public void setPosAutoSpeed(double position) {
@@ -224,6 +225,8 @@ public abstract class DualArmSegmentBase extends SubsystemBase implements edu.wp
     velocityRequest.Velocity = velocitySetpoint;
     left.setControl(velocityRequest);
     right.setControl(velocityRequest);
+    String msg = this.getClass().getSimpleName() + " Vel ";
+    SmartDashboard.putNumber(msg, velocityRPS);
     InitLogger.logDouble(this.getClass().getSimpleName(), "Velocity",velocityRPS);
   }
   /**
