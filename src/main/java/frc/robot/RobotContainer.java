@@ -361,9 +361,7 @@ public class RobotContainer {
     // })); // Chomp is off
 
     CoveredSwitch.whileTrue(
-        new FollowCurve(mArm, startPoint,controlPoint1,controlPoint2,endPoint,base)//Need to add isfinished command
-
-    );
+        new FollowCurve(mArm, startPoint,controlPoint1,controlPoint2,endPoint,base,() ->mArm.lowerArm.getPos(), () ->mArm.upperArm.getPos(),() ->mArm.slider.getPos(),false));
 
    // Chomp.onTrue(new FollowCurve(mArm, startPoint,controlPoint1,controlPoint2,endPoint,base));
 
