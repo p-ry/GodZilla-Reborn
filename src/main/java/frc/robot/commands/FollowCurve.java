@@ -258,5 +258,16 @@ public class FollowCurve extends Command {
     }
 
     // ===== Helpers =====
-    private static double safeScale(double value, double maxAbs) { double a = Math.abs(value); if (a < 1e-6) return 1.0; // nothing to scale return Math.min(1.0, maxAbs / a); // ≤ 1.0 } private static double applyDeadband(double v, double db) { return (Math.abs(v) < db) ? 0.0 : v; }
+    private static double safeScale(double value, double maxAbs) {
+        double a = Math.abs(value);
+        if (a < 1e-6)
+            return 1.0;
+        // nothing to scale
+        return Math.min(1.0, maxAbs / a);
+        // ≤ 1.0
+    }
+
+    private static double applyDeadband(double v, double db) {
+        return (Math.abs(v) < db) ? 0.0 : v;
+    }
 }
