@@ -49,7 +49,7 @@ public abstract class DualArmSegmentBase extends SubsystemBase implements edu.wp
 
   protected double switchToFastThreshold = 12.0;
   protected double switchToSlowThreshold = 8.0;
- private final VelocityDutyCycle velocityRequest = new VelocityDutyCycle(0).withSlot(0);
+ private final VelocityDutyCycle velocityRequest = new VelocityDutyCycle(0).withSlot(1);
  private static double velocitySetpoint = 0;
 
   // Logging rate-limiter
@@ -86,6 +86,7 @@ public abstract class DualArmSegmentBase extends SubsystemBase implements edu.wp
 
     leftPID = leftConfig.Slot0;
     rightPID = rightConfig.Slot0;
+    
     leftMM = leftConfig.MotionMagic;
     rightMM = rightConfig.MotionMagic;
 
@@ -112,6 +113,22 @@ public abstract class DualArmSegmentBase extends SubsystemBase implements edu.wp
     rightPID.kS = kS;
     rightPID.kV = 0.12;
     rightPID.kA = 0.01;
+    // Velocity slot (for velocity control mode)
+    Slot1Configs leftPID1 = leftConfig.Slot1;
+    Slot1Configs rightPID1 = rightConfig.Slot1;
+    leftPID1.kP = 0.02;
+    leftPID1.kI = 0.0;
+    leftPID1.kD = 0.0;
+    leftPID1.kS = 0.3;
+    leftPID1.kV = 0.0;
+    leftPID1.kA = 0.00;
+    rightPID1.kP = 0.02;
+    rightPID1.kI = 0.0;
+    rightPID1.kD = 0.0;
+    rightPID1.kS = 0.3;
+    rightPID1.kV = 0.0;
+    rightPID1.kA = 0.0;
+
 
     // Fast motion magic profile
     leftMM.MotionMagicCruiseVelocity = fastVel;
@@ -125,6 +142,7 @@ public abstract class DualArmSegmentBase extends SubsystemBase implements edu.wp
     // Apply initial config
     left.getConfigurator().apply(leftConfig);
     right.getConfigurator().apply(rightConfig);
+   
   }
 
   public void setBrakeMode(NeutralModeValue mode) {

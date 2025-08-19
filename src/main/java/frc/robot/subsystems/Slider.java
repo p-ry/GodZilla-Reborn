@@ -4,6 +4,7 @@ import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import frc.robot.Constants;
@@ -83,9 +84,10 @@ public class Slider extends SubsystemBase implements Sendable {
   }
 
   public void setTargetVelocityRPS(double velocityRPS) {
-    velocitySetpoint =0;// velocityRPS;
+    velocitySetpoint = velocityRPS;
     velocityRequest.Velocity = velocitySetpoint;
     slider.setControl(velocityRequest);
+    SmartDashboard.putNumber("SliderRPSCmd", velocitySetpoint);
     
   }
 

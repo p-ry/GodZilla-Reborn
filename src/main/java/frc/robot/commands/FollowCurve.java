@@ -147,7 +147,7 @@ public class FollowCurve extends Command {
         SmartDashboard.putNumber("SliderRPSCmd",    sliderRPSCmd);
 
         // 12) send to hardware
-        arm.setJointVelocities(shoulderVelCmd, 0,0);//elbowVelCmd, sliderRPSCmd);
+        arm.setJointVelocities(shoulderVelCmd, -elbowVelCmd, sliderRPSCmd);
 
         // 13) update history
         lastRawShoulderDeg = rawShoulderDeg;
