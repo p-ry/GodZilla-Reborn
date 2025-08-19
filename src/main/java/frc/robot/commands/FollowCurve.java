@@ -32,7 +32,7 @@ public class FollowCurve extends Command {
     private static final double MAX_ELBOW_VEL = 20.0; // deg/s command cap
     private static final double MAX_SLIDER_LENGTH = 350.0; // slider stroke (same units as L1/L2)
     private static final double MAX_SLIDER_RPS = 1.0; // command cap
-    private static final double SLIDER_UNITS_PER_REV = 0.142875; // distance units per rev
+    private static final double SLIDER_UNITS_PER_REV = 142.875;// 0.142875; // distance units per rev
 
     // ===== Direction & smoothing =====
     private static final double ELBOW_SIGN = -1.0; // invert elbow as you observed
@@ -51,6 +51,12 @@ public class FollowCurve extends Command {
     // state for finite-difference
     private double lastRawShoulderDeg;
     private double lastElbowDeg;
+    private static final double SHOULDER_SIGN = +1.0; // flip to -1.0 if needed
+    private double shoulderZeroOffsetDeg; // HW - IK at start
+   
+private double shoulderOffsetIK = 0.0;            // maps HW reading into IK frame
+
+
     double rawShoulderDeg;
 
     double elbowDeg;
@@ -74,9 +80,18 @@ public class FollowCurve extends Command {
     public void initialize() {
         time = 0;
         Point2D.Double startPos = curve.getPositionAtArcLengthTime(0.0);
+        double startIK = computeRawShoulderDeg(startPos);
+        double startHW = arm.lowerArm.getPos(); // your sensor reading
+        shoulderZeroOffsetDeg = startHW - (SHOULDER_SIGN * startIK);
+
         lastRawShoulderDeg = computeRawShoulderDeg(startPos);
         lastElbowDeg = computeElbowDeg(startPos);
         lastSliderUnits = computeSlider(startPos);
+        finalPos = curve.getPositionAtArcLengthTime(1.0);
+        finalRawShoulderDeg = computeRawShoulderDeg(finalPos);
+        finalElbowDeg = computeElbowDeg(finalPos);
+        finalSliderUnits = computeSlider(finalPos);
+
     }
 
     @Override
@@ -98,9 +113,9 @@ public class FollowCurve extends Command {
         double dydT_base = dPos_ds.y * (sp / totalTime);
 
         // Current kinematics at pose (angles depend only on pos, not uDot)
-        double rawShoulderDeg = computeRawShoulderDeg(pos);
-        double elbowDeg = computeElbowDeg(pos);
-        double sliderUnits = computeSlider(pos);
+        rawShoulderDeg = computeRawShoulderDeg(pos);
+        elbowDeg = computeElbowDeg(pos);
+        sliderUnits = computeSlider(pos);
 
         // Predict slider rate for base uDot using finite diff over one unsaturated step
         double uNextBase = Math.min(1.0, time + (dt / totalTime));
@@ -166,16 +181,60 @@ public class FollowCurve extends Command {
         double shErr = rawShoulderDeg - finalRawShoulderDeg;
         double elErr = elbowDeg - finalElbowDeg;
         double slErr = sliderUnits - finalSliderUnits;
-        if ((Math.abs(shErr) < ANG_TOL_DEG && Math.abs(elErr) < ANG_TOL_DEG && Math.abs(slErr) < SLIDER_TOL
-                && (sp < SP_TOL || time > 0.999))) {
-            shoulderVelCmd = 0;
-            elbowVelCmd = 0;
-            sliderRPSCmd = 0;
-            time = 1.0; // force completion
+
+        double shoulderIK = rawShoulderDeg;
+        double shoulderHW_asIK = (arm.lowerArm.getPos() - shoulderZeroOffsetDeg) / SHOULDER_SIGN;
+
+        double shErrIK = shoulderIK - finalRawShoulderDeg;
+        double shErrHW = shoulderHW_asIK - finalRawShoulderDeg; // what the robot is really doing
+
+       
+shoulderHW_asIK = SHOULDER_SIGN * arm.lowerArm.getPos() - shoulderOffsetIK;
+
+shErrIK = shoulderIK      - finalRawShoulderDeg;
+shErrHW = shoulderHW_asIK - finalRawShoulderDeg;
+
+
+        boolean nearEnd = (smoothstepDeriv(time) < SP_TOL) || (time > totalTime);
+        boolean atGoalIK = Math.abs(shErrIK) < ANG_TOL_DEG;
+        boolean atGoalHW = Math.abs(shErrHW) < ANG_TOL_DEG;
+
+        if (nearEnd && Math.abs(shErrHW) < ANG_TOL_DEG) {
+            arm.setJointVelocities(0, 0, 0);
+            time = 1.0;
+            return;
         }
+        double desiredDirHW = Math.signum(finalRawShoulderDeg - shoulderHW_asIK);
+if (nearEnd && desiredDirHW != 0.0 && Math.signum(shoulderVelCmd) != 0.0
+    && Math.signum(shoulderVelCmd) != desiredDirHW) {
+    shoulderVelCmd = 0.0; // don’t drive away from the target
+}
+
+
+        // if ((Math.abs(shErr) < ANG_TOL_DEG && Math.abs(elErr) < ANG_TOL_DEG &&
+        // Math.abs(slErr) < SLIDER_TOL
+        // && (sp < SP_TOL || time > 0.999))) {
+        // shoulderVelCmd = 0;
+        // elbowVelCmd = 0;
+        // sliderRPSCmd = 0;
+        // time = totalTime; // force completion
+        // }
 
         // Dashboard (angles clamped for display only)
-        SmartDashboard.putNumber("ShoulderDeg", clamp(rawShoulderDeg, -180.0, MAX_SHOULDER_DEG));
+        SmartDashboard.putNumber("u_norm", time);
+        SmartDashboard.putNumber("sp_smoothstepPrime", smoothstepDeriv(time));
+        // IK vs HW:
+        SmartDashboard.putNumber("ShoulderDeg_IK", shoulderIK);
+        SmartDashboard.putNumber("ShoulderDeg_HW", arm.lowerArm.getPos());
+        SmartDashboard.putNumber("ShoulderDeg_HW_asIK", shoulderHW_asIK);
+        SmartDashboard.putNumber("shErr_IK", shErrIK);
+        SmartDashboard.putNumber("shErr_HW", shErrHW);
+        SmartDashboard.putNumber("FinalShoulder_IK", finalRawShoulderDeg);
+       
+
+        SmartDashboard.putNumber("ShoulderDeg", rawShoulderDeg);
+        SmartDashboard.putNumber("ShoulderDegActual", arm.lowerArm.getPos());
+
         SmartDashboard.putNumber("ElbowDeg", elbowDeg);
         SmartDashboard.putNumber("CurrentSlider", sliderUnits);
         SmartDashboard.putNumber("ShoulderVelCmd", shoulderVelCmd);
@@ -187,6 +246,7 @@ public class FollowCurve extends Command {
         SmartDashboard.putNumber("shErr", shErr);
         SmartDashboard.putNumber("elErr", elErr);
         SmartDashboard.putNumber("slErr", slErr);
+        
 
         arm.setJointVelocities(shoulderVelCmd, elbowVelCmd, sliderRPSCmd);
 
