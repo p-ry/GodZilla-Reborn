@@ -218,27 +218,26 @@ public class FollowCurve extends Command {
 
         // REPLACE your nearEnd line with this:
 boolean nearEnd = (time > 0.95) || (sp < SP_TOL && time > 0.05);
-
-// Stop window near the end — prefer HARDWARE angles; slider optional
-double shErr = rawShoulderDeg - finalRawShoulderDeg;  // IK defaults (fallback)
+// Stop window near the end — use HARDWARE ANGLES; slider not required
+double shErr = rawShoulderDeg - finalRawShoulderDeg;  // IK fallback
 double elErr = elbowDeg       - finalElbowDeg;
 
-// If sensors available, map into IK frame and use HW angles
-boolean usingHWStop = false;
+// Map sensors → IK frame if available and use those errors instead
+boolean usingHW = false;
 if (shoulderDegHwSup != null && elbowDegHwSup != null) {
     double hwSh_deg = shoulderDegHwSup.getAsDouble();
     double hwEl_deg = elbowDegHwSup.getAsDouble();
-    double theta1IK_deg = SHOULDER_SIGN   * hwSh_deg - shoulderOffsetIK;   // shoulder in IK frame
-    double theta2IK_deg = ELBOW_MEAS_SIGN * hwEl_deg - elbowOffsetIK;      // elbow (relative) in IK frame
+    double theta1IK_deg = SHOULDER_SIGN   * hwSh_deg - shoulderOffsetIK; // shoulder world angle in IK frame
+    double theta2IK_deg = ELBOW_MEAS_SIGN * hwEl_deg - elbowOffsetIK;    // elbow interior in IK frame
     shErr = theta1IK_deg - finalRawShoulderDeg;
     elErr = theta2IK_deg - finalElbowDeg;
-    usingHWStop = true;
+    usingHW = true;
 }
 
-// Only require angles to be good; slider is *not* required for the stop
+// only angles; slider may be in different units, so don’t gate on it
 boolean anglesGood = Math.abs(shErr) < ANG_TOL_DEG && Math.abs(elErr) < ANG_TOL_DEG;
 
-// Gate by near-end so we don't stop early
+// use your nearEnd flag (so we don’t stop at the start where sp≈0)
 if (nearEnd && anglesGood) {
     shoulderVelCmd = 0;
     elbowVelCmd    = 0;
@@ -246,10 +245,12 @@ if (nearEnd && anglesGood) {
     time = 1.0; // force completion
 }
 
-// (optional) telemetry
-SmartDashboard.putBoolean("Stop_UsingHW", usingHWStop);
+// debug (optional)
+SmartDashboard.putBoolean("Stop_UsingHW", usingHW);
 SmartDashboard.putNumber("Stop_shErr_deg", shErr);
 SmartDashboard.putNumber("Stop_elErr_deg", elErr);
+SmartDashboard.putBoolean("nearEnd", nearEnd);
+
 
         // Command
         arm.setJointVelocities(shoulderVelCmd, elbowVelCmd, sliderRPSCmd);
