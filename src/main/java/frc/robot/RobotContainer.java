@@ -360,9 +360,19 @@ public class RobotContainer {
     // System.out.println("Chomp is off");
     // })); // Chomp is off
 
-    CoveredSwitch.whileTrue(
+    CoveredSwitch.onTrue(
         new FollowCurve(mArm, startPoint,controlPoint1,controlPoint2,endPoint,base,() ->mArm.lowerArm.getPos(), () ->mArm.upperArm.getPos(),() ->mArm.slider.getPos(),false));
+CoveredSwitch.onFalse(new InstantCommand(() -> {
+            mArm.lowerArm.setPos(mArm.lowerArm.getPos());
+            
+            mArm.upperArm.setPos(mArm.upperArm.getPos());
+            
+            mArm.slider.setPos(mArm.slider.getPos());
+            
+          }));
+        
 
+    // Chomp.onTrue(new FollowCurve(mArm, startPoint,controlPoint1,controlPoint2,endPoint,base));
    // Chomp.onTrue(new FollowCurve(mArm, startPoint,controlPoint1,controlPoint2,endPoint,base));
 
     // Chomp.onTrue(new InstantCommand(() -> {

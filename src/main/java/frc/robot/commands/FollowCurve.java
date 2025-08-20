@@ -63,6 +63,8 @@ public class FollowCurve extends Command {
     private double lastElbowDeg;
     private double lastSliderUnits;
 
+
+
     // ===== Mapping HW sensors -> IK angles (calibrated at start pose) =====
     private static final double SHOULDER_SIGN = +1.0; // flip if your sensor increases opposite to IK frame
     private static final double ELBOW_MEAS_SIGN = +1.0; // sign for relative elbow sensor
@@ -214,28 +216,40 @@ public class FollowCurve extends Command {
         double elbowVelCmd    = applyDeadband(elbowVelDeg_raw    * g * ELBOW_SIGN, VEL_DB_ELBOW);
         double sliderRPSCmd   = applyDeadband(sliderRPS_raw      * g, VEL_DB_SLIDER);
 
-        // Stop window near the end — prefer HARDWARE if available
-double shErr = rawShoulderDeg - finalRawShoulderDeg;
+        // REPLACE your nearEnd line with this:
+boolean nearEnd = (time > 0.95) || (sp < SP_TOL && time > 0.05);
+
+// Stop window near the end — prefer HARDWARE angles; slider optional
+double shErr = rawShoulderDeg - finalRawShoulderDeg;  // IK defaults (fallback)
 double elErr = elbowDeg       - finalElbowDeg;
-double slErr = sliderUnits    - finalSliderUnits;
-// If sensors are available, compute errors using HW mapped into IK frame
-if (shoulderDegHwSup != null && elbowDegHwSup != null && sliderUnitsHwSup != null) {
+
+// If sensors available, map into IK frame and use HW angles
+boolean usingHWStop = false;
+if (shoulderDegHwSup != null && elbowDegHwSup != null) {
     double hwSh_deg = shoulderDegHwSup.getAsDouble();
     double hwEl_deg = elbowDegHwSup.getAsDouble();
-    double hwSl     = sliderUnitsHwSup.getAsDouble();
-    double theta1IK_deg = SHOULDER_SIGN   * hwSh_deg - shoulderOffsetIK;
-    double theta2IK_deg = ELBOW_MEAS_SIGN * hwEl_deg - elbowOffsetIK;
-    double sliderMM     = (sliderIsRotations ? hwSl * SLIDER_UNITS_PER_REV : hwSl) - sliderZeroMM;
-
+    double theta1IK_deg = SHOULDER_SIGN   * hwSh_deg - shoulderOffsetIK;   // shoulder in IK frame
+    double theta2IK_deg = ELBOW_MEAS_SIGN * hwEl_deg - elbowOffsetIK;      // elbow (relative) in IK frame
     shErr = theta1IK_deg - finalRawShoulderDeg;
     elErr = theta2IK_deg - finalElbowDeg;
-    slErr = sliderMM     - finalSliderUnits;
+    usingHWStop = true;
 }
-if ((Math.abs(shErr) < ANG_TOL_DEG && Math.abs(elErr) < ANG_TOL_DEG && Math.abs(slErr) < SLIDER_TOL
-             && (sp < SP_TOL || time > 0.999)) ) {
-    shoulderVelCmd = 0; elbowVelCmd = 0; sliderRPSCmd = 0;
+
+// Only require angles to be good; slider is *not* required for the stop
+boolean anglesGood = Math.abs(shErr) < ANG_TOL_DEG && Math.abs(elErr) < ANG_TOL_DEG;
+
+// Gate by near-end so we don't stop early
+if (nearEnd && anglesGood) {
+    shoulderVelCmd = 0;
+    elbowVelCmd    = 0;
+    sliderRPSCmd   = 0;
     time = 1.0; // force completion
 }
+
+// (optional) telemetry
+SmartDashboard.putBoolean("Stop_UsingHW", usingHWStop);
+SmartDashboard.putNumber("Stop_shErr_deg", shErr);
+SmartDashboard.putNumber("Stop_elErr_deg", elErr);
 
         // Command
         arm.setJointVelocities(shoulderVelCmd, elbowVelCmd, sliderRPSCmd);
@@ -255,7 +269,7 @@ if ((Math.abs(shErr) < ANG_TOL_DEG && Math.abs(elErr) < ANG_TOL_DEG && Math.abs(
         SmartDashboard.putNumber("sp", sp);
         SmartDashboard.putNumber("shErr", shErr);
         SmartDashboard.putNumber("elErr", elErr);
-        SmartDashboard.putNumber("slErr", slErr);
+        
 
         // ===== NEW: Forward Kinematics from sensors (if available) =====
         if (shoulderDegHwSup != null && elbowDegHwSup != null && sliderUnitsHwSup != null) {
@@ -294,10 +308,19 @@ if ((Math.abs(shErr) < ANG_TOL_DEG && Math.abs(elErr) < ANG_TOL_DEG && Math.abs(
     }
 
     @Override
-    public boolean isFinished() { return time >= 1.0; }
+    public boolean isFinished() { 
+        
+
+        
+        
+        return time >= 1.0; }
 
     @Override
-    public void end(boolean interrupted) { arm.setJointVelocities(0, 0, 0); }
+    public void end(boolean interrupted) { arm.setJointVelocities(0, 0, 0); 
+        arm.lowerArm.setPos(lastRawShoulderDeg);   
+        arm.upperArm.setPos(lastElbowDeg); // interior angle
+        arm.slider.setPos(lastSliderUnits);
+    }
 
     // ===== Helpers =====
     private static double smoothstep(double u) { return u*u*(3 - 2*u); }
