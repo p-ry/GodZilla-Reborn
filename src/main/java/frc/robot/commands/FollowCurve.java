@@ -29,7 +29,7 @@ public class FollowCurve extends Command {
     private final boolean sliderIsRotations;       // true if slider supplier returns rotations
 
     // ===== Timing (u ~ progress 0..1) =====
-    private static final double totalTime = 5.0;   // planned time to traverse u from 0→1 when unsaturated
+    private static final double totalTime = 2.0;   // planned time to traverse u from 0→1 when unsaturated
     private static final double dt        = 0.02;  // loop period
     private double time;                           // progress 0..1
 
@@ -62,6 +62,17 @@ public class FollowCurve extends Command {
     private double lastRawShoulderDeg;
     private double lastElbowDeg;
     private double lastSliderUnits;
+    // ===== PD correction (HW vs current IK target) =====
+// Tune small first; these are deg/s per deg (Kp) and deg/s per (deg/s) (Kd)
+private static final double KP_SH = 2.0;
+private static final double KD_SH = 0.08;
+private static final double KP_EL = 1.0;
+private static final double KD_EL = 0.06;
+
+// memory for derivative term
+private double lastShErrHW = 0.0; // (deg) = shoulder_HW(as IK) - rawShoulderDeg
+private double lastElErrHW = 0.0; // (deg) = elbow_HW(as IK)    - elbowDeg
+
 
 
 
@@ -131,7 +142,7 @@ public class FollowCurve extends Command {
             double hwEl = elbowDegHwSup.getAsDouble();
             double hwSl = sliderUnitsHwSup.getAsDouble();
 
-            shoulderOffsetIK = SHOULDER_SIGN * hwSh - startIK_theta1;
+            shoulderOffsetIK = 0.0;//SHOULDER_SIGN * hwSh - startIK_theta1;
             elbowOffsetIK    = ELBOW_MEAS_SIGN * hwEl - startIK_theta2; // relative sensor already interior angle
             double hwSliderMM = sliderIsRotations ? hwSl * SLIDER_UNITS_PER_REV : hwSl;
             sliderZeroMM      = hwSliderMM - startIK_slider;
@@ -140,6 +151,19 @@ public class FollowCurve extends Command {
         } else {
             SmartDashboard.putBoolean("FK_Calibrated", false);
         }
+        // === PD error memory init (match HW->IK at start) ===
+if (shoulderDegHwSup != null && elbowDegHwSup != null) {
+    double hwSh0 = shoulderDegHwSup.getAsDouble();
+    double hwEl0 = elbowDegHwSup.getAsDouble();
+    double shIK0 = SHOULDER_SIGN   * hwSh0 - shoulderOffsetIK;   // shoulder in IK frame
+    double elIK0 = ELBOW_MEAS_SIGN * hwEl0 - elbowOffsetIK;      // elbow (relative) in IK frame
+    lastShErrHW = shIK0 - lastRawShoulderDeg;  // should be near 0 if mapping was calibrated
+    lastElErrHW = elIK0 - lastElbowDeg;
+} else {
+    lastShErrHW = 0.0;
+    lastElErrHW = 0.0;
+}
+
     }
 
     @Override
@@ -182,6 +206,7 @@ public class FollowCurve extends Command {
         double J12 =        - sEff * s12;
         double J21 =  L1 * c1 + sEff * c12;
         double J22 =          sEff * c12;
+        
 
         // Subtract slider contribution at base rate (so shoulder/elbow only see what's left)
         double vx_base = dxdT_base - (c12 * sliderVel_base);
@@ -216,8 +241,53 @@ public class FollowCurve extends Command {
         double elbowVelCmd    = applyDeadband(elbowVelDeg_raw    * g * ELBOW_SIGN, VEL_DB_ELBOW);
         double sliderRPSCmd   = applyDeadband(sliderRPS_raw      * g, VEL_DB_SLIDER);
 
+
+// === Continuous PD correction (HW vs *current* IK target) ===
+// Map sensors into IK frame and compute angle errors to the instantaneous targets
+if (shoulderDegHwSup != null && elbowDegHwSup != null) {
+    double hwSh = shoulderDegHwSup.getAsDouble();
+    double hwEl = elbowDegHwSup.getAsDouble();
+
+    double shIK = SHOULDER_SIGN   * hwSh - shoulderOffsetIK; // shoulder HW in IK frame (deg)
+    double elIK = ELBOW_MEAS_SIGN * hwEl - elbowOffsetIK;    // elbow HW in IK frame (deg)
+
+    double shErrHW = shIK - rawShoulderDeg; // deg
+    double elErrHW = elIK - elbowDeg;       // deg
+
+    double shErrDot = (shErrHW - lastShErrHW) / dt; // deg/s
+    double elErrDot = (elErrHW - lastElErrHW) / dt; // deg/s
+
+    // PD correction in deg/s (IK frame)
+    double shCorr = -KP_SH * shErrHW + KD_SH * shErrDot;
+    double elCorrIK = KP_EL * elErrHW + KD_EL * elErrDot;
+
+    // Add to commands (note: elbow command uses ELBOW_SIGN)
+    shoulderVelCmd += shCorr;
+    elbowVelCmd    += elCorrIK * ELBOW_SIGN;
+
+    // Re-apply deadband and clamp to velocity limits (safety)
+    shoulderVelCmd = applyDeadband(
+        clamp(shoulderVelCmd, -MAX_SHOULDER_VEL, MAX_SHOULDER_VEL), VEL_DB_SHOULDER);
+    elbowVelCmd    = applyDeadband(
+        clamp(elbowVelCmd,    -MAX_ELBOW_VEL,    MAX_ELBOW_VEL),    VEL_DB_ELBOW);
+
+    // Telemetry for tuning
+    SmartDashboard.putNumber("PD_ShErr", shErrHW);
+    SmartDashboard.putNumber("PD_ShCorr", shCorr);
+    SmartDashboard.putNumber("PD_ElErr", elErrHW);
+    SmartDashboard.putNumber("PD_ElCorr", elCorrIK);
+    SmartDashboard.putNumber("PD_ShErrDot", shErrDot);
+    SmartDashboard.putNumber("PD_ElErrDot", elErrDot);
+
+    // Update derivative memory
+    lastShErrHW = shErrHW;
+    lastElErrHW = elErrHW;
+}
+
+
+
         // REPLACE your nearEnd line with this:
-boolean nearEnd = (time > 0.95) || (sp < SP_TOL && time > 0.05);
+boolean nearEnd = (time > 0.5) || (sp < SP_TOL && time > 0.05);
 // Stop window near the end — use HARDWARE ANGLES; slider not required
 double shErr = rawShoulderDeg - finalRawShoulderDeg;  // IK fallback
 double elErr = elbowDeg       - finalElbowDeg;
@@ -250,6 +320,7 @@ SmartDashboard.putBoolean("Stop_UsingHW", usingHW);
 SmartDashboard.putNumber("Stop_shErr_deg", shErr);
 SmartDashboard.putNumber("Stop_elErr_deg", elErr);
 SmartDashboard.putBoolean("nearEnd", nearEnd);
+SmartDashboard.putNumber("shoulderOffsetIK", shoulderOffsetIK);
 
 
         // Command
@@ -259,7 +330,8 @@ SmartDashboard.putBoolean("nearEnd", nearEnd);
         time = Math.min(1.0, time + (g * dt / totalTime));
 
         // === 5) Telemetry (angles clamped for display only) ===
-        SmartDashboard.putNumber("ShoulderDeg",   clamp(rawShoulderDeg, -180.0, MAX_SHOULDER_DEG));
+        SmartDashboard.putNumber("ShoulderDeg",rawShoulderDeg);
+        SmartDashboard.putNumber("LeftShoulderDeg", arm.lowerArm.getPosRight());
         SmartDashboard.putNumber("ElbowDeg",      elbowDeg);
         SmartDashboard.putNumber("CurrentSlider", sliderUnits);
         SmartDashboard.putNumber("ShoulderVelCmd", shoulderVelCmd);
