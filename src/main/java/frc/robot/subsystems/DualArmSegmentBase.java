@@ -49,8 +49,8 @@ public abstract class DualArmSegmentBase extends SubsystemBase implements edu.wp
 
   protected double switchToFastThreshold = 12.0;
   protected double switchToSlowThreshold = 8.0;
- private final VelocityDutyCycle velocityRequest = new VelocityDutyCycle(0).withSlot(1);
- private static double velocitySetpoint = 0;
+  private final VelocityDutyCycle velocityRequest = new VelocityDutyCycle(0).withSlot(1);
+  private static double velocitySetpoint = 0;
 
   // Logging rate-limiter
   private double lastLogTime = 0;
@@ -67,8 +67,7 @@ public abstract class DualArmSegmentBase extends SubsystemBase implements edu.wp
       double slowAcc,
       double slowJerk,
       boolean invertLeft,
-      boolean invertRight
-  ) {
+      boolean invertRight) {
     this.left = new TalonFX(leftId, canBusName);
     this.right = new TalonFX(rightId, canBusName);
     this.dynamic = dynamic;
@@ -80,13 +79,14 @@ public abstract class DualArmSegmentBase extends SubsystemBase implements edu.wp
     this.slowAcc = slowAcc;
     this.slowJerk = slowJerk;
 
-    // Refresh to get existing (current) configuration so unspecified fields are preserved
+    // Refresh to get existing (current) configuration so unspecified fields are
+    // preserved
     left.getConfigurator().refresh(leftConfig);
     right.getConfigurator().refresh(rightConfig);
 
     leftPID = leftConfig.Slot0;
     rightPID = rightConfig.Slot0;
-    
+
     leftMM = leftConfig.MotionMagic;
     rightMM = rightConfig.MotionMagic;
 
@@ -95,9 +95,9 @@ public abstract class DualArmSegmentBase extends SubsystemBase implements edu.wp
     rightConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
     leftConfig.MotorOutput.Inverted = invertLeft ? InvertedValue.Clockwise_Positive
-                                                : InvertedValue.CounterClockwise_Positive;
-    rightConfig.MotorOutput.Inverted = invertRight ? InvertedValue.Clockwise_Positive  
-                                                  : InvertedValue.CounterClockwise_Positive;
+        : InvertedValue.CounterClockwise_Positive;
+    rightConfig.MotorOutput.Inverted = invertRight ? InvertedValue.Clockwise_Positive
+        : InvertedValue.CounterClockwise_Positive;
 
     // PID initial values from mutable fields
     leftPID.kP = kP;
@@ -129,7 +129,6 @@ public abstract class DualArmSegmentBase extends SubsystemBase implements edu.wp
     rightPID1.kV = 0.0;
     rightPID1.kA = 0.0;
 
-
     // Fast motion magic profile
     leftMM.MotionMagicCruiseVelocity = fastVel;
     leftMM.MotionMagicAcceleration = fastAcc;
@@ -142,7 +141,7 @@ public abstract class DualArmSegmentBase extends SubsystemBase implements edu.wp
     // Apply initial config
     left.getConfigurator().apply(leftConfig);
     right.getConfigurator().apply(rightConfig);
-   
+
   }
 
   public void setBrakeMode(NeutralModeValue mode) {
@@ -187,7 +186,27 @@ public abstract class DualArmSegmentBase extends SubsystemBase implements edu.wp
   }
 
   public double getPos() {
+
     return 0.5 * (cachedLeftPos + cachedRightPos);
+  }
+
+  public double getDegs() {
+    // Special case for lowerArm and upperArm to convert to degrees
+    // based on the encoder resolution.
+    // This is a workaround for the fact that the encoder resolution
+    // is not the same for different arm segments.
+    
+    
+    if (this.getClass().getSimpleName().equals("LowerArm") ){
+
+      return (0.5 * (cachedLeftPos + cachedRightPos) * (360/128));
+    }
+    if (this.getClass().getSimpleName().equals( "UpperArm")) {
+      return (0.5 * (cachedLeftPos + cachedRightPos) * (360/125));
+    } else {
+
+      return 0.5 * (cachedLeftPos + cachedRightPos);
+    }
   }
 
   public double getPosLeft() {
@@ -237,16 +256,17 @@ public abstract class DualArmSegmentBase extends SubsystemBase implements edu.wp
    * Command both motors to a target velocity (rotations/sec).
    */
 
-   public void setTargetVelocityRPS(double velocityRPS) {
-    //SmartDashboard.putNumber("LowerArm Velocity", velocityRPS);
+  public void setTargetVelocityRPS(double velocityRPS) {
+    // SmartDashboard.putNumber("LowerArm Velocity", velocityRPS);
     velocitySetpoint = velocityRPS;
     velocityRequest.Velocity = velocitySetpoint;
     left.setControl(velocityRequest);
     right.setControl(velocityRequest);
     String msg = this.getClass().getSimpleName() + " Vel ";
     SmartDashboard.putNumber(msg, velocityRPS);
-    InitLogger.logDouble(this.getClass().getSimpleName(), "Velocity",velocityRPS);
+    InitLogger.logDouble(this.getClass().getSimpleName(), "Velocity", velocityRPS);
   }
+
   /**
    * Stop a given motor immediately.
    */
@@ -273,15 +293,14 @@ public abstract class DualArmSegmentBase extends SubsystemBase implements edu.wp
     cachedLeftPos = left.getPosition().getValueAsDouble();
     cachedRightPos = right.getPosition().getValueAsDouble();
 
-    atPosition =
-        Math.abs(cachedLeftPos - requestedPosition) < 1.0 &&
+    atPosition = Math.abs(cachedLeftPos - requestedPosition) < 1.0 &&
         Math.abs(cachedRightPos - requestedPosition) < 1.0;
 
     double now = Timer.getFPGATimestamp();
     if (now - lastLogTime >= 0.5) { // log up to twice a second
       String periodicMsg = String.format(
           "LeftPos=%.2f RightPos=%.2f Setpoint=%.2f Fast=%b AtPosition=%b",
-           cachedLeftPos, cachedRightPos, requestedPosition, fast,atPosition);
+          cachedLeftPos, cachedRightPos, requestedPosition, fast, atPosition);
       InitLogger.logMessage(this.getClass().getSimpleName(), periodicMsg);
       InitLogger.logDouble(this.getClass().getSimpleName(), "LeftPos", cachedLeftPos);
       InitLogger.logDouble(this.getClass().getSimpleName(), "RightPos", cachedRightPos);
