@@ -73,7 +73,7 @@ public class FollowCurve extends Command {
 
     // ===== PD correction (HW vs current IK target) =====
     // Tune small first; units: (deg/s) per deg for Kp, (deg/s) per (deg/s) for Kd
-    private static final double KP_SH = 3.0;
+    private static final double KP_SH = 2.0;
     private static final double KD_SH = 0.0;//8;
     private static final double KP_EL = 1.0;
     private static final double KD_EL = 0.0;//6;
@@ -216,11 +216,13 @@ public class FollowCurve extends Command {
             double theta2Dt = invDet * (-J21 * vx_base + J11 * vy_base);
             shoulderVelDeg_raw = Math.toDegrees(theta1Dt);
             elbowVelDeg_raw = Math.toDegrees(theta2Dt);
+
         } else {
             // singular fallback
             shoulderVelDeg_raw = (rawShoulderDeg - lastRawShoulderDeg) / dt;
             elbowVelDeg_raw = (elbowDeg - lastElbowDeg) / dt;
         }
+        
 
         double sliderRPS_raw = sliderVel_base / SLIDER_UNITS_PER_REV; // rps at g=1
 
@@ -298,7 +300,7 @@ SmartDashboard.putNumber("PD_Hardware_Sh", shIK);
             elErr = theta2IK_deg - finalElbowDeg;
             usingHW = true;
         }
-        anglesGood = Math.abs(shErr) < ANG_TOL_DEG && Math.abs(elErr) < ANG_TOL_DEG;
+        anglesGood = Math.abs(shErr) < ANG_TOL_DEG;// && Math.abs(elErr) < ANG_TOL_DEG;
 
         // === Direction guard: near the end, never drive AWAY from the target ===
         if (nearEnd) {
@@ -337,14 +339,19 @@ SmartDashboard.putNumber("PD_Hardware_Sh", shIK);
         }
 
         // === 6) Command outputs ===
-        arm.setJointVelocities(shoulderVelCmd, elbowVelCmd, sliderRPSCmd);
+        // let's stop elbow
+        elbowVelCmd = 0;
+       // arm.setJointVelocities(shoulderVelCmd, elbowVelCmd, sliderRPSCmd);
+       shoulderVelCmd = 0; // stop shoulder too
+        arm.upperArm.setPos(elbowDeg); // interior angle
+        arm.lowerArm.setPos(rawShoulderDeg); // world angle
 
         // === 7) Progress advances slower if we had to downscale ===
         time = Math.min(1.0, time + (g * dt / totalTime));
 
         // === 8) Telemetry ===
-        SmartDashboard.putNumber("ShoulderDeg", rawShoulderDeg);
-        SmartDashboard.putNumber("ElbowDeg", elbowDeg);
+        SmartDashboard.putNumber("CalculatedShoulderDegBezierCurve", rawShoulderDeg);
+        SmartDashboard.putNumber("CalculatedElbowDegBezierCurve", elbowDeg);
         SmartDashboard.putNumber("CurrentSlider", sliderUnits);
         SmartDashboard.putNumber("ShoulderVelCmd", shoulderVelCmd);
         SmartDashboard.putNumber("ElbowVelCmd", elbowVelCmd);

@@ -199,10 +199,10 @@ public abstract class DualArmSegmentBase extends SubsystemBase implements edu.wp
     
     if (this.getClass().getSimpleName().equals("LowerArm") ){
 
-      return (0.5 * (cachedLeftPos + cachedRightPos) * (360/128));
+      return (0.5 * (cachedLeftPos + cachedRightPos) * (360.0/128.0));
     }
     if (this.getClass().getSimpleName().equals( "UpperArm")) {
-      return (0.5 * (cachedLeftPos + cachedRightPos) * (360/125));
+      return (0.5 * (cachedLeftPos + cachedRightPos) * (360.0/100.0));
     } else {
 
       return 0.5 * (cachedLeftPos + cachedRightPos);
