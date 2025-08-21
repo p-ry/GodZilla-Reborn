@@ -141,13 +141,13 @@ public class RobotContainer {
   public static double maxSpeedConstant = 4.73;
   public static double maxAngularRateConstant = RotationsPerSecond.of(0.75).in(RadiansPerSecond);
 
-  public static Point2D.Double base = new Point2D.Double(176.45,508.9889);//.17645,.50898890);
-  public static Point2D.Double startPoint = new Point2D.Double(-27.77,580.7621);//-.02777, .5207621); 
+  public static Point2D.Double base = new Point2D.Double(85.393,509);//.17645,.50898890);
+  public static Point2D.Double startPoint = new Point2D.Double(-116,646);//-.02777, .5207621); 
   
 
-  public static Point2D.Double controlPoint1 = new Point2D.Double(-20.0,800.0);//-0.4,.5);
-  public static Point2D.Double controlPoint2 = new Point2D.Double(-20.0,1200.0);//.2,0.6);
-  public static Point2D.Double endPoint = new Point2D.Double(50,800);//(-20.1,1160.95);//0.0041,1.85795);
+  public static Point2D.Double controlPoint1 = new Point2D.Double(120.0,800.0);//-0.4,.5);
+  public static Point2D.Double controlPoint2 = new Point2D.Double(110.0,900.0);//.2,0.6);
+  public static Point2D.Double endPoint = new Point2D.Double(-90,1200);//(-20.1,1160.95);//0.0041,1.85795);
 
   /* Path follower */
   private final SendableChooser<Command> AutoChooser;
