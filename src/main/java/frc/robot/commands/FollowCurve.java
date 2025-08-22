@@ -59,9 +59,9 @@ public class FollowCurve extends Command {
   private static final double ELBOW_INT_MAX = 180.0-1e-6; // strictly < 180
 
   // Motion timing
-  private static final double TOTAL_TIME = 5.0;  // s
+  private static final double TOTAL_TIME = 0.8;  // s
   private static final double DT = 0.02;         // s (plot/update throttle)
-  private static final double BLEND_TIME = 0.60; // s ramp-in from live pose
+  private static final double BLEND_TIME = 0.30; // s ramp-in from live pose 0.6
 
   private final Timer timer = new Timer();
   private double lastT = 0.0;
@@ -80,7 +80,7 @@ private static final double IK_ERR_THRESH_MM2 = 50.0 * 50.0;  // ~50 mm radial e
 
 
   // Limit how much the shoulder may change this tick (user degrees)
-  private static final double MAX_SHOULDER_DELTA_DEG = 5.0;
+  private static final double MAX_SHOULDER_DELTA_DEG = 9.0;
 
   /**
    * Signature kept to match RobotContainer usage.
@@ -166,7 +166,7 @@ private static final double IK_ERR_THRESH_MM2 = 50.0 * 50.0;  // ~50 mm radial e
   @Override
   public void execute() {
     final double t = clamp(startT + (timer.get() / TOTAL_TIME), 0.0, 1.0);
-    if (t < lastT + (DT / TOTAL_TIME) && t < 1.0) return; // throttle to ~50 Hz if needed
+   // if (t < lastT + (DT / TOTAL_TIME) && t < 1.0) return; // throttle to ~50 Hz if needed
     lastT = t;
 
     // Target point in world coords from cubic Bézier
