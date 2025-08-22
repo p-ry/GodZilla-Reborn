@@ -145,9 +145,9 @@ public class RobotContainer {
   public static Point2D.Double startPoint = new Point2D.Double(-116,646);//-.02777, .5207621); 
   
 
-  public static Point2D.Double controlPoint1 = new Point2D.Double(120.0,800.0);//-0.4,.5);
-  public static Point2D.Double controlPoint2 = new Point2D.Double(110.0,900.0);//.2,0.6);
-  public static Point2D.Double endPoint = new Point2D.Double(-190,1500);//(-20.1,1160.95);//0.0041,1.85795);
+  public static Point2D.Double controlPoint1 = new Point2D.Double(110.0,800.0);//-0.4,.5);
+  public static Point2D.Double controlPoint2 = new Point2D.Double(100.0,900.0);//.2,0.6);
+  public static Point2D.Double endPoint = new Point2D.Double(-190,1700);//(-20.1,1160.95);//0.0041,1.85795);
   
 
   /* Path follower */
