@@ -39,6 +39,8 @@ public class Robot extends TimedRobot {
 
   private final boolean kUseLimelight = true;
   private boolean allianceSet = false;
+  private boolean warmupQueued = false;
+
 
   public Robot() {
     CanBridge.runTCP();
@@ -51,18 +53,9 @@ public class Robot extends TimedRobot {
         m_robotContainer = new RobotContainer();
         DataLogManager.log("Finished RobotContainer init");
       });
-
-
-      new java.util.Timer().schedule(new java.util.TimerTask() {
-        @Override
-        public void run() {
-         InitLogger.time("schedule Warmps",() -> {
-          m_robotContainer.scheduleWarmups();
-          });
-        }
-      }, 1000);
     }
   }
+  
 
   @Override
   public void robotInit() {
@@ -86,14 +79,23 @@ public class Robot extends TimedRobot {
   }
 
   @Override
-  public void disabledInit() {
-    ensureRobotContainerInitialized();
-    //CommandScheduler.getInstance().run();
+public void disabledInit() {
+  ensureRobotContainerInitialized();
+
+  if (!warmupQueued && m_robotContainer != null) {
+    warmupQueued = true;
+    System.out.println("[Init] Scheduling PathfindingCommand warmup...");
+    // Schedule on main thread, one cycle later so everything is up
+    edu.wpi.first.wpilibj2.command.Commands
+        .waitSeconds(0.05)
+        .andThen(new InstantCommand(() -> m_robotContainer.scheduleWarmups()))
+        .schedule();
   }
+}
 
   @Override
   public void disabledPeriodic() {
-    CommandScheduler.getInstance().run();
+    
   }
 
   @Override

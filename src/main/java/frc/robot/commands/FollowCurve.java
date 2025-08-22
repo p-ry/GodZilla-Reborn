@@ -51,7 +51,7 @@ public class FollowCurve extends Command {
   private static final double USER_OFFSET_DEG = 25.0;
 
   // Limits
-  private static final double SHOULDER_USER_MIN = 0.0;
+  private static final double SHOULDER_USER_MIN = 2.0;
   private static final double SHOULDER_USER_MAX = 115.0;
   private static final double ELBOW_INT_MIN = 1e-6;       // strictly > 0
   private static final double ELBOW_INT_MAX = 180.0-1e-6; // strictly < 180
@@ -69,6 +69,11 @@ public class FollowCurve extends Command {
   private double startShoulderUser = 0.0;
   private double startElbowInternal = 180.0;
   private double startL3 = 0.0;
+  double cmdShoulderUser,rawcmdShoulderUser;
+  
+  double cmdElbowInt,rawcmdElbowInt;
+  
+  double cmdL3;
 
   /**
    * Signature kept to match RobotContainer usage.
@@ -191,21 +196,21 @@ public class FollowCurve extends Command {
     // --- Smooth ramp from live pose to IK setpoints ---
     double blend = smooth01(timer.get() / BLEND_TIME);
 
-    double cmdShoulderUser = lerpDegShortest(startShoulderUser, ik.shoulderUserDeg, blend);
-    double cmdElbowInt     = lerpDegShortest(startElbowInternal, ik.elbowInteriorDeg, blend);
-    double cmdL3           = lerp(startL3, ik.L3mm, blend);
+     cmdShoulderUser = lerpDegShortest(startShoulderUser, ik.shoulderUserDeg, blend);
+    cmdElbowInt     = lerpDegShortest(startElbowInternal, ik.elbowInteriorDeg, blend);
+     cmdL3           = lerp(startL3, ik.L3mm, blend);
 
     // Clamp to limits (safety)
-    cmdShoulderUser = clamp(cmdShoulderUser, SHOULDER_USER_MIN, SHOULDER_USER_MAX);
-    cmdElbowInt     = clamp(cmdElbowInt,     ELBOW_INT_MIN,     ELBOW_INT_MAX);
+    rawcmdShoulderUser = clamp(cmdShoulderUser, SHOULDER_USER_MIN, SHOULDER_USER_MAX);
+    rawcmdElbowInt     = clamp(cmdElbowInt,     ELBOW_INT_MIN,     ELBOW_INT_MAX);
     cmdL3           = clamp(cmdL3,           L3_MIN,            L3_MAX);
     // Convert to actuator units
     cmdShoulderUser=(cmdShoulderUser/360.0)*128.0;
     cmdElbowInt=(cmdElbowInt/360.0)*100.0;
 
     // Command actuators (POSITION ONLY)
-   // arm.lowerArm.setPos( cmdShoulderUser );
-//arm.upperArm.setPos( cmdElbowInt );
+   arm.lowerArm.setPos( cmdShoulderUser );
+arm.upperArm.setPos( cmdElbowInt );
     //arm.slider.setPos(   cmdL3 );
 
     if (debug) {
@@ -213,8 +218,8 @@ public class FollowCurve extends Command {
       SmartDashboard.putNumber("FollowCurve/tx", tx);
       SmartDashboard.putNumber("FollowCurve/ty", ty);
       SmartDashboard.putNumber("FollowCurve/blend", blend);
-      SmartDashboard.putNumber("FollowCurve/cmd_shoulder_user", cmdShoulderUser);
-      SmartDashboard.putNumber("FollowCurve/cmd_elbow_int", cmdElbowInt);
+      SmartDashboard.putNumber("FollowCurve/cmd_shoulder_user", rawcmdShoulderUser);
+      SmartDashboard.putNumber("FollowCurve/cmd_elbow_int", rawcmdElbowInt);
       SmartDashboard.putNumber("FollowCurve/cmd_L3", cmdL3);
     }
   }
@@ -223,6 +228,15 @@ public class FollowCurve extends Command {
   public boolean isFinished() {
     return timer.get() >= TOTAL_TIME + 0.05;
   }
+@Override
+  public void end(boolean interrupted) {
+     SmartDashboard.putString("FollowCurve/reach", interrupted ? "interrupted" : "complete");   
+    //arm.setJointVelocities(0, 0, 0); // harmless even though we don't use velocities now
+    arm.lowerArm.setPos(cmdShoulderUser);
+    arm.upperArm.setPos(cmdElbowInt); // interior angle
+    arm.slider.setPos(0);
+}
+
 
   // ----------------- Helpers -----------------
 
