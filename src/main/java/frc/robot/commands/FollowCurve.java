@@ -247,13 +247,11 @@ if (ik == null) {
     rawcmdShoulderUser = clamp(cmdShoulderUser, SHOULDER_USER_MIN, SHOULDER_USER_MAX);
     rawcmdElbowInt     = clamp(cmdElbowInt,     ELBOW_INT_MIN,     ELBOW_INT_MAX);
     cmdL3           = clamp(cmdL3,           L3_MIN,            L3_MAX);
-    // Convert to actuator units
-    cmdShoulderUser=(cmdShoulderUser/360.0)*128.0;
-    cmdElbowInt=(cmdElbowInt/360.0)*100.0;
+    
 
     // Command actuators (POSITION ONLY)
-   arm.lowerArm.setPos( cmdShoulderUser );
-arm.upperArm.setPos( cmdElbowInt );
+   arm.lowerArm.setDeg( cmdShoulderUser );
+arm.upperArm.setDeg( cmdElbowInt );
     //arm.slider.setPos(   cmdL3 );
 
     if (debug) {
@@ -275,9 +273,9 @@ arm.upperArm.setPos( cmdElbowInt );
   public void end(boolean interrupted) {
      SmartDashboard.putString("FollowCurve/reach", interrupted ? "interrupted" : "complete");   
     //arm.setJointVelocities(0, 0, 0); // harmless even though we don't use velocities now
-    arm.lowerArm.setPos(cmdShoulderUser);
-    arm.upperArm.setPos(cmdElbowInt); // interior angle
-    arm.slider.setPos(0);
+   // arm.lowerArm.setPos(cmdShoulderUser);
+   // arm.upperArm.setPos(cmdElbowInt); // interior angle
+   // arm.slider.setPos(0);
 }
 
 

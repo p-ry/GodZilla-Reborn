@@ -147,7 +147,7 @@ public class RobotContainer {
 
   public static Point2D.Double controlPoint1 = new Point2D.Double(120.0,800.0);//-0.4,.5);
   public static Point2D.Double controlPoint2 = new Point2D.Double(110.0,900.0);//.2,0.6);
-  public static Point2D.Double endPoint = new Point2D.Double(-90,1500);//(-20.1,1160.95);//0.0041,1.85795);
+  public static Point2D.Double endPoint = new Point2D.Double(-190,1500);//(-20.1,1160.95);//0.0041,1.85795);
   
 
   /* Path follower */
@@ -340,8 +340,14 @@ public class RobotContainer {
     // Process
     // .onFalse(new InstantCommand(() -> ace.setSpeed(0)));
 
+    // Barge
+    //     .onTrue(new MoveArmFix(mArm, ace, 42, -1));
+    // Barge
+    //     .onFalse(new MoveArmFix(mArm, ace, 0, 0));
     Barge
-        .onTrue(new MoveArmFix(mArm, ace, 42, -1));
+        .onTrue(new InstantCommand(() ->mArm.lowerArm.setDeg(25.0))); //degrees/360 * 128 gear ratio
+
+        
     Barge
         .onFalse(new MoveArmFix(mArm, ace, 0, 0));
 
@@ -363,14 +369,8 @@ public class RobotContainer {
 
     CoveredSwitch.onTrue(
         new FollowCurve(mArm, startPoint,controlPoint1,controlPoint2,endPoint,base,() ->mArm.lowerArm.getDegs(), () ->mArm.upperArm.getDegs(),() ->mArm.slider.getPos(),true));
-CoveredSwitch.onFalse(new InstantCommand(() -> {
-            mArm.lowerArm.setPos(mArm.lowerArm.getPos());
-            
-            mArm.upperArm.setPos(mArm.upperArm.getPos());
-            
-            mArm.slider.setPos(mArm.slider.getPos());
-            
-          }));
+CoveredSwitch.onFalse(new MoveArmFix(mArm, ace, 0, 0));
+
         
 
     // Chomp.onTrue(new FollowCurve(mArm, startPoint,controlPoint1,controlPoint2,endPoint,base));

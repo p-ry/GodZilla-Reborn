@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.DataLogManager;
 
 import com.ctre.phoenix6.controls.DynamicMotionMagicVoltage;
+import com.ctre.phoenix6.controls.PositionDutyCycle;
 import com.ctre.phoenix6.controls.VelocityDutyCycle;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.configs.*;
@@ -49,6 +50,7 @@ public abstract class DualArmSegmentBase extends SubsystemBase implements edu.wp
 
   protected double switchToFastThreshold = 12.0;
   protected double switchToSlowThreshold = 8.0;
+  private final PositionDutyCycle motorPosRequest = new PositionDutyCycle(0).withSlot(2);
   private final VelocityDutyCycle velocityRequest = new VelocityDutyCycle(0).withSlot(1);
   private static double velocitySetpoint = 0;
 
@@ -156,6 +158,19 @@ public abstract class DualArmSegmentBase extends SubsystemBase implements edu.wp
     right.getConfigurator().apply(rightOut);
   }
 
+  public void setDeg(double degrees) {
+    double position;
+    if (this.getClass().getSimpleName().equals("LowerArm")) {
+      position = degrees * (128.0 / 360.0);
+    } else if (this.getClass().getSimpleName().equals("UpperArm")) {
+      position = degrees * (100.0 / 360.0);
+    } else {
+      position = degrees;
+    }
+    left.setControl(motorPosRequest.withPosition(position));
+    right.setControl(motorPosRequest.withPosition(position));
+  }
+
   public void setPos(double position) {
     setPos(position, fast);
   }
@@ -170,7 +185,16 @@ public abstract class DualArmSegmentBase extends SubsystemBase implements edu.wp
 
     left.setControl(dynamic.withVelocity(vel).withAcceleration(acc).withJerk(jerk).withPosition(position));
     right.setControl(dynamic.withVelocity(vel).withAcceleration(acc).withJerk(jerk).withPosition(position));
-    SmartDashboard.putNumber(this.getClass().getSimpleName(), position);
+
+    if (this.getClass().getSimpleName().equals("LowerArm")) {
+      SmartDashboard.putNumber(this.getClass().getSimpleName(),
+          (0.5 * (cachedLeftPos + cachedRightPos) * (360.0 / 128.0)));
+    }
+    if (this.getClass().getSimpleName().equals("UpperArm")) {
+      SmartDashboard.putNumber(this.getClass().getSimpleName(),
+          (0.5 * (cachedLeftPos + cachedRightPos) * (360.0 / 100.0)));
+    }
+
   }
 
   public void setPosAutoSpeed(double position) {
@@ -195,16 +219,15 @@ public abstract class DualArmSegmentBase extends SubsystemBase implements edu.wp
     // based on the encoder resolution.
     // This is a workaround for the fact that the encoder resolution
     // is not the same for different arm segments.
-    
-    
-    if (this.getClass().getSimpleName().equals("LowerArm") ){
 
-      return (0.5 * (cachedLeftPos + cachedRightPos) * (360.0/128.0));
+    if (this.getClass().getSimpleName().equals("LowerArm")) {
+
+      return (0.5 * (cachedLeftPos + cachedRightPos) * (360.0 / 128.0));
     }
-    if (this.getClass().getSimpleName().equals( "UpperArm")) {
-      return (0.5 * (cachedLeftPos + cachedRightPos) * (360.0/100.0));
+    if (this.getClass().getSimpleName().equals("UpperArm")) {
+      return (0.5 * (cachedLeftPos + cachedRightPos) * (360.0 / 100.0));
     } else {
-
+      System.out.println("DualArmSegmentBase.getDegs() called on unknown segment: " + this.getClass().getSimpleName());
       return 0.5 * (cachedLeftPos + cachedRightPos);
     }
   }
@@ -295,6 +318,8 @@ public abstract class DualArmSegmentBase extends SubsystemBase implements edu.wp
 
     atPosition = Math.abs(cachedLeftPos - requestedPosition) < 1.0 &&
         Math.abs(cachedRightPos - requestedPosition) < 1.0;
+        SmartDashboard.putNumber(this.getClass().getSimpleName(),getDegs());
+        
 
     double now = Timer.getFPGATimestamp();
     if (now - lastLogTime >= 0.5) { // log up to twice a second
