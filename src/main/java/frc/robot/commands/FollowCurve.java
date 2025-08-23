@@ -86,12 +86,14 @@ public class FollowCurve extends Command {
   private final Timer timer = new Timer();
   private double lastT = 0.0;
 
+
   // Start location on the curve & start joint snapshot (for smoothing)
   private double startT = 0.0;
   private double startShoulderUser = 0.0;
   private double startElbowInternal = 180.0;
   private double startL3 = 0.0;
-
+static double shoulderBiasPhase=0.0;
+static double targetElbowInt = 10.0; // target elbow interior angle (for biasing)
   double cmdShoulderUser, rawcmdShoulderUser;
   double cmdElbowInt,     rawcmdElbowInt;
   double cmdL3;
@@ -193,6 +195,10 @@ public class FollowCurve extends Command {
     // throttle to ~50 Hz
     if (t < lastT + (DT / TOTAL_TIME) && t < 1.0) return;
     lastT = t;
+    // Bias only near the end so we don't pull the shoulder down at t≈0
+shoulderBiasPhase = smooth01((t - 0.50) / 0.50);  // 0→1 as t goes 0.5→1.0
+
+
   
     // Target point in world coords from cubic Bézier
     final double[] xy = bezier(t, p0, p1, p2, p3);
@@ -259,9 +265,10 @@ public class FollowCurve extends Command {
         // Prefer slightly less shoulder near end of path (soft max)
         double suUser = cand.shoulderUserDeg;
         if (suUser > SHOULDER_USER_SOFT_MAX) {
-          double over = suUser - SHOULDER_USER_SOFT_MAX;
-          err += SHOULDER_SOFT_PENALTY_W * over * over;
-        }
+            double over = suUser - SHOULDER_USER_SOFT_MAX;
+            err += shoulderBiasPhase * SHOULDER_SOFT_PENALTY_W * over * over;  // gated
+          }
+          
         // NOTE: No L3 bias here — we want L3 to actuate LAST during blending.
   
         if (err < localBestErr) { localBestErr = err; localBest = cand; }
@@ -285,7 +292,16 @@ public class FollowCurve extends Command {
     // --- Smooth ramp from live pose to IK setpoints ---
     // Angles ramp immediately (as before)
     final double blendAng = smooth01(timer.get() / BLEND_TIME);
-    cmdShoulderUser = lerpDegShortest(startShoulderUser,   ik.shoulderUserDeg,   blendAng);
+    double targetShoulderUser = ik.shoulderUserDeg;
+
+// For the first ~0.30 s, don't command shoulder below the startup reading
+if (timer.get() < 0.30 && targetShoulderUser < startShoulderUser) {
+  targetShoulderUser = startShoulderUser;
+}
+
+cmdShoulderUser = lerpDegShortest(startShoulderUser, targetShoulderUser, blendAng);
+SmartDashboard.putBoolean("FollowCurve/noDip_active", timer.get() < 0.30);
+
     cmdElbowInt     = lerpDegShortest(startElbowInternal,  ik.elbowInteriorDeg,  blendAng);
   
     // L3 moves LAST: hold until late in the path, then ramp to target
@@ -301,6 +317,15 @@ public class FollowCurve extends Command {
     cmdL3              = clamp(cmdL3,           L3_MIN,            L3_MAX);
   
     // --- existing clamp & commands above this point ---
+
+
+
+// --- EASY ELBOW NO-DIP GUARD (first 0.30 s) ---
+final double NO_DIP_WINDOW_S = 0.30;
+if (timer.get() < NO_DIP_WINDOW_S && rawcmdElbowInt < startElbowInternal) {
+  rawcmdElbowInt = startElbowInternal;
+}
+
 
 // Command actuators (POSITION ONLY)
 arm.lowerArm.setDeg(rawcmdShoulderUser);
@@ -494,7 +519,7 @@ SmartDashboard.putNumber("FollowCurve/err_cmd_mm2",  err_cmd_mm2);
           // shoulder soft-max (full weight in fallback)
           if (su > SHOULDER_USER_SOFT_MAX) {
             double over = su - SHOULDER_USER_SOFT_MAX;
-            err += SHOULDER_SOFT_PENALTY_W * over * over;
+            err += shoulderBiasPhase* SHOULDER_SOFT_PENALTY_W * over * over;
           }
           // L3 soft-min
           double underL3 = Math.max(0.0, L3_SOFT_MAX - l3);
@@ -524,7 +549,7 @@ SmartDashboard.putNumber("FollowCurve/err_cmd_mm2",  err_cmd_mm2);
           }
           if (su < SHOULDER_USER_SOFT_MIN) {
             double under = SHOULDER_USER_SOFT_MIN - su;
-            err += SHOULDER_SOFT_PENALTY_W * under * under;
+            err += shoulderBiasPhase*SHOULDER_SOFT_PENALTY_W * under * under;
           }
           double overL3 = Math.max(0.0, l3 - L3_SOFT_MAX);
           if (overL3 > 0.0) {
