@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import java.awt.geom.Point2D;
 import java.util.function.DoubleSupplier;
 
+import frc.robot.subsystems.Ace;
 import frc.robot.subsystems.ArmAssembly;
 
 /**
@@ -30,6 +31,7 @@ import frc.robot.subsystems.ArmAssembly;
  */
 public class FollowCurve extends Command {
   private final ArmAssembly arm;
+  private final Ace ace; // not used, but kept for signature compatibility
   private final Point2D.Double p0, p1, p2, p3;
   private final Point2D.Double base;
 
@@ -90,6 +92,7 @@ private static final double IK_ERR_THRESH_MM2 = 50.0 * 50.0;  // ~50 mm radial e
    */
   public FollowCurve(
       ArmAssembly arm,
+        Ace ace, // not used, but kept for signature compatibility
       Point2D.Double startPoint,
       Point2D.Double controlPoint1,
       Point2D.Double controlPoint2,
@@ -101,6 +104,7 @@ private static final double IK_ERR_THRESH_MM2 = 50.0 * 50.0;  // ~50 mm radial e
       boolean debug) {
 
     this.arm = arm;
+    this.ace = ace; // not used, but kept for signature compatibility
     this.p0 = startPoint;
     this.p1 = controlPoint1;
     this.p2 = controlPoint2;
@@ -309,7 +313,10 @@ if (ik == null) {
   @Override
   public void end(boolean interrupted) {
     SmartDashboard.putString("FollowCurve/reach", interrupted ? "interrupted" : "complete");
+    ace.setPos(5.0);
     arm.wrist.setPos(9.4); // reset wrist to 0.0 (home) on end
+    
+    
     // arm.setJointVelocities(0, 0, 0); // harmless even though we don't use velocities now
     // arm.lowerArm.setPos(cmdShoulderUser);
     // arm.upperArm.setPos(cmdElbowInt); // interior angle

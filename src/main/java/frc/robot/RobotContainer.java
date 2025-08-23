@@ -368,7 +368,7 @@ public class RobotContainer {
     // })); // Chomp is off
 
     CoveredSwitch.onTrue(
-        new FollowCurve(mArm, startPoint,controlPoint1,controlPoint2,endPoint,base,() ->mArm.lowerArm.getDegs(), () ->mArm.upperArm.getDegs(),() ->mArm.slider.getPos(),true));
+        new FollowCurve(mArm, ace,startPoint,controlPoint1,controlPoint2,endPoint,base,() ->mArm.lowerArm.getDegs(), () ->mArm.upperArm.getDegs(),() ->mArm.slider.getPos(),true));
 CoveredSwitch.onFalse(new MoveArmFix(mArm, ace, 0, 0));
 
         
