@@ -54,6 +54,7 @@ public class Ace extends SubsystemBase {
 
   public Ace(int level) {
     TalonFXConfiguration config = new TalonFXConfiguration();
+    ace.getConfigurator().refresh(config);
     config.CurrentLimits.SupplyCurrentLimitEnable = true;
     config.CurrentLimits.SupplyCurrentLimit = 50;
     config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
