@@ -309,6 +309,7 @@ if (ik == null) {
   @Override
   public void end(boolean interrupted) {
     SmartDashboard.putString("FollowCurve/reach", interrupted ? "interrupted" : "complete");
+    arm.wrist.setPos(9.4); // reset wrist to 0.0 (home) on end
     // arm.setJointVelocities(0, 0, 0); // harmless even though we don't use velocities now
     // arm.lowerArm.setPos(cmdShoulderUser);
     // arm.upperArm.setPos(cmdElbowInt); // interior angle
