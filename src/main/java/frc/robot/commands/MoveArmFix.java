@@ -150,7 +150,9 @@ public class MoveArmFix extends Command {
         } else {
           arm.upperArm.setPos(0, true);
           arm.wrist.setPos(0.7);
+         
         }
+        arm.slider.setMM(5);
         arm.slider.setPos(0.50);
         break;
 
@@ -164,7 +166,10 @@ public class MoveArmFix extends Command {
           arm.lowerArm.setPos(18.00);
           arm.upperArm.setPos(1.5, true);
           arm.wrist.setPos(0.1);
-          arm.slider.setPos(0.5);
+          
+          arm.slider.setMM(5);
+          //arm.slider.setPos(0.5);
+          
         }
         break;
 

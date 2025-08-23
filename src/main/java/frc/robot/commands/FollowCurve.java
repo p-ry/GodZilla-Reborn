@@ -20,18 +20,19 @@ import frc.robot.subsystems.ArmAssembly;
  * Features:
  *  - Elbow pivot at end of shoulder; forearm mounted via an L-bracket offset (H) that is
  *    PERPENDICULAR TO THE FOREARM AXIS and is forced "ABOVE" (its world Y >= 0).
- *  - Elbow-UP branch only
+ *  - Elbow-UP branch only (but we now test both ±acos branches and choose the better)
  *  - Prismatic extension L3 in [0, 350] mm (effective forearm length = L2 + L3)
  *  - Angle convention: world_abs = user - 25°, so user = world_abs + 25°
- *  - Limits: shoulder_user in [0°,115°], 0° < elbow_internal < 180°, shoulder points right/up
+ *  - Limits: shoulder_user in [0°,115°], 0° < elbow_internal < 172° (hard cap), shoulder points right/up
  *  - Starts from the live hardware pose: finds closest t on the Bézier
  *  - Smooth ramp from the live pose to IK setpoints (blend time configurable)
+ *  - Soft penalties to avoid near-straight elbow and to prefer a more upright shoulder near the end
  *
  * Units: mm & degrees.
  */
 public class FollowCurve extends Command {
   private final ArmAssembly arm;
-  private final Ace ace; // not used, but kept for signature compatibility
+  private final Ace ace; // used in end()
   private final Point2D.Double p0, p1, p2, p3;
   private final Point2D.Double base;
 
@@ -39,9 +40,9 @@ public class FollowCurve extends Command {
   private final DoubleSupplier shoulderDegNow;
   private final DoubleSupplier elbowDegNow;
   private final DoubleSupplier sliderPosNow;
-  // Scales how fast we march along the Bézier (1.0 = original speed)
-private static final double PATH_SPEED = 2.0; // try 1.5–2.0 for faster motion
 
+  // Scales how fast we march along the Bézier (1.0 = original speed)
+  private static final double PATH_SPEED = 2.0; // try 1.5–2.0 for faster motion
 
   private final boolean debug;
 
@@ -57,16 +58,29 @@ private static final double PATH_SPEED = 2.0; // try 1.5–2.0 for faster motion
   private static double toAbs(double shoulderUserDeg)   { return shoulderUserDeg - USER_OFFSET_DEG; }
   private static double toUser(double shoulderAbsDeg)   { return shoulderAbsDeg + USER_OFFSET_DEG; }
 
-  // Limits  (CHANGED: min from 2.0 -> 0.0)
+  // Limits
   private static final double SHOULDER_USER_MIN = 0.0;
-  private static final double SHOULDER_USER_MAX = 115.0;
+  private static final double SHOULDER_USER_MAX = 105.0;
   private static final double ELBOW_INT_MIN = 1e-6;       // strictly > 0
-  private static final double ELBOW_INT_MAX = 180.0-1e-6; // strictly < 180
+  // HARD elbow ceiling (never exceed)
+  private static final double ELBOW_INT_HARD_MAX = 172.0; // deg
+  // Soft elbow preference (prefer not to go past this)
+  private static final double ELBOW_INT_SOFT_MAX = 158.0; // deg (was 168.0) // deg
+  // Tie existing max to hard cap so all checks use the ceiling
+  private static final double ELBOW_INT_MAX = ELBOW_INT_HARD_MAX;
+
+  // Soft penalty weights / preferences
+  private static final double ELBOW_PENALTY_W    = 2.5e4; // mm^2 per (deg over soft)^2
+  private static final double SHOULDER_USER_SOFT_MIN = 95.0;   // (legacy; not used in bias now)
+  private static final double SHOULDER_USER_SOFT_MAX = 90.0;   // prefer ≤ ~90° near end (10° less)   // prefer ≥ ~95° user near end
+  private static final double SHOULDER_SOFT_PENALTY_W = 7.5e3; // mm^2 per (deg under)^2
+  private static final double L3_SOFT_MAX = 0.65 * L3_MAX;      // prefer at least ~65% extension near end      // prefer ≤ 60% of max extension
+  private static final double L3_SOFT_PENALTY_W = 15.0;         // mm^2 per (mm over)^2
 
   // Motion timing
   private static final double TOTAL_TIME = 1.0;  // s
   private static final double DT = 0.02;         // s (plot/update throttle)
-  private static final double BLEND_TIME = 0.20; // s ramp-in from live pose 0.6
+  private static final double BLEND_TIME = 0.20; // s ramp-in from live pose
 
   private final Timer timer = new Timer();
   private double lastT = 0.0;
@@ -80,11 +94,11 @@ private static final double PATH_SPEED = 2.0; // try 1.5–2.0 for faster motion
   double cmdShoulderUser, rawcmdShoulderUser;
   double cmdElbowInt,     rawcmdElbowInt;
   double cmdL3;
+
   // If best wrist error (to the Bezier target) exceeds this, widen the shoulder window (mm^2)
-private static final double IK_ERR_THRESH_MM2 = 50.0 * 50.0;  // ~50 mm radial error
+  private static final double IK_ERR_THRESH_MM2 = 50.0 * 50.0;  // ~50 mm radial error
 
-
-  // Limit how much the shoulder may change this tick (user degrees)
+  // Limit how much the shoulder may change this tick (user degrees) — currently unused but kept
   private static final double MAX_SHOULDER_DELTA_DEG = 9.0;
 
   /**
@@ -92,7 +106,7 @@ private static final double IK_ERR_THRESH_MM2 = 50.0 * 50.0;  // ~50 mm radial e
    */
   public FollowCurve(
       ArmAssembly arm,
-        Ace ace, // not used, but kept for signature compatibility
+      Ace ace,
       Point2D.Double startPoint,
       Point2D.Double controlPoint1,
       Point2D.Double controlPoint2,
@@ -104,7 +118,7 @@ private static final double IK_ERR_THRESH_MM2 = 50.0 * 50.0;  // ~50 mm radial e
       boolean debug) {
 
     this.arm = arm;
-    this.ace = ace; // not used, but kept for signature compatibility
+    this.ace = ace;
     this.p0 = startPoint;
     this.p1 = controlPoint1;
     this.p2 = controlPoint2;
@@ -174,7 +188,8 @@ private static final double IK_ERR_THRESH_MM2 = 50.0 * 50.0;  // ~50 mm radial e
   public void execute() {
     final double t = clamp(startT + (PATH_SPEED * (timer.get() / TOTAL_TIME)), 0.0, 1.0);
 
-   // if (t < lastT + (DT / TOTAL_TIME) && t < 1.0) return; // throttle to ~50 Hz if needed
+    // throttle to ~50 Hz
+    if (t < lastT + (DT / TOTAL_TIME) && t < 1.0) return;
     lastT = t;
 
     // Target point in world coords from cubic Bézier
@@ -186,90 +201,92 @@ private static final double IK_ERR_THRESH_MM2 = 50.0 * 50.0;  // ~50 mm radial e
     final double rx = tx - base.x;
     final double ry = ty - base.y;
 
+    // Bias phase (shoulder preference grows near end of path)
+    final double shoulderBiasPhase = smooth01((t - 0.50) / 0.50); // 0→1 as t goes 0.5→1.0
+
     // Seed shoulder with current reading (user → world abs)
     double shoulderUserSeed = shoulderDegNow.getAsDouble();
     double shoulderAbsSeed = wrapDeg(shoulderUserSeed - USER_OFFSET_DEG);
     if (!Double.isFinite(shoulderAbsSeed)) {
       shoulderAbsSeed = Math.toDegrees(Math.atan2(ry, rx));
     }
-// -------- Shoulder-first with ADAPTIVE window --------
-double currShoulderUser = clamp(shoulderDegNow.getAsDouble(), SHOULDER_USER_MIN, SHOULDER_USER_MAX);
 
-// Candidate half-spans to try (deg): ±5, ±15, ±30, then full range
-final double[] halfSpans = new double[] { 5.0, 15.0, 30.0, 999.0 };
+    // -------- Shoulder-first with ADAPTIVE window --------
+    double currShoulderUser = clamp(shoulderDegNow.getAsDouble(), SHOULDER_USER_MIN, SHOULDER_USER_MAX);
 
-IKResult ik = null;
-double bestErr = Double.POSITIVE_INFINITY;
+    // Candidate half-spans to try (deg): ±5, ±15, ±30, then full range
+    final double[] halfSpans = new double[] { 5.0, 15.0, 30.0, 999.0 };
 
-for (double span : halfSpans) {
-  double minUser = Math.max(SHOULDER_USER_MIN, currShoulderUser - span);
-  double maxUser = Math.min(SHOULDER_USER_MAX, currShoulderUser + span);
+    IKResult ik = null;
+    double bestErr = Double.POSITIVE_INFINITY;
 
-  IKResult localBest = null;
-  double localBestErr = Double.POSITIVE_INFINITY;
+    for (double span : halfSpans) {
+      double minUser = Math.max(SHOULDER_USER_MIN, currShoulderUser - span);
+      double maxUser = Math.min(SHOULDER_USER_MAX, currShoulderUser + span);
 
-  for (double su = minUser; su <= maxUser + 1e-9; su += 1.0) {
-    double sAbs = su - USER_OFFSET_DEG; // user -> absolute
-    IKResult cand = solveWithFixedShoulderAbs(rx, ry, sAbs);
-    if (cand == null) continue;
+      IKResult localBest = null;
+      double localBestErr = Double.POSITIVE_INFINITY;
 
-    // Evaluate wrist error to the RELATIVE Bezier target (rx, ry)
-    double th1 = Math.toRadians(cand.shoulderAbsDeg);
-    double th2j = Math.toRadians(180.0 - cand.elbowInteriorDeg);
+      for (double su = minUser; su <= maxUser + 1e-9; su += 1.0) {
+        double sAbs = su - USER_OFFSET_DEG; // user -> absolute
+        IKResult cand = solveWithFixedShoulderAbsBestBranch(rx, ry, sAbs);
+        if (cand == null) continue;
 
-    // Elbow pivot at end of L1
-    double ex_rel = L1 * Math.cos(th1);
-    double ey_rel = L1 * Math.sin(th1);
+        // Evaluate wrist error to the RELATIVE Bezier target (rx, ry)
+        double th1 = Math.toRadians(cand.shoulderAbsDeg);
+        double th2j = Math.toRadians(180.0 - cand.elbowInteriorDeg);
 
-    // Forearm frame
-    double th12 = th1 + th2j;
-    double n2x = -Math.sin(th12), n2y = Math.cos(th12);
-    if (n2y < 0.0) { n2x = -n2x; n2y = -n2y; }
-    double u2x = Math.cos(th12), u2y = Math.sin(th12);
+        // Elbow pivot at end of L1
+        double ex_rel = L1 * Math.cos(th1);
+        double ey_rel = L1 * Math.sin(th1);
 
-    double wx_rel = ex_rel + H*n2x + (L2 + cand.L3mm) * u2x;
-    double wy_rel = ey_rel + H*n2y + (L2 + cand.L3mm) * u2y;
+        // Forearm frame
+        double th12 = th1 + th2j;
+        double n2x = -Math.sin(th12), n2y = Math.cos(th12);
+        if (n2y < 0.0) { n2x = -n2x; n2y = -n2y; }
+        double u2x = Math.cos(th12), u2y = Math.sin(th12);
 
-    double err = (wx_rel - rx)*(wx_rel - rx) + (wy_rel - ry)*(wy_rel - ry);
-    if (err < localBestErr) { localBestErr = err; localBest = cand; }
-  }
+        double wx_rel = ex_rel + H*n2x + (L2 + cand.L3mm) * u2x;
+        double wy_rel = ey_rel + H*n2y + (L2 + cand.L3mm) * u2y;
 
-  // If we found anything in this span, keep it
-  if (localBest != null) {
-    ik = localBest; bestErr = localBestErr;
-    // If the solution is already “good enough”, stop widening
-    if (bestErr <= IK_ERR_THRESH_MM2) break;
-    // Otherwise, continue to try a wider span
-  }
-}
+        double err = (wx_rel - rx)*(wx_rel - rx) + (wy_rel - ry)*(wy_rel - ry);
 
-// If still nothing after all spans, fall back to your global solver
-if (ik == null) {
-  ik = solveIkElbowUp_LoffsetAbove(rx, ry, shoulderAbsSeed, /*start*/ false);
-  if (ik == null) {
-    if (debug) SmartDashboard.putString("FollowCurve/reach", "unreachable/limits");
-    return;
-  }
-}
+        // Soft penalty for near-straight elbow (prefer ≤ ELBOW_INT_SOFT_MAX)
+        double elbowInt = cand.elbowInteriorDeg;
+        if (elbowInt > ELBOW_INT_SOFT_MAX) {
+          double over = elbowInt - ELBOW_INT_SOFT_MAX;
+          err += ELBOW_PENALTY_W * over * over;
+        }
+        // Prefer slightly less shoulder near end of path
+        double suUser = cand.shoulderUserDeg;
+        if (suUser > SHOULDER_USER_SOFT_MAX) {
+          double over = suUser - SHOULDER_USER_SOFT_MAX;
+          err += shoulderBiasPhase * SHOULDER_SOFT_PENALTY_W * over * over;
+        }
+        // Encourage slider to carry more of the reach (prefer L3 ≥ threshold)
+        double underL3 = Math.max(0.0, L3_SOFT_MAX - cand.L3mm);
+        if (underL3 > 0.0) {
+          err += shoulderBiasPhase * L3_SOFT_PENALTY_W * underL3 * underL3;
+        }
 
-    // If nothing feasible inside ±5°, fall back to the original global solver
+        if (err < localBestErr) { localBestErr = err; localBest = cand; }
+      }
+
+      // If we found anything in this span, keep it
+      if (localBest != null) {
+        ik = localBest; bestErr = localBestErr;
+        // If the solution is already “good enough”, stop widening
+        if (bestErr <= IK_ERR_THRESH_MM2) break;
+      }
+    }
+
+    // If still nothing after all spans, fall back to your global solver
     if (ik == null) {
       ik = solveIkElbowUp_LoffsetAbove(rx, ry, shoulderAbsSeed, /*start*/ false);
       if (ik == null) {
         if (debug) SmartDashboard.putString("FollowCurve/reach", "unreachable/limits");
         return;
       }
-    }
-
-    // If still null (belt & suspenders), nearest feasible
-    if (ik == null) {
-      IKResult nearest = nearestFeasible(rx, ry);
-      if (nearest == null) {
-        if (debug) SmartDashboard.putString("FollowCurve/reach", "unreachable/no-fallback");
-        return;
-      }
-      ik = nearest;
-      if (debug) SmartDashboard.putString("FollowCurve/reach", "fallback-nearest");
     }
 
     // --- Smooth ramp from live pose to IK setpoints ---
@@ -279,17 +296,17 @@ if (ik == null) {
     cmdElbowInt     = lerpDegShortest(startElbowInternal,  ik.elbowInteriorDeg,  blend);
     cmdL3           = lerp(startL3,                        ik.L3mm,              blend);
 
-    // Clamp to limits (safety)  (UNCHANGED, but we will use these to command)
+    // Clamp to limits (safety)
     rawcmdShoulderUser = clamp(cmdShoulderUser, SHOULDER_USER_MIN, SHOULDER_USER_MAX);
     rawcmdElbowInt     = clamp(cmdElbowInt,     ELBOW_INT_MIN,     ELBOW_INT_MAX);
     cmdL3              = clamp(cmdL3,           L3_MIN,            L3_MAX);
 
-    // Command actuators (POSITION ONLY)  (CHANGED: use clamped values)
+    // Command actuators (POSITION ONLY)
     arm.lowerArm.setDeg( rawcmdShoulderUser );
     arm.upperArm.setDeg( rawcmdElbowInt );
     arm.slider.setMM( cmdL3 );
 
-    // Optional: publish world wrist XY for sanity checks (ADDED)
+    // Optional: publish world wrist XY for sanity checks
     double[] fkWorld = fkWrist(base.x, base.y, rawcmdShoulderUser, rawcmdElbowInt, cmdL3);
     SmartDashboard.putNumber("FollowCurve/wrist_x_world", fkWorld[0]);
     SmartDashboard.putNumber("FollowCurve/wrist_y_world", fkWorld[1]);
@@ -302,6 +319,10 @@ if (ik == null) {
       SmartDashboard.putNumber("FollowCurve/cmd_shoulder_user", rawcmdShoulderUser);
       SmartDashboard.putNumber("FollowCurve/cmd_elbow_int", rawcmdElbowInt);
       SmartDashboard.putNumber("FollowCurve/cmd_L3", cmdL3);
+      SmartDashboard.putNumber("FollowCurve/ik_err_mm2", bestErr);
+      SmartDashboard.putNumber("FollowCurve/ik_elbow_int_deg", ik.elbowInteriorDeg);
+      SmartDashboard.putNumber("FollowCurve/ik_shoulder_user_deg", ik.shoulderUserDeg);
+      SmartDashboard.putNumber("FollowCurve/ik_L3_mm", ik.L3mm);
     }
   }
 
@@ -314,13 +335,7 @@ if (ik == null) {
   public void end(boolean interrupted) {
     SmartDashboard.putString("FollowCurve/reach", interrupted ? "interrupted" : "complete");
     ace.setPos(5.0);
-    arm.wrist.setPos(9.4); // reset wrist to 0.0 (home) on end
-    
-    
-    // arm.setJointVelocities(0, 0, 0); // harmless even though we don't use velocities now
-    // arm.lowerArm.setPos(cmdShoulderUser);
-    // arm.upperArm.setPos(cmdElbowInt); // interior angle
-    // arm.slider.setPos(0);
+    arm.wrist.setPos(9.4); // example wrist reset
   }
 
   // ----------------- Helpers -----------------
@@ -342,10 +357,8 @@ if (ik == null) {
    * Elbow-UP IK with L-shaped offset applied perpendicular to the FOREARM axis.
    * We force the offset "ABOVE" by flipping the forearm's left-normal so its world Y >= 0.
    * Limits enforced:
-   *   0° ≤ shoulder_user ≤ 115°, 0° < elbow_internal < 180°,
+   *   0° ≤ shoulder_user ≤ 115°, 0° < elbow_internal < 172° (hard),
    *   and shoulder must point right/up (cos(theta1_abs) >= 0).
-   *
-   * If start==true (not used in this version), L3 scan would begin at 0 first tick.
    */
   private static IKResult solveIkElbowUp_LoffsetAbove(double rx, double ry, double shoulderAbsSeedDeg, boolean start) {
     final double LeffMinScan = L2 + (start ? 0.0 : L3_MIN);
@@ -394,14 +407,14 @@ if (ik == null) {
       double elbowInternalDeg = Math.toDegrees(Math.PI - Math.abs(theta2));
 
       if (shoulderUserDeg < SHOULDER_USER_MIN - 1e-6 || shoulderUserDeg > SHOULDER_USER_MAX + 1e-6) continue;
-      if (!(ELBOW_INT_MIN < elbowInternalDeg && elbowInternalDeg < ELBOW_INT_MAX)) continue;
+      if (!(ELBOW_INT_MIN < elbowInternalDeg && elbowInternalDeg < ELBOW_INT_HARD_MAX)) continue;
       if (Math.cos(Math.toRadians(shoulderAbsDeg)) < -1e-9) continue;
 
       double L3mm = clamp(Leff - L2, L3_MIN, L3_MAX);
       return new IKResult(shoulderAbsDeg, shoulderUserDeg, elbowInternalDeg, L3mm);
     }
     return null;
-}
+  }
 
   /** Shoulder must point right or up. */
   private static boolean rightOrUpOk(double shoulderAbsDeg) {
@@ -427,7 +440,7 @@ if (ik == null) {
     return new double[] { wx, wy, ex, ey, ex + H*n2x, ey + H*n2y }; // wrist, elbow pivot, offset point
   }
 
-  /** Grid-search a nearest feasible (S_user, E_internal, L3) that minimizes wrist->target distance. */
+  /** Grid-search a nearest feasible (S_user, E_internal, L3) that minimizes wrist->target distance, with soft penalties. */
   private static IKResult nearestFeasible(double rx, double ry) {
     // target in world (relative to base)
     double targetX = rx, targetY = ry;
@@ -439,11 +452,28 @@ if (ik == null) {
     for (double su = SHOULDER_USER_MIN; su <= SHOULDER_USER_MAX + 1e-9; su += 5.0) {
       double sAbs = su - USER_OFFSET_DEG;
       if (!rightOrUpOk(sAbs)) continue;
-      for (double ei = 1.0; ei < 179.0; ei += 5.0) {
+      for (double ei = Math.max(1.0, ELBOW_INT_MIN + 1.0); ei < Math.min(179.0, ELBOW_INT_HARD_MAX); ei += 5.0) {
         for (double l3 = L3_MIN; l3 <= L3_MAX + 1e-9; l3 += 25.0) {
           double[] fk = fkWrist(0.0, 0.0, su, ei, l3);  // base at origin since rx,ry already relative
           double dx = fk[0] - targetX, dy = fk[1] - targetY;
           double err = dx*dx + dy*dy;
+
+          // elbow soft penalty
+          if (ei > ELBOW_INT_SOFT_MAX) {
+            double over = ei - ELBOW_INT_SOFT_MAX;
+            err += ELBOW_PENALTY_W * over * over;
+          }
+          // shoulder soft-max (full weight in fallback)
+          if (su > SHOULDER_USER_SOFT_MAX) {
+            double over = su - SHOULDER_USER_SOFT_MAX;
+            err += SHOULDER_SOFT_PENALTY_W * over * over;
+          }
+          // L3 soft-min
+          double underL3 = Math.max(0.0, L3_SOFT_MAX - l3);
+          if (underL3 > 0.0) {
+            err += L3_SOFT_PENALTY_W * underL3 * underL3;
+          }
+
           if (err < bestErr) { bestErr = err; bestS = su; bestE = ei; bestL3 = l3; }
         }
       }
@@ -454,11 +484,25 @@ if (ik == null) {
     for (double su = Math.max(SHOULDER_USER_MIN, bestS-4); su <= Math.min(SHOULDER_USER_MAX, bestS+4); su += 1.0) {
       double sAbs = su - USER_OFFSET_DEG;
       if (!rightOrUpOk(sAbs)) continue;
-      for (double ei = Math.max(1.0, bestE-4); ei <= Math.min(179.0, bestE+4); ei += 1.0) {
+      for (double ei = Math.max(1.0, bestE-4); ei <= Math.min(ELBOW_INT_HARD_MAX - 1e-6, bestE+4); ei += 1.0) {
         for (double l3 = Math.max(L3_MIN, bestL3-15); l3 <= Math.min(L3_MAX, bestL3+15); l3 += 5.0) {
           double[] fk = fkWrist(0.0, 0.0, su, ei, l3);
           double dx = fk[0] - targetX, dy = fk[1] - targetY;
           double err = dx*dx + dy*dy;
+
+          if (ei > ELBOW_INT_SOFT_MAX) {
+            double over = ei - ELBOW_INT_SOFT_MAX;
+            err += ELBOW_PENALTY_W * over * over;
+          }
+          if (su < SHOULDER_USER_SOFT_MIN) {
+            double under = SHOULDER_USER_SOFT_MIN - su;
+            err += SHOULDER_SOFT_PENALTY_W * under * under;
+          }
+          double overL3 = Math.max(0.0, l3 - L3_SOFT_MAX);
+          if (overL3 > 0.0) {
+            err += L3_SOFT_PENALTY_W * overL3 * overL3;
+          }
+
           if (err < bestErr) { bestErr = err; bestS = su; bestE = ei; bestL3 = l3; }
         }
       }
@@ -468,51 +512,64 @@ if (ik == null) {
     return new IKResult(sAbsDeg, bestS, bestE, bestL3);
   }
 
-  /**
-   * Solve with a FIXED shoulder absolute angle (degrees).
-   * Returns IKResult or null if no feasible elbow/L3 under constraints.
-  */
-  private static IKResult solveWithFixedShoulderAbs(double rx, double ry, double shoulderAbsDeg) {
-    double th1 = Math.toRadians(shoulderAbsDeg);
-    for (double L3 = L3_MIN; L3 <= L3_MAX; L3 += 1.0) {
+  /** Weighted error used by the best-branch chooser */
+  private static double candidateErrMm2(double rx, double ry, IKResult ik) {
+    if (ik == null) return Double.POSITIVE_INFINITY;
+    double[] fk = fkWrist(0.0, 0.0, ik.shoulderUserDeg, ik.elbowInteriorDeg, ik.L3mm);
+    double dx = fk[0] - rx, dy = fk[1] - ry;
+    double err = dx*dx + dy*dy;
+    if (ik.elbowInteriorDeg > ELBOW_INT_SOFT_MAX) {
+      double over = ik.elbowInteriorDeg - ELBOW_INT_SOFT_MAX;
+      err += ELBOW_PENALTY_W * over * over;
+    }
+    return err;
+  }
+
+  /** Try both elbow branches (±acos) with fixed shoulder; return the better one. */
+  private static IKResult solveWithFixedShoulderAbsBestBranch(double rx, double ry, double shoulderAbsDeg) {
+    IKResult a = solveWithFixedShoulderAbs(rx, ry, shoulderAbsDeg, -1); // one branch
+    IKResult b = solveWithFixedShoulderAbs(rx, ry, shoulderAbsDeg, +1); // opposite branch
+    double ea = candidateErrMm2(rx, ry, a);
+    double eb = candidateErrMm2(rx, ry, b);
+    return (ea <= eb) ? a : b;
+  }
+
+  /** Fixed-shoulder solver that seeds the elbow with the chosen sign (±acos). */
+  private static IKResult solveWithFixedShoulderAbs(double rx, double ry, double shoulderAbsDeg, int elbowSign) {
+    final double th1 = Math.toRadians(shoulderAbsDeg);
+    for (double L3 = L3_MIN; L3 <= L3_MAX + 1e-9; L3 += 1.0) {
       double Leff = L2 + L3;
 
-      // Pass 1: shoulder → target (corrected)
-      double r2 = rx * rx + ry * ry;
-      double c2 = (r2 - L1 * L1 - Leff * Leff) / (2.0 * L1 * Leff);
+      // Pass 1: get a usable normal
+      double r2 = rx*rx + ry*ry;
+      double c2 = (r2 - L1*L1 - Leff*Leff) / (2.0 * L1 * Leff);
       if (c2 < -1.0 || c2 > 1.0) continue;
-      double theta2 = -Math.acos(clamp(c2, -1.0, 1.0));
-      double k1 = L1 + Leff * Math.cos(theta2);
-      double k2 = Leff * Math.sin(theta2);
-      double theta1 = Math.atan2(ry, rx) - Math.atan2(k2, k1);
 
-      double th12 = theta1 + theta2;
+      double theta2 = elbowSign * Math.acos(clamp(c2, -1.0, 1.0));
+      double th12 = th1 + theta2;
+
       double n2x = -Math.sin(th12), n2y = Math.cos(th12);
-      if (n2y < 0.0) { n2x = -n2x; n2y = -n2y; }
+      if (n2y < 0.0) { n2x = -n2x; n2y = -n2y; } // keep offset ABOVE
 
-      // Pass 2: de-offset only by H (corrected)
-      double px = rx - H * n2x;
-      double py = ry - H * n2y;
-      double rr2 = px * px + py * py;
-      c2 = (rr2 - L1 * L1 - Leff * Leff) / (2.0 * L1 * Leff);
-      if (c2 < -1.0 || c2 > 1.0) continue;
-      theta2 = -Math.acos(clamp(c2, -1.0, 1.0));
-      k1 = L1 + Leff * Math.cos(theta2);
-      k2 = Leff * Math.sin(theta2);
-      theta1 = th1; // keep fixed
+      // Pass 2: de-offset by H then re-solve with same branch
+      double px = rx - H * n2x, py = ry - H * n2y;
+      double rr2 = px*px + py*py;
+      double c2b = (rr2 - L1*L1 - Leff*Leff) / (2.0 * L1 * Leff);
+      if (c2b < -1.0 || c2b > 1.0) continue;
+
+      theta2 = elbowSign * Math.acos(clamp(c2b, -1.0, 1.0));
 
       double elbowInterior = Math.toDegrees(Math.PI - Math.abs(theta2));
       double shoulderUserDeg = shoulderAbsDeg + USER_OFFSET_DEG;
 
       if (shoulderUserDeg < SHOULDER_USER_MIN - 1e-6 || shoulderUserDeg > SHOULDER_USER_MAX + 1e-6) continue;
-      if (!(ELBOW_INT_MIN < elbowInterior && elbowInterior < ELBOW_INT_MAX)) continue;
-      if (Math.cos(th1) < -1e-9) continue;
+      if (!(ELBOW_INT_MIN < elbowInterior && elbowInterior < ELBOW_INT_HARD_MAX)) continue;
+      if (!rightOrUpOk(shoulderAbsDeg)) continue;
 
       return new IKResult(shoulderAbsDeg, shoulderUserDeg, elbowInterior, L3);
     }
     return null;
   }
-
 
   private static double[] bezier(double t, Point2D.Double a, Point2D.Double b, Point2D.Double c, Point2D.Double d) {
     double u = 1.0 - t;

@@ -44,7 +44,7 @@ public class Slider extends SubsystemBase implements Sendable {
  private static double velocitySetpoint = 0;
 
   // Tunable PID constants
-  public double kP = 2.5, kI = 0.0, kD = 0.0, kV = 0.25, kS = 0.6;
+  public double kP = 0.05, kI = 0.0, kD = 0.0, kV = 0.25, kS = 0.6;
 
   // Motion Magic profiles
   public static double fastVel = 300, fastAcc = 600, fastJerk = 2000;
@@ -123,15 +123,15 @@ public void setMM(double distance) {
   }
 
   public void setPos(double position, boolean fast) {
-    this.fast = fast;
-    this.requestedPosition = position;
-    slider.setControl(
-      dynamic
-        .withVelocity(fast ? fastVel : slowVel)
-        .withAcceleration(fast ? fastAcc : slowAcc)
-        .withJerk(fast ? fastJerk : slowJerk)
-        .withPosition(position)
-    );
+    // this.fast = fast;
+    // this.requestedPosition = position;
+    // slider.setControl(
+    //   dynamic
+    //     .withVelocity(fast ? fastVel : slowVel)
+    //     .withAcceleration(fast ? fastAcc : slowAcc)
+    //     .withJerk(fast ? fastJerk : slowJerk)
+    //     .withPosition(position)
+    // );
   }
 
   public double getPos() {

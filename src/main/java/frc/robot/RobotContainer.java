@@ -344,8 +344,10 @@ public class RobotContainer {
     //     .onTrue(new MoveArmFix(mArm, ace, 42, -1));
     // Barge
     //     .onFalse(new MoveArmFix(mArm, ace, 0, 0));
-    Barge
-        .onTrue(new InstantCommand(() ->mArm.lowerArm.setDeg(25.0))); //degrees/360 * 128 gear ratio
+    Barge.onTrue(  new FollowCurve(mArm, ace,startPoint,controlPoint1,controlPoint2,endPoint,base,() ->mArm.lowerArm.getDegs(), () ->mArm.upperArm.getDegs(),() ->mArm.slider.getPos(),true));
+
+
+    //    .onTrue(new InstantCommand(() ->mArm.lowerArm.setDeg(25.0))); //degrees/360 * 128 gear ratio
 
         
     Barge
