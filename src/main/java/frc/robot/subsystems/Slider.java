@@ -9,24 +9,29 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import frc.robot.Constants;
 
+import static edu.wpi.first.units.Units.Newton;
+
 import com.ctre.phoenix6.configs.*;
 import com.ctre.phoenix6.controls.DynamicMotionMagicVoltage;
+import com.ctre.phoenix6.controls.PositionDutyCycle;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VelocityDutyCycle;
 import com.ctre.phoenix6.hardware.TalonFXS;
 import com.ctre.phoenix6.signals.*;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 
 public class Slider extends SubsystemBase implements Sendable {
 
   private final TalonFXS slider;
-  private final TalonFXSConfigurator sliderConfigurator;
-  private final TalonFXSConfiguration sliderConfigs;
+ 
+  private final TalonFXSConfiguration sliderConfigs = new TalonFXSConfiguration();
 
   private final Slot0Configs pidConfigs;
   private final MotionMagicConfigs mmConfigs;
 
   private static final DynamicMotionMagicVoltage dynamic = new DynamicMotionMagicVoltage(0, 300, 300, 800);
   private static final PositionVoltage sController = new PositionVoltage(0);
+  private static final PositionDutyCycle  pControllerDuty = new PositionDutyCycle(0).withSlot(2);
 
   
   private boolean fast = true;
@@ -47,8 +52,12 @@ public class Slider extends SubsystemBase implements Sendable {
 
   public Slider() {
     slider = new TalonFXS(35, "Canivore2");
-    sliderConfigurator = slider.getConfigurator();
-    sliderConfigs = new TalonFXSConfiguration();
+   //lider.getConfigurator().refresh(sliderConfigs);
+   slider.getConfigurator().refresh(sliderConfigs);
+
+ 
+   
+    
 
     // Motor config
     sliderConfigs.Commutation.MotorArrangement = MotorArrangementValue.Minion_JST;
@@ -69,7 +78,7 @@ public class Slider extends SubsystemBase implements Sendable {
     mmConfigs.MotionMagicAcceleration = fastAcc;
     mmConfigs.MotionMagicJerk = fastJerk;
 
-    sliderConfigurator.apply(sliderConfigs);
+    slider.getConfigurator().apply(sliderConfigs);
     if (Constants.enableShuffleboard) {
       ShuffleboardTab tab = Shuffleboard.getTab("Arms");
       tab.add("Wrist", this);
@@ -103,7 +112,11 @@ public class Slider extends SubsystemBase implements Sendable {
     return Math.abs(getCurrentVelocity(motor) - targetRPS) < tolerance;
   }
 
-
+public void setMM(double distance) {
+  double position = (distance * 12)/(9.525*16 );
+   slider.setControl(pControllerDuty.withPosition(position));
+    
+  }
 
   public void setPos(double position) {
     setPos(position, true);
@@ -135,7 +148,7 @@ public class Slider extends SubsystemBase implements Sendable {
     pidConfigs.kD = kD;
     pidConfigs.kV = kV;
     pidConfigs.kS = kS;
-    sliderConfigurator.apply(pidConfigs);
+    slider.getConfigurator().apply(pidConfigs);
   }
 
   @Override
