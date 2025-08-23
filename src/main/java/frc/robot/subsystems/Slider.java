@@ -35,13 +35,13 @@ public class Slider extends SubsystemBase implements Sendable {
 
   
   private boolean fast = true;
-  private double requestedPosition = 0;
-  private double cachedPosition = 0;
+  private double requestedPosition = 0.0;
+  private double cachedPosition = 0.0;
   private boolean atPosition = false;
   private boolean updatePending = false;
   private final VelocityDutyCycle velocityRequest = new VelocityDutyCycle(0).withSlot(0);
   
- private static double velocitySetpoint = 0;
+ private static double velocitySetpoint = 0.0;
 
   // Tunable PID constants
   public double kP = 0.05, kI = 0.0, kD = 0.0, kV = 0.25, kS = 0.6;
@@ -113,8 +113,14 @@ public class Slider extends SubsystemBase implements Sendable {
   }
 
 public void setMM(double distance) {
-  double position = (distance * 12)/(9.525*16 );
+  double position = (distance * 12.0)/(9.525*16.0 );
    slider.setControl(pControllerDuty.withPosition(position));
+    
+  }
+  public double getMM() {
+  double distance = cachedPosition * (9.525 * 16.0) / 12.0;
+    
+    return distance;
     
   }
 

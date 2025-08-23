@@ -145,10 +145,10 @@ public class MoveArmFix extends Command {
       case HOME:
         arm.lowerArm.setPos(1.0);
         if (algae) {
-          arm.upperArm.setPos(5, true);
+          arm.upperArm.setPos(5.0, true);
           arm.wrist.setPos(3.0);
         } else {
-          arm.upperArm.setPos(0, true);
+          arm.upperArm.setPos(3.0, true);
           arm.wrist.setPos(0.7);
          
         }

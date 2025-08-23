@@ -76,6 +76,8 @@ public class Robot extends TimedRobot {
         RobotContainer.BlueAlliance = 1;
       }
     }
+    SmartDashboard.putBoolean("followcurve",Constants.followCurve);
+    
   }
 
   @Override

@@ -142,12 +142,12 @@ public class RobotContainer {
   public static double maxAngularRateConstant = RotationsPerSecond.of(0.75).in(RadiansPerSecond);
 
   public static Point2D.Double base = new Point2D.Double(85.393,509.0);//.17645,.50898890);
-  public static Point2D.Double startPoint = new Point2D.Double(-110.0,734.0);//-.02777, .5207621); 
+  public static Point2D.Double startPoint = new Point2D.Double(-90.00,780.0);//-.02777, .5207621); 
   
 
-  public static Point2D.Double controlPoint1 = new Point2D.Double(-61.0,1147.4);//-0.4,.5);
-  public static Point2D.Double controlPoint2 = new Point2D.Double(158.0,1684.7);//.2,0.6);
-  public static Point2D.Double endPoint = new Point2D.Double(-71.0,1914.0);//(-20.1,1160.95);//0.0041,1.85795);
+  public static Point2D.Double controlPoint1 = new Point2D.Double(100.0,800.0);//-0.4,.5);
+  public static Point2D.Double controlPoint2 = new Point2D.Double(250.0,1684.7);//158.0,1684.7);//.2,0.6);
+  public static Point2D.Double endPoint = new Point2D.Double(100.0,2040.0);//(-20.1,1160.95);//0.0041,1.85795);
   
 
   /* Path follower */
@@ -344,7 +344,7 @@ public class RobotContainer {
     //     .onTrue(new MoveArmFix(mArm, ace, 42, -1));
     // Barge
     //     .onFalse(new MoveArmFix(mArm, ace, 0, 0));
-    Barge.onTrue(  new FollowCurve(mArm, ace,startPoint,controlPoint1,controlPoint2,endPoint,base,() ->mArm.lowerArm.getDegs(), () ->mArm.upperArm.getDegs(),() ->mArm.slider.getPos(),true));
+    Barge.onTrue(  new FollowCurve(mArm, ace,startPoint,controlPoint1,controlPoint2,endPoint,base,() ->mArm.lowerArm.getDegs(), () ->mArm.upperArm.getDegs(),() ->mArm.slider.getMM(),true));
 
 
     //    .onTrue(new InstantCommand(() ->mArm.lowerArm.setDeg(25.0))); //degrees/360 * 128 gear ratio

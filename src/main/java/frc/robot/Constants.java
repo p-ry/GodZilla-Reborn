@@ -41,6 +41,7 @@ import java.util.function.Supplier;
 public final class Constants {
 
   public static final AtomicBoolean algaeMode = new AtomicBoolean(false);
+  public static boolean followCurve = false;
 
   public static final Mode simMode = Mode.SIM;
   public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
