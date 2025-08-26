@@ -141,13 +141,13 @@ public class RobotContainer {
   public static double maxSpeedConstant = 4.73;
   public static double maxAngularRateConstant = RotationsPerSecond.of(0.75).in(RadiansPerSecond);
 
-  public static Point2D.Double base = new Point2D.Double(85.393,509.0);//.17645,.50898890);
-  public static Point2D.Double startPoint = new Point2D.Double(-90.00,780.0);//-.02777, .5207621); 
+  // public static Point2D.Double base = new Point2D.Double(85.393,509.0);//.17645,.50898890);
+  // public static Point2D.Double startPoint = new Point2D.Double(-90.00,780.0);//-.02777, .5207621); 
   
 
-  public static Point2D.Double controlPoint1 = new Point2D.Double(100.0,800.0);//-0.4,.5);
-  public static Point2D.Double controlPoint2 = new Point2D.Double(250.0,1684.7);//158.0,1684.7);//.2,0.6);
-  public static Point2D.Double endPoint = new Point2D.Double(0.00,2020.0);//80.0,2040.0-20.1,1160.95);//0.0041,1.85795);
+  // public static Point2D.Double controlPoint1 = new Point2D.Double(100.0,800.0);//-0.4,.5);
+  // public static Point2D.Double controlPoint2 = new Point2D.Double(250.0,1684.7);//158.0,1684.7);//.2,0.6);
+  // public static Point2D.Double endPoint = new Point2D.Double(0.00,2020.0);//80.0,2040.0-20.1,1160.95);//0.0041,1.85795);
   
 
   /* Path follower */
@@ -332,11 +332,12 @@ public class RobotContainer {
         .onFalse(new MoveArmFix(mArm, ace, 0, 0)
             .alongWith(new InstantCommand(() -> loading = false)));
     Process
-        .onTrue(new MoveArmFix(mArm, ace, 5, 0));
+    .onTrue(new InstantCommand(() -> {Constants.endX-=25.0;  }));
+        //.onTrue(new MoveArmFix(mArm, ace, 5, 0));
     // Process.whileTrue(new InstantCommand(() -> ace.setSpeed(0.1)));
 
-    Process
-        .onFalse(new MoveArmFix(mArm, ace, 0, 0));
+    Barge
+        .onTrue(new InstantCommand(() -> {Constants.endX+=25.0;  }));
     // Process
     // .onFalse(new InstantCommand(() -> ace.setSpeed(0)));
 
@@ -477,14 +478,14 @@ public class RobotContainer {
     Lv3R.onFalse(new InstantCommand(() -> MaxSpeed = maxSpeedConstant));
     Lv3R.onFalse(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant));
     // *********TRUE *************************************** */
-    Lv4L.onTrue(new FollowCurve(mArm, ace,startPoint,controlPoint1,controlPoint2,endPoint,base,() ->mArm.lowerArm.getDegs(), () ->mArm.upperArm.getDegs(),() ->mArm.slider.getMM(),true)
+    Lv4L.onTrue(new FollowCurve(mArm, ace,Constants.startPoint,Constants.controlPoint1,Constants.controlPoint2,Constants.endPoint,Constants.base,() ->mArm.lowerArm.getDegs(), () ->mArm.upperArm.getDegs(),() ->mArm.slider.getMM(),true)
     .andThen(new InstantCommand(() ->  {
       MaxSpeed = maxSpeedConstant / 4;
         MaxAngularRate = maxAngularRateConstant / 2.5;
         rightTree = false;
         }))
     );
-Lv4R.onTrue(new FollowCurve(mArm, ace,startPoint,controlPoint1,controlPoint2,endPoint,base,() ->mArm.lowerArm.getDegs(), () ->mArm.upperArm.getDegs(),() ->mArm.slider.getMM(),true)
+Lv4R.onTrue(new FollowCurve(mArm, ace,Constants.startPoint,Constants.controlPoint1,Constants.controlPoint2,Constants.endPoint,Constants.base,() ->mArm.lowerArm.getDegs(), () ->mArm.upperArm.getDegs(),() ->mArm.slider.getMM(),true)
 .andThen(new InstantCommand(() ->  {
   MaxSpeed = maxSpeedConstant / 4;
 
@@ -505,23 +506,23 @@ Lv4R.onTrue(new FollowCurve(mArm, ace,startPoint,controlPoint1,controlPoint2,end
     // Lv4R.onTrue(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant / 2.5));
     // Lv4R.onTrue(new InstantCommand(() -> rightTree = true));
     // *********FALSE **************************************************/
-    Lv4L.onFalse(new MoveArmFix(mArm, ace, 0, 0).andThen(new WaitCommand(0.1))
-        .andThen(new InstantCommand(() -> {
+    Lv4L.onFalse(new MoveArmFix(mArm, ace, 0, 0)
+            .andThen(new InstantCommand(() -> {
 
           MaxSpeed = maxSpeedConstant;
 
           MaxAngularRate = maxAngularRateConstant;
-          mArm.wrist.setPos(0.7);
+         // mArm.wrist.setPos(0.7);
         })));
 
     // .andThen(new InstantCommand(() -> ace.setSpeed(1))));
     // Lv4L.onFalse(new InstantCommand(() -> MaxSpeed = MaxSpeed * 4));
     // Lv4L.onFalse(new InstantCommand(() -> MaxAngularRate = MaxAngularRate * 2));
-    Lv4R.onFalse(new MoveArmFix(mArm, ace, 0, 0).andThen(new WaitCommand(0.1))
+    Lv4R.onFalse(new MoveArmFix(mArm, ace, 0, 0)
         .andThen(new InstantCommand(() -> {
           MaxSpeed = maxSpeedConstant;
           MaxAngularRate = maxAngularRateConstant;
-          mArm.wrist.setPos(0.7);
+         // mArm.wrist.setPos(0.7);
         })));
 
     Intake
