@@ -149,7 +149,7 @@ public class MoveArmFix extends Command {
           arm.wrist.setPos(3.0);
         } else {
           arm.upperArm.setPos(3.0, true);
-          arm.wrist.setPos(0.7);
+          arm.wrist.setPos(0.1);
          
         }
         arm.slider.setMM(5);
@@ -249,7 +249,7 @@ public class MoveArmFix extends Command {
 
       case LOWER_FROM_4:
         arm.lowerArm.setPos(18.00);
-        arm.upperArm.setPos(1.5, false);
+        arm.upperArm.setPos(1.5, true);//false);
         arm.wrist.setPos(0.1);
         arm.slider.setPos(0.5, true);
         break;
