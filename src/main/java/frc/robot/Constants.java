@@ -56,7 +56,8 @@ public final class Constants {
 
   public static Point2D.Double controlPoint1 = new Point2D.Double(100.0,800.0);//-0.4,.5);
   public static Point2D.Double controlPoint2 = new Point2D.Double(250.0,1684.7);//158.0,1684.7);//.2,0.6);
-  public static double endX = 0.0;
+  public static double endX = 80.0;
+  public static double endY = 2020.0;
   public static Point2D.Double endPoint = new Point2D.Double(endX,2020.0);//80.0,2040.0-20.1,1160.95);//0.0041,1.85795);
   
 

@@ -134,6 +134,8 @@ public class RobotContainer {
 
   final Trigger lTrigger = controller.leftTrigger();
   final Trigger rTrigger = controller.rightTrigger();
+  final Trigger leftBumper = controller.leftBumper();
+  final Trigger rightBumper = controller.rightBumper();
   public static boolean loading = false;
   public static int BlueAlliance = 1;
   public static Command driveIt;
@@ -220,8 +222,10 @@ public class RobotContainer {
     NamedCommands.registerCommand("L1", new MoveArmFix(mArm, ace, 6, 0));
     NamedCommands.registerCommand("L2", new MoveArmFix(mArm, ace, 2, 0));
     NamedCommands.registerCommand("L3", new MoveArmFix(mArm, ace, 3, 0));
-    NamedCommands.registerCommand("L4", new MoveArmFix(mArm, ace, 4, 0));
-    NamedCommands.registerCommand("L4No", new MoveArmFix(mArm, ace, 400, 0));
+    NamedCommands.registerCommand("L4", new FollowCurve(mArm, ace,Constants.startPoint,Constants.controlPoint1,Constants.controlPoint2,Constants.endPoint,Constants.base,() ->mArm.lowerArm.getDegs(), () ->mArm.upperArm.getDegs(),() ->mArm.slider.getMM(),true));
+    //MoveArmFix(mArm, ace, 4, 0));
+    NamedCommands.registerCommand("L4No",new FollowCurve(mArm, ace,Constants.startPoint,Constants.controlPoint1,Constants.controlPoint2,Constants.endPoint,Constants.base,() ->mArm.lowerArm.getDegs(), () ->mArm.upperArm.getDegs(),() ->mArm.slider.getMM(),true));
+     //new MoveArmFix(mArm, ace, 400, 0));
     NamedCommands.registerCommand("Intake",
         new InstantCommand(() -> ace.setSpeed(1))
             .alongWith(new InstantCommand(() -> ace.gotIt = false))
@@ -332,12 +336,24 @@ public class RobotContainer {
         .onFalse(new MoveArmFix(mArm, ace, 0, 0)
             .alongWith(new InstantCommand(() -> loading = false)));
     Process
-    .onTrue(new InstantCommand(() -> {Constants.endX-=25.0;  }));
+    .onTrue(new InstantCommand(() -> {
+      Constants.endX-=25.0;
+      Constants.endPoint.setLocation(Constants.endX, Constants.endY);
+
+    SmartDashboard.putNumber("endX",Constants.endX); 
+    SmartDashboard.putNumber("endpoinX",Constants.endPoint.getX());
+    SmartDashboard.putNumber("endpoinY",Constants.endPoint.getY()); }));
+
         //.onTrue(new MoveArmFix(mArm, ace, 5, 0));
     // Process.whileTrue(new InstantCommand(() -> ace.setSpeed(0.1)));
 
     Barge
-        .onTrue(new InstantCommand(() -> {Constants.endX+=25.0;  }));
+        .onTrue(new InstantCommand(() -> {Constants.endX+=25.0; 
+          Constants.endPoint.setLocation(Constants.endX, Constants.endY);
+          SmartDashboard.putNumber("endX",Constants.endX);  
+          SmartDashboard.putNumber("endpoinX",Constants.endPoint.getX());
+    SmartDashboard.putNumber("endpoinY",Constants.endPoint.getY());}));
+    
     // Process
     // .onFalse(new InstantCommand(() -> ace.setSpeed(0)));
 
@@ -507,7 +523,7 @@ Lv4R.onTrue(new FollowCurve(mArm, ace,Constants.startPoint,Constants.controlPoin
     // Lv4R.onTrue(new InstantCommand(() -> rightTree = true));
     // *********FALSE **************************************************/
     Lv4L.onFalse(new MoveArmFix(mArm, ace, 0, 0)
-            .andThen(new InstantCommand(() -> {
+            .alongWith(new InstantCommand(() -> {
 
           MaxSpeed = maxSpeedConstant;
 
@@ -519,7 +535,7 @@ Lv4R.onTrue(new FollowCurve(mArm, ace,Constants.startPoint,Constants.controlPoin
     // Lv4L.onFalse(new InstantCommand(() -> MaxSpeed = MaxSpeed * 4));
     // Lv4L.onFalse(new InstantCommand(() -> MaxAngularRate = MaxAngularRate * 2));
     Lv4R.onFalse(new MoveArmFix(mArm, ace, 0, 0)
-        .andThen(new InstantCommand(() -> {
+        .alongWith(new InstantCommand(() -> {
           MaxSpeed = maxSpeedConstant;
           MaxAngularRate = maxAngularRateConstant;
          // mArm.wrist.setPos(0.7);
@@ -534,7 +550,7 @@ Lv4R.onTrue(new FollowCurve(mArm, ace,Constants.startPoint,Constants.controlPoin
     Outtake
         .onFalse(new InstantCommand(() -> ace.setSpeed(0)));
 
-    controller.rightBumper()
+   rightBumper
 
         .onTrue(new InstantCommand(() -> {
 
@@ -546,7 +562,7 @@ Lv4R.onTrue(new FollowCurve(mArm, ace,Constants.startPoint,Constants.controlPoin
           }
 
         }));
-    controller.rightBumper()
+    rightBumper
         .onFalse(new InstantCommand(() -> {
 
           if (driveIt != null) {
@@ -554,7 +570,7 @@ Lv4R.onTrue(new FollowCurve(mArm, ace,Constants.startPoint,Constants.controlPoin
           }
         }));
 
-    controller.leftBumper().onTrue(
+    leftBumper.onTrue(
 
         new InstantCommand(() -> {
 
@@ -563,7 +579,7 @@ Lv4R.onTrue(new FollowCurve(mArm, ace,Constants.startPoint,Constants.controlPoin
             driveIt.schedule();
           }
         }));
-    controller.leftBumper()
+    leftBumper
         .onFalse(new InstantCommand(() -> {
 
           if (driveIt != null) {
