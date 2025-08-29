@@ -107,7 +107,7 @@ public class Utilitys {
         LimelightHelpers.LimelightResults resultsLeft = LimelightHelpers.getLatestResults("limelight-left");
 
         LimelightHelpers.LimelightResults resultsRight = LimelightHelpers.getLatestResults("limelight-right");
-        LimelightHelpers.LimelightResults results = LimelightHelpers.getLatestResults("limelight-left");
+       // LimelightHelpers.LimelightResults results = LimelightHelpers.getLatestResults("limelight-left");
         Pose3d targetPose3D;
         Pose2d robotPose =  drivetrain.getPose();
         where = robotPose;
@@ -147,6 +147,8 @@ public class Utilitys {
             rightDist = 999999;
         }
 
+        SmartDashboard.putNumber("Left C Distance",leftDist);
+        SmartDashboard.putNumber("Right C Distance",rightDist);
         Pose3d tagPose3d = LimelightHelpers.getTargetPose3d_RobotSpace("limelight-left");
         // Pose3d robotPoseTargetSpacePose3d =
         // LimelightHelpers.getBotPose3d_TargetSpace("limelight-left");
@@ -159,7 +161,7 @@ public class Utilitys {
                 // targetPose3D = LimelightHelpers.getTargetPose3d_RobotSpace("limelight-left");
             } else {
                 tagId = tagIds[1];
-                results = resultsRight;
+               // results = resultsRight;
                 tagPose3d = LimelightHelpers.getTargetPose3d_RobotSpace("limelight-right");
 
                 // tagPose3d = LimelightHelpers.getBotPose3d_TargetSpace("limelight-right");
@@ -168,8 +170,9 @@ public class Utilitys {
 
             Rotation2d yawOffset = new Rotation2d(tagPose3d.getRotation().getY());
             // Rotation2d yawOffset = new Rotation2d(targetPose3D.getRotation().getY());
-
+          
             if (right) {
+             
 
                 // tagRel2d = new Pose2d(tagPose3d.getZ()-0.8, -tagPose3d.getX()
                 // -Units.inchesToMeters(6.0),

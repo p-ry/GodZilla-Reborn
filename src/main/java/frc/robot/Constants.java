@@ -22,6 +22,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import frc.robot.LimelightHelpers.PoseEstimate;
 import edu.wpi.first.wpilibj.RobotBase;
 //import frc.robot.Constants.POSES;
 import edu.wpi.first.math.util.Units;
@@ -59,6 +60,7 @@ public final class Constants {
   public static double endX = 80.0;
   public static double endY = 2020.0;
   public static Point2D.Double endPoint = new Point2D.Double(endX,2020.0);//80.0,2040.0-20.1,1160.95);//0.0041,1.85795);
+  public static LimelightHelpers.PoseEstimate[] cameraPoses = new LimelightHelpers.PoseEstimate[2];
   
 
   public Pose3d tag1 = fieldLayout.getTagPose(1).get();
