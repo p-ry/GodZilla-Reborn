@@ -115,7 +115,7 @@ public class Utilitys {
         double rightAmbiguity = 0;
         double yawToTagRad, desiredRotationDeg;
         Rotation2d desiredHeading;
-        double[] targetPose = LimelightHelpers.getTargetPose_RobotSpace("limelight-left");
+        //double[] targetPose = LimelightHelpers.getTargetPose_RobotSpace("limelight-left");
         Rotation2d tagFieldYaw, robotRelYaw;
         Transform2d robotToTag;
         Pose2d tagRel2d;
@@ -124,36 +124,55 @@ public class Utilitys {
         RawFiducial[] fiducialsRight;
         boolean algae;
 
-        if (resultsLeft.valid) {
-            fiducialsLeft = LimelightHelpers.getRawFiducials("limelight-left");
-            leftAmbiguity = fiducialsLeft[0].ambiguity;
-            leftDist = resultsLeft.botpose_avgdist;
+        if (Constants.cameraPoses[0].rawFiducials.length > 0 ) {
+            //fiducialsLeft = LimelightHelpers.getRawFiducials("limelight-left");
+            //leftAmbiguity = fiducialsLeft[0].ambiguity;
+            leftAmbiguity = Constants.cameraPoses[0].rawFiducials[0].ambiguity;
+            leftDist = Constants.cameraPoses[0].rawFiducials[0].distToRobot;
+            //leftDist = resultsLeft.botpose_avgdist;
             validTarget = true;
             // leftAmbiguity = resultsLeft.targets_Fiducials[0].
             // getAmbiguity().getValueAsDouble; // Ensure getAmbiguity() is a valid method
-            tagIds[0] = (int) resultsLeft.targets_Fiducials[0].fiducialID;
+            tagIds[0] =Constants.cameraPoses[0].rawFiducials[0].id; //         (int) resultsLeft.targets_Fiducials[0].fiducialID;
         } else {
             leftDist = 999999;
         }
-
-        if (resultsRight.valid) {
-            fiducialsRight = LimelightHelpers.getRawFiducials("limelight-right");
-            rightAmbiguity = fiducialsRight[0].ambiguity;
-            rightDist = resultsRight.botpose_avgdist;
-
-            tagIds[1] = (int) resultsRight.targets_Fiducials[0].fiducialID;
+        if (Constants.cameraPoses[1].rawFiducials.length > 0 ) {
+            //fiducialsLeft = LimelightHelpers.getRawFiducials("limelight-left");
+            //leftAmbiguity = fiducialsLeft[0].ambiguity;
+            rightAmbiguity = Constants.cameraPoses[1].rawFiducials[0].ambiguity;
+            rightDist = Constants.cameraPoses[1].rawFiducials[0].distToRobot;
+            //leftDist = resultsLeft.botpose_avgdist;
             validTarget = true;
+            // leftAmbiguity = resultsLeft.targets_Fiducials[0].
+            // getAmbiguity().getValueAsDouble; // Ensure getAmbiguity() is a valid method
+            tagIds[1] =Constants.cameraPoses[1].rawFiducials[0].id; //         (int) resultsLeft.targets_Fiducials[0].fiducialID;
         } else {
             rightDist = 999999;
         }
 
+        
+
+        // if (resultsRight.valid) {
+        //     fiducialsRight = LimelightHelpers.getRawFiducials("limelight-right");
+        //     rightAmbiguity = fiducialsRight[0].ambiguity;
+        //     rightDist = resultsRight.botpose_avgdist;
+
+        //     tagIds[1] = (int) resultsRight.targets_Fiducials[0].fiducialID;
+        //     validTarget = true;
+        // } else {
+        //     rightDist = 999999;
+        // }
+
         SmartDashboard.putNumber("Left C Distance",leftDist);
         SmartDashboard.putNumber("Right C Distance",rightDist);
         Pose3d tagPose3d = LimelightHelpers.getTargetPose3d_RobotSpace("limelight-left");
+//******* may need to tchange to constants */
+
+
         // Pose3d robotPoseTargetSpacePose3d =
         // LimelightHelpers.getBotPose3d_TargetSpace("limelight-left");
-        SmartDashboard.putNumber("leftAmbiguity", leftAmbiguity);
-        SmartDashboard.putNumber("rightAmbiguity", rightAmbiguity);
+        
 
         if (validTarget) {
             if (leftDist < rightDist) {
