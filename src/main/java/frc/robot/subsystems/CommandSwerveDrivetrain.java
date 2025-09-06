@@ -281,12 +281,11 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         Constants.cameraPoses[1] = cameraPoses[1];
 
 if (cameraPoses[0]!= null && cameraPoses[0].rawFiducials.length>0) {
-         //SmartDashboard.putNumber("LEFTAMB",Constants.cameraPoses[0].rawFiducials[0].ambiguity);
-         }
+         SmartDashboard.putNumber("LEFTAMB",Constants.cameraPoses[0].rawFiducials[0].ambiguity);}
 
     if(cameraPoses[1]!= null && cameraPoses[1].rawFiducials.length>0) {  
         
-       // SmartDashboard.putNumber("RIGHTAMB",Constants.cameraPoses[1].rawFiducials[0].ambiguity);
+        SmartDashboard.putNumber("RIGHTAMB",Constants.cameraPoses[1].rawFiducials[0].ambiguity);
     }
         if (cameraPoses[0] == null && cameraPoses[1] == null) {
             bestCamera = -1;

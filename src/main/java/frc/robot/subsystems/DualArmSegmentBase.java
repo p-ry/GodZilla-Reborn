@@ -22,10 +22,10 @@ public abstract class DualArmSegmentBase extends SubsystemBase implements edu.wp
   protected final TalonFXConfiguration leftConfig = new TalonFXConfiguration();
   protected final TalonFXConfiguration rightConfig = new TalonFXConfiguration();
 
-  protected  Slot0Configs leftPID = new Slot0Configs();
-  protected  Slot0Configs rightPID = new Slot0Configs();
-  protected  MotionMagicConfigs leftMM = new MotionMagicConfigs();
-  protected  MotionMagicConfigs rightMM = new MotionMagicConfigs();
+  protected final Slot0Configs leftPID;
+  protected final Slot0Configs rightPID;
+  protected final MotionMagicConfigs leftMM;
+  protected final MotionMagicConfigs rightMM;
 
   protected final DynamicMotionMagicVoltage dynamic;
 
@@ -47,126 +47,104 @@ public abstract class DualArmSegmentBase extends SubsystemBase implements edu.wp
   protected double slowVel;
   protected double slowAcc;
   protected double slowJerk;
-  private static boolean invertLeft;
-  private static boolean invertRight;
 
   protected double switchToFastThreshold = 12.0;
   protected double switchToSlowThreshold = 8.0;
   private final PositionDutyCycle motorPosRequest = new PositionDutyCycle(0).withSlot(2);
   private final VelocityDutyCycle velocityRequest = new VelocityDutyCycle(0).withSlot(1);
   private static double velocitySetpoint = 0;
-  private int failRefreshCount = 0;
 
   // Logging rate-limiter
   private double lastLogTime = 0;
 
   public DualArmSegmentBase(
-    int leftId,
-    int rightId,
-    String canBusName,
-    DynamicMotionMagicVoltage dynamic,
-    double fastVel,
-    double fastAcc,
-    double fastJerk,
-    double slowVel,
-    double slowAcc,
-    double slowJerk,
-    boolean invertLeft,
-    boolean invertRight
-) {
+      int leftId,
+      int rightId,
+      String canBusName,
+      DynamicMotionMagicVoltage dynamic,
+      double fastVel,
+      double fastAcc,
+      double fastJerk,
+      double slowVel,
+      double slowAcc,
+      double slowJerk,
+      boolean invertLeft,
+      boolean invertRight) {
     this.left = new TalonFX(leftId, canBusName);
     this.right = new TalonFX(rightId, canBusName);
     this.dynamic = dynamic;
 
-    this.fastVel = fastVel; this.fastAcc = fastAcc; this.fastJerk = fastJerk;
-    this.slowVel = slowVel; this.slowAcc = slowAcc; this.slowJerk = slowJerk;
+    this.fastVel = fastVel;
+    this.fastAcc = fastAcc;
+    this.fastJerk = fastJerk;
+    this.slowVel = slowVel;
+    this.slowAcc = slowAcc;
+    this.slowJerk = slowJerk;
 
-    // If you need invertLeft/invertRight later, store them in fields first.
-    this.invertLeft = invertLeft;
-    this.invertRight = invertRight;
+    // Refresh to get existing (current) configuration so unspecified fields are
+    // preserved
+    left.getConfigurator().refresh(leftConfig);
+    right.getConfigurator().refresh(rightConfig);
 
-    // Do the guarded init (3 tries with 50 ms backoff is a good start)
-    initializePIDWithRetry(3, 0.050);
-}
+    leftPID = leftConfig.Slot0;
+    rightPID = rightConfig.Slot0;
 
-// Call this from the constructor
-private void initializePIDWithRetry(int maxAttempts, double backoffSeconds) {
-  int attempt = 0;
-  while (attempt < maxAttempts) {
-      attempt++;
+    leftMM = leftConfig.MotionMagic;
+    rightMM = rightConfig.MotionMagic;
 
-      var leftStatus  = left.getConfigurator().refresh(leftConfig);
-      var rightStatus = right.getConfigurator().refresh(rightConfig);
+    // Motor output defaults
+    leftConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    rightConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
-      if (leftStatus.isOK() && rightStatus.isOK()) {
-          // Map config sub-objects once refresh succeeded
-          // (These fields are final; assigning here from the ctor is valid)
-          // Slot0 (position/Motion Magic)
-          leftPID  = leftConfig.Slot0;
-          rightPID = rightConfig.Slot0;
+    leftConfig.MotorOutput.Inverted = invertLeft ? InvertedValue.Clockwise_Positive
+        : InvertedValue.CounterClockwise_Positive;
+    rightConfig.MotorOutput.Inverted = invertRight ? InvertedValue.Clockwise_Positive
+        : InvertedValue.CounterClockwise_Positive;
 
-          // Slot1 (velocity)
-          Slot1Configs leftPID1  = leftConfig.Slot1;
-          Slot1Configs rightPID1 = rightConfig.Slot1;
+    // PID initial values from mutable fields
+    leftPID.kP = kP;
+    leftPID.kI = kI;
+    leftPID.kD = kD;
+    leftPID.kS = kS;
+    leftPID.kV = 0.12;
+    leftPID.kA = 0.01;
 
-          // Motion Magic configs
-          leftMM  = leftConfig.MotionMagic;
-          rightMM = rightConfig.MotionMagic;
+    rightPID.kP = kP;
+    rightPID.kI = kI;
+    rightPID.kD = kD;
+    rightPID.kS = kS;
+    rightPID.kV = 0.12;
+    rightPID.kA = 0.01;
+    // Velocity slot (for velocity control mode)
+    Slot1Configs leftPID1 = leftConfig.Slot1;
+    Slot1Configs rightPID1 = rightConfig.Slot1;
+    leftPID1.kP = 0.02;
+    leftPID1.kI = 0.0;
+    leftPID1.kD = 0.0;
+    leftPID1.kS = 0.3;
+    leftPID1.kV = 0.0;
+    leftPID1.kA = 0.00;
+    rightPID1.kP = 0.02;
+    rightPID1.kI = 0.0;
+    rightPID1.kD = 0.0;
+    rightPID1.kS = 0.3;
+    rightPID1.kV = 0.0;
+    rightPID1.kA = 0.0;
 
-          // Motor output defaults (preserved from your original flow)
-          leftConfig.MotorOutput.NeutralMode  = NeutralModeValue.Brake;
-          rightConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    // Fast motion magic profile
+    leftMM.MotionMagicCruiseVelocity = fastVel;
+    leftMM.MotionMagicAcceleration = fastAcc;
+    leftMM.MotionMagicJerk = fastJerk;
 
-          // Respect constructor inversion args
-          // (same logic you had originally)
-          // invertLeft / invertRight assumed available from ctor params
-          // If you store them in fields, use those here.
-          // Example shown with booleans invertLeft/invertRight captured via fields.
-          leftConfig.MotorOutput.Inverted  = invertLeft  ? InvertedValue.Clockwise_Positive
-                                                         : InvertedValue.CounterClockwise_Positive;
-          rightConfig.MotorOutput.Inverted = invertRight ? InvertedValue.Clockwise_Positive
-                                                         : InvertedValue.CounterClockwise_Positive;
+    rightMM.MotionMagicCruiseVelocity = fastVel;
+    rightMM.MotionMagicAcceleration = fastAcc;
+    rightMM.MotionMagicJerk = fastJerk;
 
-          // PID (Slot0) initial values from your mutable fields
-          leftPID.kP = kP; leftPID.kI = kI; leftPID.kD = kD; leftPID.kS = kS; leftPID.kV = 0.12; leftPID.kA = 0.01;
-          rightPID.kP = kP; rightPID.kI = kI; rightPID.kD = kD; rightPID.kS = kS; rightPID.kV = 0.12; rightPID.kA = 0.01;
+    // Apply initial config
+    left.getConfigurator().apply(leftConfig);
+    right.getConfigurator().apply(rightConfig);
 
-          // Velocity (Slot1) initial values (same as your original)
-          leftPID1.kP = 0.02;  leftPID1.kI = 0.0; leftPID1.kD = 0.0; leftPID1.kS = 0.3; leftPID1.kV = 0.0; leftPID1.kA = 0.00;
-          rightPID1.kP = 0.02; rightPID1.kI = 0.0; rightPID1.kD = 0.0; rightPID1.kS = 0.3; rightPID1.kV = 0.0; rightPID1.kA = 0.0;
-
-          // Motion Magic “fast” profile
-          leftMM.MotionMagicCruiseVelocity  = fastVel;
-          leftMM.MotionMagicAcceleration    = fastAcc;
-          leftMM.MotionMagicJerk            = fastJerk;
-          rightMM.MotionMagicCruiseVelocity = fastVel;
-          rightMM.MotionMagicAcceleration   = fastAcc;
-          rightMM.MotionMagicJerk           = fastJerk;
-
-          // Apply initial config once, after a successful refresh
-          left.getConfigurator().apply(leftConfig);
-          right.getConfigurator().apply(rightConfig);
-
-          InitLogger.logMessage(getClass().getSimpleName(),
-              "PID/MM initialization applied after refresh attempt " + attempt);
-          return;
-      }
-
-      // Not OK — retry after backoff
-      if (attempt < maxAttempts) {
-          InitLogger.logMessage(getClass().getSimpleName(),
-              String.format("refresh() failed (attempt %d/%d). Retrying in %.3fs. Left=%s Right=%s",
-                  attempt, maxAttempts, backoffSeconds, leftStatus, rightStatus));
-          Timer.delay(backoffSeconds); // WPILib delay is available
-      }
   }
-
-  // Exhausted attempts: count a failure & log
-  failRefreshCount++;
-  InitLogger.logMessage(getClass().getSimpleName(),
-      String.format("PID/MM initialization skipped after %d failed refresh attempts (failRefreshCount=%d)",
-          maxAttempts, failRefreshCount));
-}
 
   public void setBrakeMode(NeutralModeValue mode) {
     MotorOutputConfigs leftOut = new MotorOutputConfigs();
@@ -208,14 +186,14 @@ private void initializePIDWithRetry(int maxAttempts, double backoffSeconds) {
     left.setControl(dynamic.withVelocity(vel).withAcceleration(acc).withJerk(jerk).withPosition(position));
     right.setControl(dynamic.withVelocity(vel).withAcceleration(acc).withJerk(jerk).withPosition(position));
 
-    // if (this.getClass().getSimpleName().equals("LowerArm")) {
-    //   SmartDashboard.putNumber(this.getClass().getSimpleName(),
-    //       (0.5 * (cachedLeftPos + cachedRightPos) * (360.0 / 128.0)));
-    // }
-    // if (this.getClass().getSimpleName().equals("UpperArm")) {
-    //   SmartDashboard.putNumber(this.getClass().getSimpleName(),
-    //       (0.5 * (cachedLeftPos + cachedRightPos) * (360.0 / 100.0)));
-    // }
+    if (this.getClass().getSimpleName().equals("LowerArm")) {
+      SmartDashboard.putNumber(this.getClass().getSimpleName(),
+          (0.5 * (cachedLeftPos + cachedRightPos) * (360.0 / 128.0)));
+    }
+    if (this.getClass().getSimpleName().equals("UpperArm")) {
+      SmartDashboard.putNumber(this.getClass().getSimpleName(),
+          (0.5 * (cachedLeftPos + cachedRightPos) * (360.0 / 100.0)));
+    }
 
   }
 

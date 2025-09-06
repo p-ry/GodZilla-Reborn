@@ -51,8 +51,8 @@ public class Extend extends Command {
   @Override
   public boolean isFinished() {
     double elaspedTime = Timer.getTimestamp()-startTime;
-    //SmartDashboard.putBoolean("retractFinished",(myArm.slider.atPos()||(timeout-startTime>2.0)));
-    //SmartDashboard.putNumber("elaspedRTime", elaspedTime);
+    SmartDashboard.putBoolean("retractFinished",(myArm.slider.atPos()||(timeout-startTime>2.0)));
+    SmartDashboard.putNumber("elaspedRTime", elaspedTime);
     
     
      return (myArm.slider.atPos() 

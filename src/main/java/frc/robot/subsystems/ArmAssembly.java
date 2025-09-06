@@ -72,7 +72,7 @@ public class ArmAssembly extends SubsystemBase {
             slider.setPos(sliderPos * 8.1 / 100, true);
             // System.out.println("Lower Gear Ratio: " + (shoulderDeg / 360) *
             // lowerGearRatio + ", Upper Gear Ratio: " + (elbowDeg / 360) * upperGearRatio);
-           // SmartDashboard.putNumber("lowerARM!!!!", (shoulderDeg / 360) * lowerGearRatio);
+            SmartDashboard.putNumber("lowerARM!!!!", (shoulderDeg / 360) * lowerGearRatio);
 
       }
 
@@ -90,9 +90,9 @@ public class ArmAssembly extends SubsystemBase {
             upperArm.setTargetVelocityRPS(elbowRPS);
             // slider.setTargetVelocityRPS(sliderRPS);
 
-           // SmartDashboard.putNumber("ShoulderVelUnits", shoulderRPS);
-          //  SmartDashboard.putNumber("ElbowVelUnits", elbowRPS);
-           // SmartDashboard.putNumber("SliderVelUnits", sliderRPS);
+            SmartDashboard.putNumber("ShoulderVelUnits", shoulderRPS);
+            SmartDashboard.putNumber("ElbowVelUnits", elbowRPS);
+            SmartDashboard.putNumber("SliderVelUnits", sliderRPS);
       }
 
       public void moveToXY(double x, double y) {
@@ -113,7 +113,7 @@ public class ArmAssembly extends SubsystemBase {
 
             lowerArm.setPos(angleToEncoderUnits(theta1) * lowerGearRatio, false);
             upperArm.setPos(angleToEncoderUnits(theta2) * upperGearRatio, false);
-          //  SmartDashboard.putNumber("lowerARM!!!!", theta1 * lowerGearRatio);
+            SmartDashboard.putNumber("lowerARM!!!!", theta1 * lowerGearRatio);
       }
 
       private double angleToEncoderUnits(double radians) {
