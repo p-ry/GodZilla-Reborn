@@ -27,11 +27,14 @@ public class WaitForCoral extends Command {
     
       @Override
       public void end(boolean interrupted) {
+        ace.setSpeed(0);
         if (interrupted) {
           InitLogger.logMessage("Ace","Interrupted");
           
+          
         } else {
           InitLogger.logMessage("Ace","AutoLoading Complete");
+         
           
         }
       }

@@ -216,7 +216,7 @@ public class RobotContainer {
           //ace.setSpeed(0.9);
           ace.resetStateMachine();
           Constants.AutonomousMode = true;
-          ace.resetStateMachine();
+          //ace.resetStateMachine();
           loading = true;
 
         })));

@@ -39,6 +39,7 @@ public class Ace extends SubsystemBase {
   public static boolean aceSensorDetected = false;
   private String stateText = "";
   private double lastLogTime = 0.0; // Initialize lastLogTime to 0
+  private boolean debug = false;
 
   public enum CoralIntakeState {
     IDLE,
@@ -80,6 +81,9 @@ public class Ace extends SubsystemBase {
   public void setSpeed(double speed) {
     double output = Constants.algaeMode.get() ? speed : speed / 2;
     ace.setControl(motorSpdRequest.withOutput(output));
+    if (debug) {
+      SmartDashboard.putNumber("Ace Speed", output);
+    }
   }
 
   public double getSpeed() {
@@ -93,8 +97,11 @@ public class Ace extends SubsystemBase {
   public void setPos(double offset) {
     requestedPosition = getPos() + offset;
     ace.setControl(motorPosRequest.withPosition(requestedPosition));
-   // SmartDashboard.putNumber("ACE Current Pos", getPos());
-    //SmartDashboard.putNumber("ACE Target Pos", requestedPosition);
+
+    if (debug) {
+      SmartDashboard.putNumber("ACE Current Pos", getPos());
+      SmartDashboard.putNumber("ACE Target Pos", requestedPosition);
+    }
   }
 
   private void updateLaserDistances() {
@@ -112,8 +119,8 @@ public class Ace extends SubsystemBase {
     aceSensorDetected = distAce < DETECT_THRESHOLD;
 
     if (Timer.getFPGATimestamp() % 0.1 < 0.02) {
-    //  SmartDashboard.putNumber("Laser Distance Funnel", distFunnel);
-     // SmartDashboard.putNumber("Laser Distance Ace", distAce);
+      // SmartDashboard.putNumber("Laser Distance Funnel", distFunnel);
+      // SmartDashboard.putNumber("Laser Distance Ace", distAce);
     }
   }
 
@@ -186,21 +193,25 @@ public class Ace extends SubsystemBase {
     } else if (!funnelSensorDetected && aceSensorDetected) {
 
       gotIt = true;
+      InitLogger.logMessage("Ace", "Got It");
+      stateText = previousState.name() + "-->" + currentState.name();
+      InitLogger.logMessage("Ace", stateText);
       currentState = CoralIntakeState.COMPLETE;
     }
     stateChange = true;
   }
 
   private void handleCompleteState() {
-    if (Constants.AutonomousMode) {
-      Constants.autoLoaded = true;
-      Constants.AutonomousMode = false;
-    }
-    updateLaserDistances();
-    if (!funnelSensorDetected && !aceSensorDetected) {
-      currentState = CoralIntakeState.BACKDRIVE;
-      stateChange = true;
-    }
+    // if (Constants.AutonomousMode) {
+    //   Constants.autoLoaded = true;
+    //   Constants.AutonomousMode = false;
+    // } else {
+    //   updateLaserDistances();
+    //   if (!funnelSensorDetected && !aceSensorDetected) {
+    //     currentState = CoralIntakeState.BACKDRIVE;
+    //     stateChange = true;
+    //   }
+    // }
 
     // Stay in complete state until reset
     // setSpeed(0);
@@ -223,6 +234,10 @@ public class Ace extends SubsystemBase {
 
   @Override
   public void periodic() {
+
+    if (debug) {
+      SmartDashboard.putString("Ace State", currentState.name());
+    }
     if (stateChange) {
       stateChange = false;
       stateText = previousState.name() + "-->" + currentState.name();
@@ -232,8 +247,8 @@ public class Ace extends SubsystemBase {
     }
     // double now = Timer.getFPGATimestamp();
     // if (now - lastLogTime >= 0.1) { // log up to twice a second
-    //   InitLogger.logDouble("Ace", "Speed", getSpeed());
-    //   lastLogTime = now;
+    // InitLogger.logDouble("Ace", "Speed", getSpeed());
+    // lastLogTime = now;
     // }
 
     if (RobotContainer.loading || Constants.AutonomousMode) {

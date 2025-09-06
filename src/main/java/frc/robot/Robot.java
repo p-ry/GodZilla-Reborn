@@ -123,7 +123,7 @@ public void disabledInit() {
   public void autonomousExit() {
     InitLogger.stopLogging();
   }
-
+  
   @Override
   public void teleopInit() {
     ensureRobotContainerInitialized();
