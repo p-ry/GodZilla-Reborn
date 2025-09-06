@@ -93,8 +93,8 @@ public class Ace extends SubsystemBase {
   public void setPos(double offset) {
     requestedPosition = getPos() + offset;
     ace.setControl(motorPosRequest.withPosition(requestedPosition));
-    SmartDashboard.putNumber("ACE Current Pos", getPos());
-    SmartDashboard.putNumber("ACE Target Pos", requestedPosition);
+   // SmartDashboard.putNumber("ACE Current Pos", getPos());
+    //SmartDashboard.putNumber("ACE Target Pos", requestedPosition);
   }
 
   private void updateLaserDistances() {
@@ -112,8 +112,8 @@ public class Ace extends SubsystemBase {
     aceSensorDetected = distAce < DETECT_THRESHOLD;
 
     if (Timer.getFPGATimestamp() % 0.1 < 0.02) {
-      SmartDashboard.putNumber("Laser Distance Funnel", distFunnel);
-      SmartDashboard.putNumber("Laser Distance Ace", distAce);
+    //  SmartDashboard.putNumber("Laser Distance Funnel", distFunnel);
+     // SmartDashboard.putNumber("Laser Distance Ace", distAce);
     }
   }
 

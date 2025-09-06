@@ -303,7 +303,7 @@ public class MoveArmFix extends Command {
       reachedThisLevel = true; // avoid repeat spam
     }
 
-    SmartDashboard.putString("MoveArmFix/Level", levelEnum.toString());
+    //SmartDashboard.putString("MoveArmFix/Level", levelEnum.toString());
   }
 
   @Override
