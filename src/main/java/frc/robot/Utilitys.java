@@ -124,7 +124,7 @@ public class Utilitys {
         RawFiducial[] fiducialsRight;
         boolean algae;
 
-        if (Constants.cameraPoses[0].rawFiducials.length > 0 ) {
+        if (Constants.cameraPoses[0]!= null && Constants.cameraPoses[0].rawFiducials.length > 0 ) {
             //fiducialsLeft = LimelightHelpers.getRawFiducials("limelight-left");
             //leftAmbiguity = fiducialsLeft[0].ambiguity;
             leftAmbiguity = Constants.cameraPoses[0].rawFiducials[0].ambiguity;
@@ -137,7 +137,7 @@ public class Utilitys {
         } else {
             leftDist = 999999;
         }
-        if (Constants.cameraPoses[1].rawFiducials.length > 0 ) {
+        if (Constants.cameraPoses[1]!= null &&Constants.cameraPoses[1].rawFiducials.length > 0 ) {
             //fiducialsLeft = LimelightHelpers.getRawFiducials("limelight-left");
             //leftAmbiguity = fiducialsLeft[0].ambiguity;
             rightAmbiguity = Constants.cameraPoses[1].rawFiducials[0].ambiguity;
@@ -164,8 +164,8 @@ public class Utilitys {
         //     rightDist = 999999;
         // }
 
-        SmartDashboard.putNumber("Left C Distance",leftDist);
-        SmartDashboard.putNumber("Right C Distance",rightDist);
+        // SmartDashboard.putNumber("Left C Distance",leftDist);
+        // SmartDashboard.putNumber("Right C Distance",rightDist);
         Pose3d tagPose3d = LimelightHelpers.getTargetPose3d_RobotSpace("limelight-left");
 //******* may need to tchange to constants */
 
@@ -185,7 +185,7 @@ public class Utilitys {
 
                 // tagPose3d = LimelightHelpers.getBotPose3d_TargetSpace("limelight-right");
             }
-            SmartDashboard.putNumber("tagID", tagId);
+            // SmartDashboard.putNumber("tagID", tagId);
 
             Rotation2d yawOffset = new Rotation2d(tagPose3d.getRotation().getY());
             // Rotation2d yawOffset = new Rotation2d(targetPose3D.getRotation().getY());
@@ -331,8 +331,8 @@ public class Utilitys {
         LimelightHelpers.LimelightResults resultsLeft = LimelightHelpers.getLatestResults("limelight-left");
 
         LimelightHelpers.LimelightResults resultsRight = LimelightHelpers.getLatestResults("limelight-right");
-        SmartDashboard.putNumber("right: ", resultsRight.botpose_avgdist);
-        SmartDashboard.putBoolean("valid", resultsRight.valid);
+        // SmartDashboard.putNumber("right: ", resultsRight.botpose_avgdist);
+        // SmartDashboard.putBoolean("valid", resultsRight.valid);
 
         if (resultsLeft.valid) {
             leftDist = resultsLeft.botpose_avgdist;
@@ -354,11 +354,11 @@ public class Utilitys {
         if (validTarget) {
             if (leftDist < rightDist) {
                 tagId = tagIds[0];
-                SmartDashboard.putString("Camera", "left");
+               // SmartDashboard.putString("Camera", "left");
 
             } else {
                 tagId = tagIds[1];
-                SmartDashboard.putString("Camera", "right");
+               // SmartDashboard.putString("Camera", "right");
             }
         }
         return tagId;

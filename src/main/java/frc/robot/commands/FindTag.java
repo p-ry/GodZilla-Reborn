@@ -82,8 +82,8 @@ public class FindTag extends Command {
     LimelightHelpers.LimelightResults resultsLeft = LimelightHelpers.getLatestResults("limelight-left");
 
     LimelightHelpers.LimelightResults resultsRight = LimelightHelpers.getLatestResults("limelight-right");
-    SmartDashboard.putNumber("right: ", resultsRight.botpose_avgdist);
-    SmartDashboard.putBoolean("valid", resultsRight.valid);
+    // SmartDashboard.putNumber("right: ", resultsRight.botpose_avgdist);
+    // SmartDashboard.putBoolean("valid", resultsRight.valid);
    if (!whereSet){
     if (resultsLeft.valid) {
       leftDist = resultsLeft.botpose_avgdist;
@@ -105,11 +105,11 @@ public class FindTag extends Command {
     if (validTarget) {
       if (leftDist < rightDist) {
         tagId = tagIds[0];
-        SmartDashboard.putString("Camera","left");
+       // SmartDashboard.putString("Camera","left");
      
       } else {
         tagId = tagIds[1];
-        SmartDashboard.putString("Camera","right");
+       // SmartDashboard.putString("Camera","right");
       }
 
       if (shiftDirection == 1) {

@@ -170,7 +170,7 @@ public class RobotContainer {
     });
 
     // gyro = new Pigeon2(0, "Canivore");
-    SmartDashboard.putNumber("prevHeading", prevHeading);
+    //SmartDashboard.putNumber("prevHeading", prevHeading);
     System.out.println("Left Y: " + controller.getLeftY());
 
     System.out.println("Left X: " + controller.getLeftX());
@@ -496,14 +496,14 @@ public class RobotContainer {
     Lv3R.onFalse(new InstantCommand(() -> MaxSpeed = maxSpeedConstant));
     Lv3R.onFalse(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant));
     // *********TRUE *************************************** */
-    Lv4L.onTrue(new FollowCurve(mArm, ace,Constants.startPoint,Constants.controlPoint1,Constants.controlPoint2,Constants.endPoint,Constants.base,() ->mArm.lowerArm.getDegs(), () ->mArm.upperArm.getDegs(),() ->mArm.slider.getMM(),true)
+    Lv4L.onTrue(new FollowCurve(mArm, ace,Constants.startPoint,Constants.controlPoint1,Constants.controlPoint2,Constants.endPoint,Constants.base,() ->mArm.lowerArm.getDegs(), () ->mArm.upperArm.getDegs(),() ->mArm.slider.getMM(),false)
     .andThen(new InstantCommand(() ->  {
       MaxSpeed = maxSpeedConstant / 4;
         MaxAngularRate = maxAngularRateConstant / 2.5;
         rightTree = false;
         }))
     );
-Lv4R.onTrue(new FollowCurve(mArm, ace,Constants.startPoint,Constants.controlPoint1,Constants.controlPoint2,Constants.endPoint,Constants.base,() ->mArm.lowerArm.getDegs(), () ->mArm.upperArm.getDegs(),() ->mArm.slider.getMM(),true)
+Lv4R.onTrue(new FollowCurve(mArm, ace,Constants.startPoint,Constants.controlPoint1,Constants.controlPoint2,Constants.endPoint,Constants.base,() ->mArm.lowerArm.getDegs(), () ->mArm.upperArm.getDegs(),() ->mArm.slider.getMM(),false)
 .andThen(new InstantCommand(() ->  {
   MaxSpeed = maxSpeedConstant / 4;
 
