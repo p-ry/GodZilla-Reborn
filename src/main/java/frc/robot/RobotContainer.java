@@ -213,9 +213,11 @@ public class RobotContainer {
     NamedCommands.registerCommand("level3", new MoveArmFix(mArm, ace, 3, 1));
     NamedCommands.registerCommand("Load", new MoveArmFix(mArm, ace, 1, 0)
         .alongWith(new InstantCommand(() -> {
-          ace.setSpeed(0.9);
+          //ace.setSpeed(0.9);
           ace.resetStateMachine();
           Constants.AutonomousMode = true;
+          ace.resetStateMachine();
+          loading = true;
 
         })));
     NamedCommands.registerCommand("WaitForCoral", new WaitForCoral(ace));
