@@ -60,6 +60,7 @@ public class Robot extends TimedRobot {
   @Override
   public void robotInit() {
     InitLogger.startLogging();
+    
     InitLogger.logMessage("robot", "RobotInit/Start");
   }
 

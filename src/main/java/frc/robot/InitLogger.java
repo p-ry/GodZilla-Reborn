@@ -21,7 +21,9 @@ public class InitLogger {
 
   /** Start logging early (call once in robotInit) */
   public static void startLogging() {
-    DataLogManager.start();
+    DataLogManager.start("","",0.04);
+    DataLogManager.logNetworkTables(false);
+    
   }
 public static void stopLogging() {
     DataLogManager.stop();
