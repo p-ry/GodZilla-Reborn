@@ -412,7 +412,7 @@ public class FollowCurve extends Command {
     @Override
     public void end(boolean interrupted) {
         SmartDashboard.putString("FollowCurve/reach", interrupted ? "interrupted" : "complete");
-        ace.setPos(5.0);
+        ace.setPos(3.0);
         arm.wrist.setPos(9.4); // example wrist reset
         Constants.followCurve = false; // disable FollowCurve mode
     }

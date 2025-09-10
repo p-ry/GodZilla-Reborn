@@ -32,7 +32,7 @@ public class Ace extends SubsystemBase {
   public static boolean backup = false;
   public static boolean stateChange = false;
   private static final double DEFAULT_DISTANCE = 1000.0;
-  private static final double DETECT_THRESHOLD = 100.0;
+  private static final double DETECT_THRESHOLD = 70.0;
   private static final double BACKDRIVE_SPEED = -0.45;
   private static final double INTAKE_SPEED = 0.7;
   public static boolean funnelSensorDetected = false;
@@ -230,6 +230,7 @@ public class Ace extends SubsystemBase {
     gotIt = false;
     Constants.autoLoaded = false;
     stateChange = true;
+
   }
 
   @Override
