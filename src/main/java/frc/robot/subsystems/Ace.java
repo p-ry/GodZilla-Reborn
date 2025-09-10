@@ -54,21 +54,21 @@ public class Ace extends SubsystemBase {
   private CoralIntakeState previousState = CoralIntakeState.IDLE;
 
   public Ace(int level) {
-    TalonFXConfiguration config = new TalonFXConfiguration();
-    ace.getConfigurator().refresh(config);
-    config.CurrentLimits.SupplyCurrentLimitEnable = true;
-    config.CurrentLimits.SupplyCurrentLimit = 50;
-    config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    // TalonFXConfiguration config = new TalonFXConfiguration();
+    // ace.getConfigurator().refresh(config);
+    // config.CurrentLimits.SupplyCurrentLimitEnable = true;
+    // config.CurrentLimits.SupplyCurrentLimit = 50;
+    // config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
-    Slot0Configs pid = config.Slot0;
-    pid.kP = 2.0;
-    pid.kI = 0.0;
-    pid.kD = 0.0;
-    pid.kS = 0.0;
-    pid.kV = 0.12;
-    pid.kA = 0.01;
+    // Slot0Configs pid = config.Slot0;
+    // pid.kP = 2.0;
+    // pid.kI = 0.0;
+    // pid.kD = 0.0;
+    // pid.kS = 0.0;
+    // pid.kV = 0.12;
+    // pid.kA = 0.01;
 
-    ace.getConfigurator().apply(config);
+    // ace.getConfigurator().apply(config);
   }
 
   public void setBrakeMode(NeutralModeValue mode) {

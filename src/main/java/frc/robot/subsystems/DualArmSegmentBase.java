@@ -15,17 +15,17 @@ import com.ctre.phoenix6.configs.*;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 
-public abstract class DualArmSegmentBase extends SubsystemBase implements edu.wpi.first.util.sendable.Sendable {
+public abstract class DualArmSegmentBase extends SubsystemBase {// } implements edu.wpi.first.util.sendable.Sendable {
   protected final TalonFX left;
   protected final TalonFX right;
 
   protected final TalonFXConfiguration leftConfig = new TalonFXConfiguration();
   protected final TalonFXConfiguration rightConfig = new TalonFXConfiguration();
 
-  protected  Slot0Configs leftPID = new Slot0Configs();
-  protected  Slot0Configs rightPID = new Slot0Configs();
-  protected  MotionMagicConfigs leftMM = new MotionMagicConfigs();
-  protected  MotionMagicConfigs rightMM = new MotionMagicConfigs();
+  protected Slot0Configs leftPID = new Slot0Configs();
+  protected Slot0Configs rightPID = new Slot0Configs();
+  protected MotionMagicConfigs leftMM = new MotionMagicConfigs();
+  protected MotionMagicConfigs rightMM = new MotionMagicConfigs();
 
   protected final DynamicMotionMagicVoltage dynamic;
 
@@ -61,112 +61,135 @@ public abstract class DualArmSegmentBase extends SubsystemBase implements edu.wp
   private double lastLogTime = 0;
 
   public DualArmSegmentBase(
-    int leftId,
-    int rightId,
-    String canBusName,
-    DynamicMotionMagicVoltage dynamic,
-    double fastVel,
-    double fastAcc,
-    double fastJerk,
-    double slowVel,
-    double slowAcc,
-    double slowJerk,
-    boolean invertLeft,
-    boolean invertRight
-) {
+      int leftId,
+      int rightId,
+      String canBusName,
+      DynamicMotionMagicVoltage dynamic,
+      double fastVel,
+      double fastAcc,
+      double fastJerk,
+      double slowVel,
+      double slowAcc,
+      double slowJerk,
+      boolean invertLeft,
+      boolean invertRight) {
     this.left = new TalonFX(leftId, canBusName);
     this.right = new TalonFX(rightId, canBusName);
     this.dynamic = dynamic;
 
-    this.fastVel = fastVel; this.fastAcc = fastAcc; this.fastJerk = fastJerk;
-    this.slowVel = slowVel; this.slowAcc = slowAcc; this.slowJerk = slowJerk;
+    this.fastVel = fastVel;
+    this.fastAcc = fastAcc;
+    this.fastJerk = fastJerk;
+    this.slowVel = slowVel;
+    this.slowAcc = slowAcc;
+    this.slowJerk = slowJerk;
 
     // If you need invertLeft/invertRight later, store them in fields first.
     this.invertLeft = invertLeft;
     this.invertRight = invertRight;
 
     // Do the guarded init (3 tries with 50 ms backoff is a good start)
-    initializePIDWithRetry(3, 0.050);
-}
+    // initializePIDWithRetry(3, 0.050);
+  }
 
-// Call this from the constructor
-private void initializePIDWithRetry(int maxAttempts, double backoffSeconds) {
-  int attempt = 0;
-  while (attempt < maxAttempts) {
+  // Call this from the constructor
+  private void initializePIDWithRetry(int maxAttempts, double backoffSeconds) {
+    int attempt = 0;
+    while (attempt < maxAttempts) {
       attempt++;
 
-      var leftStatus  = left.getConfigurator().refresh(leftConfig);
+      var leftStatus = left.getConfigurator().refresh(leftConfig);
       var rightStatus = right.getConfigurator().refresh(rightConfig);
 
       if (leftStatus.isOK() && rightStatus.isOK()) {
-          // Map config sub-objects once refresh succeeded
-          // (These fields are final; assigning here from the ctor is valid)
-          // Slot0 (position/Motion Magic)
-          leftPID  = leftConfig.Slot0;
-          rightPID = rightConfig.Slot0;
+        // Map config sub-objects once refresh succeeded
+        // (These fields are final; assigning here from the ctor is valid)
+        // Slot0 (position/Motion Magic)
+        leftPID = leftConfig.Slot0;
+        rightPID = rightConfig.Slot0;
 
-          // Slot1 (velocity)
-          Slot1Configs leftPID1  = leftConfig.Slot1;
-          Slot1Configs rightPID1 = rightConfig.Slot1;
+        // Slot1 (velocity)
+        Slot1Configs leftPID1 = leftConfig.Slot1;
+        Slot1Configs rightPID1 = rightConfig.Slot1;
 
-          // Motion Magic configs
-          leftMM  = leftConfig.MotionMagic;
-          rightMM = rightConfig.MotionMagic;
+        // Motion Magic configs
+        leftMM = leftConfig.MotionMagic;
+        rightMM = rightConfig.MotionMagic;
 
-          // Motor output defaults (preserved from your original flow)
-          leftConfig.MotorOutput.NeutralMode  = NeutralModeValue.Brake;
-          rightConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        // Motor output defaults (preserved from your original flow)
+        leftConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        rightConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
-          // Respect constructor inversion args
-          // (same logic you had originally)
-          // invertLeft / invertRight assumed available from ctor params
-          // If you store them in fields, use those here.
-          // Example shown with booleans invertLeft/invertRight captured via fields.
-          leftConfig.MotorOutput.Inverted  = invertLeft  ? InvertedValue.Clockwise_Positive
-                                                         : InvertedValue.CounterClockwise_Positive;
-          rightConfig.MotorOutput.Inverted = invertRight ? InvertedValue.Clockwise_Positive
-                                                         : InvertedValue.CounterClockwise_Positive;
+        // Respect constructor inversion args
+        // (same logic you had originally)
+        // invertLeft / invertRight assumed available from ctor params
+        // If you store them in fields, use those here.
+        // Example shown with booleans invertLeft/invertRight captured via fields.
+        leftConfig.MotorOutput.Inverted = invertLeft ? InvertedValue.Clockwise_Positive
+            : InvertedValue.CounterClockwise_Positive;
+        rightConfig.MotorOutput.Inverted = invertRight ? InvertedValue.Clockwise_Positive
+            : InvertedValue.CounterClockwise_Positive;
 
-          // PID (Slot0) initial values from your mutable fields
-          leftPID.kP = kP; leftPID.kI = kI; leftPID.kD = kD; leftPID.kS = kS; leftPID.kV = 0.12; leftPID.kA = 0.01;
-          rightPID.kP = kP; rightPID.kI = kI; rightPID.kD = kD; rightPID.kS = kS; rightPID.kV = 0.12; rightPID.kA = 0.01;
+        // PID (Slot0) initial values from your mutable fields
+        leftPID.kP = kP;
+        leftPID.kI = kI;
+        leftPID.kD = kD;
+        leftPID.kS = kS;
+        leftPID.kV = 0.12;
+        leftPID.kA = 0.01;
+        rightPID.kP = kP;
+        rightPID.kI = kI;
+        rightPID.kD = kD;
+        rightPID.kS = kS;
+        rightPID.kV = 0.12;
+        rightPID.kA = 0.01;
 
-          // Velocity (Slot1) initial values (same as your original)
-          leftPID1.kP = 0.02;  leftPID1.kI = 0.0; leftPID1.kD = 0.0; leftPID1.kS = 0.3; leftPID1.kV = 0.0; leftPID1.kA = 0.00;
-          rightPID1.kP = 0.02; rightPID1.kI = 0.0; rightPID1.kD = 0.0; rightPID1.kS = 0.3; rightPID1.kV = 0.0; rightPID1.kA = 0.0;
+        // Velocity (Slot1) initial values (same as your original)
+        leftPID1.kP = 0.02;
+        leftPID1.kI = 0.0;
+        leftPID1.kD = 0.0;
+        leftPID1.kS = 0.3;
+        leftPID1.kV = 0.0;
+        leftPID1.kA = 0.00;
+        rightPID1.kP = 0.02;
+        rightPID1.kI = 0.0;
+        rightPID1.kD = 0.0;
+        rightPID1.kS = 0.3;
+        rightPID1.kV = 0.0;
+        rightPID1.kA = 0.0;
 
-          // Motion Magic “fast” profile
-          leftMM.MotionMagicCruiseVelocity  = fastVel;
-          leftMM.MotionMagicAcceleration    = fastAcc;
-          leftMM.MotionMagicJerk            = fastJerk;
-          rightMM.MotionMagicCruiseVelocity = fastVel;
-          rightMM.MotionMagicAcceleration   = fastAcc;
-          rightMM.MotionMagicJerk           = fastJerk;
+        // Motion Magic “fast” profile
+        leftMM.MotionMagicCruiseVelocity = fastVel;
+        leftMM.MotionMagicAcceleration = fastAcc;
+        leftMM.MotionMagicJerk = fastJerk;
+        rightMM.MotionMagicCruiseVelocity = fastVel;
+        rightMM.MotionMagicAcceleration = fastAcc;
+        rightMM.MotionMagicJerk = fastJerk;
 
-          // Apply initial config once, after a successful refresh
-          left.getConfigurator().apply(leftConfig);
-          right.getConfigurator().apply(rightConfig);
+        // Apply initial config once, after a successful refresh
+        left.getConfigurator().apply(leftConfig);
+        right.getConfigurator().apply(rightConfig);
 
-          InitLogger.logMessage(getClass().getSimpleName(),
-              "PID/MM initialization applied after refresh attempt " + attempt);
-          return;
+        InitLogger.logMessage(getClass().getSimpleName(),
+            "PID/MM initialization applied after refresh attempt " + attempt);
+        return;
       }
 
       // Not OK — retry after backoff
       if (attempt < maxAttempts) {
-          InitLogger.logMessage(getClass().getSimpleName(),
-              String.format("refresh() failed (attempt %d/%d). Retrying in %.3fs. Left=%s Right=%s",
-                  attempt, maxAttempts, backoffSeconds, leftStatus, rightStatus));
-          Timer.delay(backoffSeconds); // WPILib delay is available
+        InitLogger.logMessage(getClass().getSimpleName(),
+            String.format("refresh() failed (attempt %d/%d). Retrying in %.3fs. Left=%s Right=%s",
+                attempt, maxAttempts, backoffSeconds, leftStatus, rightStatus));
+        Timer.delay(backoffSeconds); // WPILib delay is available
       }
-  }
+    }
 
-  // Exhausted attempts: count a failure & log
-  failRefreshCount++;
-  InitLogger.logMessage(getClass().getSimpleName(),
-      String.format("PID/MM initialization skipped after %d failed refresh attempts (failRefreshCount=%d)",
-          maxAttempts, failRefreshCount));
-}
+    // Exhausted attempts: count a failure & log
+    failRefreshCount++;
+    InitLogger.logMessage(getClass().getSimpleName(),
+        String.format("PID/MM initialization skipped after %d failed refresh attempts (failRefreshCount=%d)",
+            maxAttempts, failRefreshCount));
+  }
 
   public void setBrakeMode(NeutralModeValue mode) {
     MotorOutputConfigs leftOut = new MotorOutputConfigs();
@@ -209,12 +232,12 @@ private void initializePIDWithRetry(int maxAttempts, double backoffSeconds) {
     right.setControl(dynamic.withVelocity(vel).withAcceleration(acc).withJerk(jerk).withPosition(position));
 
     // if (this.getClass().getSimpleName().equals("LowerArm")) {
-    //   SmartDashboard.putNumber(this.getClass().getSimpleName(),
-    //       (0.5 * (cachedLeftPos + cachedRightPos) * (360.0 / 128.0)));
+    // SmartDashboard.putNumber(this.getClass().getSimpleName(),
+    // (0.5 * (cachedLeftPos + cachedRightPos) * (360.0 / 128.0)));
     // }
     // if (this.getClass().getSimpleName().equals("UpperArm")) {
-    //   SmartDashboard.putNumber(this.getClass().getSimpleName(),
-    //       (0.5 * (cachedLeftPos + cachedRightPos) * (360.0 / 100.0)));
+    // SmartDashboard.putNumber(this.getClass().getSimpleName(),
+    // (0.5 * (cachedLeftPos + cachedRightPos) * (360.0 / 100.0)));
     // }
 
   }
@@ -267,34 +290,34 @@ private void initializePIDWithRetry(int maxAttempts, double backoffSeconds) {
   }
 
   /** Apply current PID fields to the hardware. */
-  public void updatePID() {
-    leftPID.kP = kP;
-    leftPID.kI = kI;
-    leftPID.kD = kD;
-    leftPID.kS = kS;
+  // public void updatePID() {
+  //   leftPID.kP = kP;
+  //   leftPID.kI = kI;
+  //   leftPID.kD = kD;
+  //   leftPID.kS = kS;
 
-    rightPID.kP = kP;
-    rightPID.kI = kI;
-    rightPID.kD = kD;
-    rightPID.kS = kS;
+  //   rightPID.kP = kP;
+  //   rightPID.kI = kI;
+  //   rightPID.kD = kD;
+  //   rightPID.kS = kS;
 
-    left.getConfigurator().apply(leftConfig);
-    right.getConfigurator().apply(rightConfig);
-  }
+  //   left.getConfigurator().apply(leftConfig);
+  //   right.getConfigurator().apply(rightConfig);
+  // }
 
   /** Apply an explicit motion magic profile (overrides fast/slow values). */
-  public void updateMotionMagic(double cruiseVel, double accel, double jerk) {
-    leftMM.MotionMagicCruiseVelocity = cruiseVel;
-    leftMM.MotionMagicAcceleration = accel;
-    leftMM.MotionMagicJerk = jerk;
+  // public void updateMotionMagic(double cruiseVel, double accel, double jerk) {
+  //   leftMM.MotionMagicCruiseVelocity = cruiseVel;
+  //   leftMM.MotionMagicAcceleration = accel;
+  //   leftMM.MotionMagicJerk = jerk;
 
-    rightMM.MotionMagicCruiseVelocity = cruiseVel;
-    rightMM.MotionMagicAcceleration = accel;
-    rightMM.MotionMagicJerk = jerk;
+  //   rightMM.MotionMagicCruiseVelocity = cruiseVel;
+  //   rightMM.MotionMagicAcceleration = accel;
+  //   rightMM.MotionMagicJerk = jerk;
 
-    left.getConfigurator().apply(leftConfig);
-    right.getConfigurator().apply(rightConfig);
-  }
+  //   left.getConfigurator().apply(leftConfig);
+  //   right.getConfigurator().apply(rightConfig);
+  // }
 
   // --- New velocity-control helpers ---
   /**
@@ -340,8 +363,7 @@ private void initializePIDWithRetry(int maxAttempts, double backoffSeconds) {
 
     atPosition = Math.abs(cachedLeftPos - requestedPosition) < 1.0 &&
         Math.abs(cachedRightPos - requestedPosition) < 1.0;
-        SmartDashboard.putNumber(this.getClass().getSimpleName(),getDegs());
-        
+    SmartDashboard.putNumber(this.getClass().getSimpleName(), getDegs());
 
     double now = Timer.getFPGATimestamp();
     if (now - lastLogTime >= 0.5) { // log up to twice a second
@@ -356,113 +378,113 @@ private void initializePIDWithRetry(int maxAttempts, double backoffSeconds) {
     }
   }
 
-  protected void configureSendable(SendableBuilder builder) {
-    builder.setSmartDashboardType(this.getClass().getSimpleName());
+  // protected void configureSendable(SendableBuilder builder) {
+  // builder.setSmartDashboardType(this.getClass().getSimpleName());
 
-    builder.addDoubleProperty("Position - Left", this::getPosLeft, null);
-    builder.addDoubleProperty("Position - Right", this::getPosRight, null);
-    builder.addDoubleProperty("Setpoint", () -> requestedPosition, this::setPos);
-    builder.addBooleanProperty("Fast", () -> fast, null);
-    builder.addBooleanProperty("AtPosition", this::atPos, null);
+  // builder.addDoubleProperty("Position - Left", this::getPosLeft, null);
+  // builder.addDoubleProperty("Position - Right", this::getPosRight, null);
+  // builder.addDoubleProperty("Setpoint", () -> requestedPosition, this::setPos);
+  // builder.addBooleanProperty("Fast", () -> fast, null);
+  // builder.addBooleanProperty("AtPosition", this::atPos, null);
 
-    // PID tuning
-    builder.addDoubleProperty("kP", () -> kP, (val) -> {
-      if (kP != val) {
-        kP = val;
-        updatePID();
-      }
-    });
-    builder.addDoubleProperty("kI", () -> kI, (val) -> {
-      if (kI != val) {
-        kI = val;
-        updatePID();
-      }
-    });
-    builder.addDoubleProperty("kD", () -> kD, (val) -> {
-      if (kD != val) {
-        kD = val;
-        updatePID();
-      }
-    });
-    builder.addDoubleProperty("kS", () -> kS, (val) -> {
-      if (kS != val) {
-        kS = val;
-        updatePID();
-      }
-    });
+  // // PID tuning
+  // builder.addDoubleProperty("kP", () -> kP, (val) -> {
+  // if (kP != val) {
+  // kP = val;
+  // updatePID();
+  // }
+  // });
+  // builder.addDoubleProperty("kI", () -> kI, (val) -> {
+  // if (kI != val) {
+  // kI = val;
+  // updatePID();
+  // }
+  // });
+  // builder.addDoubleProperty("kD", () -> kD, (val) -> {
+  // if (kD != val) {
+  // kD = val;
+  // updatePID();
+  // }
+  // });
+  // builder.addDoubleProperty("kS", () -> kS, (val) -> {
+  // if (kS != val) {
+  // kS = val;
+  // updatePID();
+  // }
+  // });
 
-    // Motion Magic tuning (fast)
-    builder.addDoubleProperty("FastVel", () -> fastVel, (val) -> {
-      if (fastVel != val) {
-        this.fastVel = val;
-        if (fast) {
-          updateMotionMagic(fastVel, fastAcc, fastJerk);
-        }
-      }
-    });
-    builder.addDoubleProperty("FastAcc", () -> fastAcc, (val) -> {
-      if (fastAcc != val) {
-        this.fastAcc = val;
-        if (fast) {
-          updateMotionMagic(fastVel, fastAcc, fastJerk);
-        }
-      }
-    });
-    builder.addDoubleProperty("FastJerk", () -> fastJerk, (val) -> {
-      if (fastJerk != val) {
-        this.fastJerk = val;
-        if (fast) {
-          updateMotionMagic(fastVel, fastAcc, fastJerk);
-        }
-      }
-    });
+  // // Motion Magic tuning (fast)
+  // builder.addDoubleProperty("FastVel", () -> fastVel, (val) -> {
+  // if (fastVel != val) {
+  // this.fastVel = val;
+  // if (fast) {
+  // updateMotionMagic(fastVel, fastAcc, fastJerk);
+  // }
+  // }
+  // });
+  // builder.addDoubleProperty("FastAcc", () -> fastAcc, (val) -> {
+  // if (fastAcc != val) {
+  // this.fastAcc = val;
+  // if (fast) {
+  // updateMotionMagic(fastVel, fastAcc, fastJerk);
+  // }
+  // }
+  // });
+  // builder.addDoubleProperty("FastJerk", () -> fastJerk, (val) -> {
+  // if (fastJerk != val) {
+  // this.fastJerk = val;
+  // if (fast) {
+  // updateMotionMagic(fastVel, fastAcc, fastJerk);
+  // }
+  // }
+  // });
 
-    // Motion Magic tuning (slow)
-    builder.addDoubleProperty("SlowVel", () -> slowVel, (val) -> {
-      if (slowVel != val) {
-        this.slowVel = val;
-        if (!fast) {
-          updateMotionMagic(slowVel, slowAcc, slowJerk);
-        }
-      }
-    });
-    builder.addDoubleProperty("SlowAcc", () -> slowAcc, (val) -> {
-      if (slowAcc != val) {
-        this.slowAcc = val;
-        if (!fast) {
-          updateMotionMagic(slowVel, slowAcc, slowJerk);
-        }
-      }
-    });
-    builder.addDoubleProperty("SlowJerk", () -> slowJerk, (val) -> {
-      if (slowJerk != val) {
-        this.slowJerk = val;
-        if (!fast) {
-          updateMotionMagic(slowVel, slowAcc, slowJerk);
-        }
-      }
-    });
+  // // Motion Magic tuning (slow)
+  // builder.addDoubleProperty("SlowVel", () -> slowVel, (val) -> {
+  // if (slowVel != val) {
+  // this.slowVel = val;
+  // if (!fast) {
+  // updateMotionMagic(slowVel, slowAcc, slowJerk);
+  // }
+  // }
+  // });
+  // builder.addDoubleProperty("SlowAcc", () -> slowAcc, (val) -> {
+  // if (slowAcc != val) {
+  // this.slowAcc = val;
+  // if (!fast) {
+  // updateMotionMagic(slowVel, slowAcc, slowJerk);
+  // }
+  // }
+  // });
+  // builder.addDoubleProperty("SlowJerk", () -> slowJerk, (val) -> {
+  // if (slowJerk != val) {
+  // this.slowJerk = val;
+  // if (!fast) {
+  // updateMotionMagic(slowVel, slowAcc, slowJerk);
+  // }
+  // }
+  // });
 
-    // Manual apply buttons if needed
-    builder.addBooleanProperty("Apply PID", () -> false, pressed -> {
-      if (pressed) {
-        updatePID();
-      }
-    });
-    builder.addBooleanProperty("Apply Fast MM", () -> false, pressed -> {
-      if (pressed) {
-        updateMotionMagic(fastVel, fastAcc, fastJerk);
-      }
-    });
-    builder.addBooleanProperty("Apply Slow MM", () -> false, pressed -> {
-      if (pressed) {
-        updateMotionMagic(slowVel, slowAcc, slowJerk);
-      }
-    });
-  }
+  // // Manual apply buttons if needed
+  // builder.addBooleanProperty("Apply PID", () -> false, pressed -> {
+  // if (pressed) {
+  // updatePID();
+  // }
+  // });
+  // builder.addBooleanProperty("Apply Fast MM", () -> false, pressed -> {
+  // if (pressed) {
+  // updateMotionMagic(fastVel, fastAcc, fastJerk);
+  // }
+  // });
+  // builder.addBooleanProperty("Apply Slow MM", () -> false, pressed -> {
+  // if (pressed) {
+  // updateMotionMagic(slowVel, slowAcc, slowJerk);
+  // }
+  // });
+  // }
 
-  @Override
-  public void initSendable(SendableBuilder builder) {
-    configureSendable(builder);
-  }
+  // @Override
+  // public void initSendable(SendableBuilder builder) {
+  // configureSendable(builder);
+  // }
 }

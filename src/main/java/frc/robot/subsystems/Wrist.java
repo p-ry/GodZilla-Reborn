@@ -20,12 +20,12 @@ import edu.wpi.first.wpilibj.Timer;
 
 import frc.robot.InitLogger;
 
-public class Wrist extends SubsystemBase implements Sendable {
+public class Wrist extends SubsystemBase {//implements Sendable {
   private static final String TAG = "Wrist";
 
   private final TalonFX wrist;
   private final TalonFXConfiguration wristConfigs = new TalonFXConfiguration();
-  private final Slot0Configs pidConfigs;
+  //private final Slot0Configs pidConfigs;
   private final PositionDutyCycle positionDutyCycle;
 
   // slew limiter on the commanded position setpoint (units/sec)
@@ -44,31 +44,31 @@ public class Wrist extends SubsystemBase implements Sendable {
 
     positionDutyCycle = new PositionDutyCycle(0);
 
-    wrist.getConfigurator().refresh(wristConfigs);
-    pidConfigs = wristConfigs.Slot0;
+    // wrist.getConfigurator().refresh(wristConfigs);
+    // pidConfigs = wristConfigs.Slot0;
 
-    // PID coefficients for slot 0
-    pidConfigs.kP = 0.05;
-    pidConfigs.kI = 0.0;
-    pidConfigs.kD = 0.0;
-    pidConfigs.kS = 0.02;
+    // // PID coefficients for slot 0
+    // pidConfigs.kP = 0.05;
+    // pidConfigs.kI = 0.0;
+    // pidConfigs.kD = 0.0;
+    // pidConfigs.kS = 0.02;
 
-    // Limit switches and neutral mode
-    wristConfigs.ClosedLoopGeneral.ContinuousWrap = false;
-    wristConfigs.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-    wristConfigs.SoftwareLimitSwitch.ReverseSoftLimitEnable = false;
-    wristConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 10.0;
-    // wristConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -0.1; // intentionally disabled
-    wristConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    // // Limit switches and neutral mode
+    // wristConfigs.ClosedLoopGeneral.ContinuousWrap = false;
+    // wristConfigs.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+    // wristConfigs.SoftwareLimitSwitch.ReverseSoftLimitEnable = false;
+    // wristConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 10.0;
+    // // wristConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -0.1; // intentionally disabled
+    // wristConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
-    // Apply initial configuration
-    wrist.getConfigurator().apply(wristConfigs);
+    // // Apply initial configuration
+    // wrist.getConfigurator().apply(wristConfigs);
 
     // Shuffleboard grouping
     ShuffleboardTab tab = Shuffleboard.getTab("Arms");
     tab.add("Wrist", this);
 
-    InitLogger.logMessage(TAG, InitLogger.Level.INFO, "Constructed and initial config applied. kP=" + pidConfigs.kP);
+    //InitLogger.logMessage(TAG, InitLogger.Level.INFO, "Constructed and initial config applied. kP=" + pidConfigs.kP);
   }
 
   /** Set desired position; internally rate-limited. */
@@ -179,29 +179,29 @@ public class Wrist extends SubsystemBase implements Sendable {
     }
   }
 
-  @Override
-  public void initSendable(SendableBuilder builder) {
-    builder.setSmartDashboardType("Wrist");
-    builder.addDoubleProperty("Position", this::getPos, null);
-    builder.addDoubleProperty("Setpoint", () -> requestedPosition, this::setPos);
-    builder.addBooleanProperty("At Setpoint", this::atPos, null);
+  // @Override
+  // public void initSendable(SendableBuilder builder) {
+  //   builder.setSmartDashboardType("Wrist");
+  //   builder.addDoubleProperty("Position", this::getPos, null);
+  //   builder.addDoubleProperty("Setpoint", () -> requestedPosition, this::setPos);
+  //   builder.addBooleanProperty("At Setpoint", this::atPos, null);
 
-    builder.addDoubleProperty("kP", () -> pidConfigs.kP, (val) -> {
-      if (pidConfigs.kP != val) {
-        wrist.getConfigurator().refresh(wristConfigs);
-        pidConfigs.kP = val;
-        wrist.getConfigurator().apply(wristConfigs);
-        InitLogger.logMessage(TAG, InitLogger.Level.INFO, "Tuned kP -> " + val);
-      }
-    });
+  //   builder.addDoubleProperty("kP", () -> pidConfigs.kP, (val) -> {
+  //     if (pidConfigs.kP != val) {
+  //       wrist.getConfigurator().refresh(wristConfigs);
+  //       pidConfigs.kP = val;
+  //       wrist.getConfigurator().apply(wristConfigs);
+  //       InitLogger.logMessage(TAG, InitLogger.Level.INFO, "Tuned kP -> " + val);
+  //     }
+  //   });
 
-    builder.addDoubleProperty("kF", () -> pidConfigs.kV, (val) -> {
-      if (pidConfigs.kV != val) {
-        wrist.getConfigurator().refresh(wristConfigs);
-        pidConfigs.kV = val;
-        wrist.getConfigurator().apply(wristConfigs);
-        InitLogger.logMessage(TAG, InitLogger.Level.INFO, "Tuned kV -> " + val);
-      }
-    });
-  }
+  //   builder.addDoubleProperty("kF", () -> pidConfigs.kV, (val) -> {
+  //     if (pidConfigs.kV != val) {
+  //       wrist.getConfigurator().refresh(wristConfigs);
+  //       pidConfigs.kV = val;
+  //       wrist.getConfigurator().apply(wristConfigs);
+  //       InitLogger.logMessage(TAG, InitLogger.Level.INFO, "Tuned kV -> " + val);
+  //     }
+  //   });
+  // }
 }
