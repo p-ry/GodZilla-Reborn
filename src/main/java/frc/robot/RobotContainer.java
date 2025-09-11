@@ -51,7 +51,6 @@ import frc.robot.subsystems.ArmAssembly;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.LowerArm;
 import frc.robot.subsystems.Wrist;
-import frc.robot.subsystems.Winch;
 import frc.robot.commands.SetArmBrakeMode;
 import frc.robot.commands.WaitForCoral;
 
@@ -100,7 +99,6 @@ public class RobotContainer {
   // = new ArmAssembly(false, 99);
   public Ace ace;
   // = new Ace(0);
-  public Winch winch;
   public static int prevLevel = 0;
 
   // private final CommandXboxController driver = new CommandXboxController(0);
@@ -115,8 +113,8 @@ public class RobotContainer {
       .withDeadband(0.0)
       .withRotationalDeadband(turnDeadband)
       .withDriveRequestType(DriveRequestType.Velocity);
-  final JoystickButton Lv1 = new JoystickButton(copilot, 12);
-  // final JoystickButton Dump = new JoystickButton(copilot, 1);
+
+  final JoystickButton Dump = new JoystickButton(copilot, 1);
   final JoystickButton Lv2L = new JoystickButton(copilot, 2);
   final JoystickButton Lv2R = new JoystickButton(copilot, 3);
   final JoystickButton Lv3L = new JoystickButton(copilot, 4);
@@ -131,7 +129,7 @@ public class RobotContainer {
   final JoystickButton Process = new JoystickButton(copilot2, 1);
   final JoystickButton Load = new JoystickButton(copilot, 12);
   final JoystickButton Barge = new JoystickButton(copilot2, 2);
-  // final JoystickButton Chomp = new JoystickButton(copilot, 9);
+  //final JoystickButton Chomp = new JoystickButton(copilot, 9);
   final JoystickButton CoveredSwitch = new JoystickButton(copilot, 9);
 
   final Trigger lTrigger = controller.leftTrigger();
@@ -142,27 +140,23 @@ public class RobotContainer {
   public static int BlueAlliance = 1;
   public static Command driveIt;
   public static boolean rightTree = true;
-  public static boolean climb = false;
   public static double maxSpeedConstant = 4.73;
   public static double maxAngularRateConstant = RotationsPerSecond.of(0.75).in(RadiansPerSecond);
 
-  // public static Point2D.Double base = new
-  // Point2D.Double(85.393,509.0);//.17645,.50898890);
-  // public static Point2D.Double startPoint = new
-  // Point2D.Double(-90.00,780.0);//-.02777, .5207621);
+  // public static Point2D.Double base = new Point2D.Double(85.393,509.0);//.17645,.50898890);
+  // public static Point2D.Double startPoint = new Point2D.Double(-90.00,780.0);//-.02777, .5207621); 
+  
 
-  // public static Point2D.Double controlPoint1 = new
-  // Point2D.Double(100.0,800.0);//-0.4,.5);
-  // public static Point2D.Double controlPoint2 = new
-  // Point2D.Double(250.0,1684.7);//158.0,1684.7);//.2,0.6);
-  // public static Point2D.Double endPoint = new
-  // Point2D.Double(0.00,2020.0);//80.0,2040.0-20.1,1160.95);//0.0041,1.85795);
+  // public static Point2D.Double controlPoint1 = new Point2D.Double(100.0,800.0);//-0.4,.5);
+  // public static Point2D.Double controlPoint2 = new Point2D.Double(250.0,1684.7);//158.0,1684.7);//.2,0.6);
+  // public static Point2D.Double endPoint = new Point2D.Double(0.00,2020.0);//80.0,2040.0-20.1,1160.95);//0.0041,1.85795);
+  
 
   /* Path follower */
   private final SendableChooser<Command> AutoChooser;
 
   public RobotContainer() {
-    winch = new Winch();
+
     InitLogger.time("ArmAssemblyInit", () -> {
       mArm = new ArmAssembly(false, 99);
     });
@@ -176,7 +170,7 @@ public class RobotContainer {
     });
 
     // gyro = new Pigeon2(0, "Canivore");
-    // SmartDashboard.putNumber("prevHeading", prevHeading);
+    //SmartDashboard.putNumber("prevHeading", prevHeading);
     System.out.println("Left Y: " + controller.getLeftY());
 
     System.out.println("Left X: " + controller.getLeftX());
@@ -219,10 +213,10 @@ public class RobotContainer {
     NamedCommands.registerCommand("level3", new MoveArmFix(mArm, ace, 3, 1));
     NamedCommands.registerCommand("Load", new MoveArmFix(mArm, ace, 1, 0)
         .alongWith(new InstantCommand(() -> {
-          // ace.setSpeed(0.9);
+          //ace.setSpeed(0.9);
           ace.resetStateMachine();
           Constants.AutonomousMode = true;
-          // ace.resetStateMachine();
+          //ace.resetStateMachine();
           loading = true;
 
         })));
@@ -230,16 +224,10 @@ public class RobotContainer {
     NamedCommands.registerCommand("L1", new MoveArmFix(mArm, ace, 6, 0));
     NamedCommands.registerCommand("L2", new MoveArmFix(mArm, ace, 2, 0));
     NamedCommands.registerCommand("L3", new MoveArmFix(mArm, ace, 3, 0));
-    NamedCommands.registerCommand("L4",
-        new FollowCurve(mArm, ace, Constants.startPoint, Constants.controlPoint1, Constants.controlPoint2,
-            Constants.endPoint, Constants.base, () -> mArm.lowerArm.getDegs(), () -> mArm.upperArm.getDegs(),
-            () -> mArm.slider.getMM(), true));
-    // MoveArmFix(mArm, ace, 4, 0));
-    NamedCommands.registerCommand("L4No",
-        new FollowCurve(mArm, ace, Constants.startPoint, Constants.controlPoint1, Constants.controlPoint2,
-            Constants.endPoint, Constants.base, () -> mArm.lowerArm.getDegs(), () -> mArm.upperArm.getDegs(),
-            () -> mArm.slider.getMM(), true));
-    // new MoveArmFix(mArm, ace, 400, 0));
+    NamedCommands.registerCommand("L4", new FollowCurve(mArm, ace,Constants.startPoint,Constants.controlPoint1,Constants.controlPoint2,Constants.endPoint,Constants.base,() ->mArm.lowerArm.getDegs(), () ->mArm.upperArm.getDegs(),() ->mArm.slider.getMM(),true));
+    //MoveArmFix(mArm, ace, 4, 0));
+    NamedCommands.registerCommand("L4No",new FollowCurve(mArm, ace,Constants.startPoint,Constants.controlPoint1,Constants.controlPoint2,Constants.endPoint,Constants.base,() ->mArm.lowerArm.getDegs(), () ->mArm.upperArm.getDegs(),() ->mArm.slider.getMM(),true));
+     //new MoveArmFix(mArm, ace, 400, 0));
     NamedCommands.registerCommand("Intake",
         new InstantCommand(() -> ace.setSpeed(1))
             .alongWith(new InstantCommand(() -> ace.gotIt = false))
@@ -341,59 +329,54 @@ public class RobotContainer {
 
     Load.onTrue(new MoveArmFix(mArm, ace, 1, 0)
         .alongWith(new InstantCommand(() -> {
-          // ace.setSpeed(0.9);
+          //ace.setSpeed(0.9);
           loading = true;
           ace.resetStateMachine();
-
+          
         })));
 
     Load
         .onFalse(new MoveArmFix(mArm, ace, 0, 0)
             .alongWith(new InstantCommand(() -> loading = false)));
     Process
-        .onTrue(new InstantCommand(() -> {
-          Constants.endX -= 25.0;
-          Constants.endPoint.setLocation(Constants.endX, Constants.endY);
+    .onTrue(new InstantCommand(() -> {
+      Constants.endX-=25.0;
+      Constants.endPoint.setLocation(Constants.endX, Constants.endY);
 
-          SmartDashboard.putNumber("endX", Constants.endX);
-          SmartDashboard.putNumber("endpoinX", Constants.endPoint.getX());
-          SmartDashboard.putNumber("endpoinY", Constants.endPoint.getY());
-        }));
+    SmartDashboard.putNumber("endX",Constants.endX); 
+    SmartDashboard.putNumber("endpoinX",Constants.endPoint.getX());
+    SmartDashboard.putNumber("endpoinY",Constants.endPoint.getY()); }));
 
-    // .onTrue(new MoveArmFix(mArm, ace, 5, 0));
+        //.onTrue(new MoveArmFix(mArm, ace, 5, 0));
     // Process.whileTrue(new InstantCommand(() -> ace.setSpeed(0.1)));
 
     Barge
-        .onTrue(new InstantCommand(() -> {
-          Constants.endX += 25.0;
+        .onTrue(new InstantCommand(() -> {Constants.endX+=25.0; 
           Constants.endPoint.setLocation(Constants.endX, Constants.endY);
-          SmartDashboard.putNumber("endX", Constants.endX);
-          SmartDashboard.putNumber("endpoinX", Constants.endPoint.getX());
-          SmartDashboard.putNumber("endpoinY", Constants.endPoint.getY());
-        }));
-
+          SmartDashboard.putNumber("endX",Constants.endX);  
+          SmartDashboard.putNumber("endpoinX",Constants.endPoint.getX());
+    SmartDashboard.putNumber("endpoinY",Constants.endPoint.getY());}));
+    
     // Process
     // .onFalse(new InstantCommand(() -> ace.setSpeed(0)));
 
     // Barge
-    // .onTrue(new MoveArmFix(mArm, ace, 42, -1));
+    //     .onTrue(new MoveArmFix(mArm, ace, 42, -1));
     // Barge
-    // .onFalse(new MoveArmFix(mArm, ace, 0, 0));
-    // Barge.onTrue( new FollowCurve(mArm,
-    // ace,startPoint,controlPoint1,controlPoint2,endPoint,base,()
-    // ->mArm.lowerArm.getDegs(), () ->mArm.upperArm.getDegs(),()
-    // ->mArm.slider.getMM(),true));
+    //     .onFalse(new MoveArmFix(mArm, ace, 0, 0));
+    // Barge.onTrue(  new FollowCurve(mArm, ace,startPoint,controlPoint1,controlPoint2,endPoint,base,() ->mArm.lowerArm.getDegs(), () ->mArm.upperArm.getDegs(),() ->mArm.slider.getMM(),true));
 
-    // // .onTrue(new InstantCommand(() ->mArm.lowerArm.setDeg(25.0)));
-    // //degrees/360 * 128 gear ratio
 
+    // //    .onTrue(new InstantCommand(() ->mArm.lowerArm.setDeg(25.0))); //degrees/360 * 128 gear ratio
+
+        
     // Barge
-    // .onFalse(new MoveArmFix(mArm, ace, 0, 0));
+    //     .onFalse(new MoveArmFix(mArm, ace, 0, 0));
 
-    // Dump
-    // .whileTrue(new MoveArmFix(mArm, ace, 6, 0));
-    // Dump
-    // .onFalse(new MoveArmFix(mArm, ace, 0, 0));
+    Dump
+        .whileTrue(new MoveArmFix(mArm, ace, 6, 0));
+    Dump
+        .onFalse(new MoveArmFix(mArm, ace, 0, 0));
 
     // Chomp.onTrue(new InstantCommand(() -> {
     // // ace.setSpeed(1);
@@ -406,17 +389,14 @@ public class RobotContainer {
     // System.out.println("Chomp is off");
     // })); // Chomp is off
 
-    // CoveredSwitch.onTrue(
-    // new FollowCurve(mArm,
-    // ace,startPoint,controlPoint1,controlPoint2,endPoint,base,()
-    // ->mArm.lowerArm.getDegs(), () ->mArm.upperArm.getDegs(),()
-    // ->mArm.slider.getPos(),true));
-    // CoveredSwitch.onFalse(new MoveArmFix(mArm, ace, 0, 0));
+//     CoveredSwitch.onTrue(
+//         new FollowCurve(mArm, ace,startPoint,controlPoint1,controlPoint2,endPoint,base,() ->mArm.lowerArm.getDegs(), () ->mArm.upperArm.getDegs(),() ->mArm.slider.getPos(),true));
+// CoveredSwitch.onFalse(new MoveArmFix(mArm, ace, 0, 0));
 
-    // Chomp.onTrue(new FollowCurve(mArm,
-    // startPoint,controlPoint1,controlPoint2,endPoint,base));
-    // Chomp.onTrue(new FollowCurve(mArm,
-    // startPoint,controlPoint1,controlPoint2,endPoint,base));
+        
+
+    // Chomp.onTrue(new FollowCurve(mArm, startPoint,controlPoint1,controlPoint2,endPoint,base));
+   // Chomp.onTrue(new FollowCurve(mArm, startPoint,controlPoint1,controlPoint2,endPoint,base));
 
     // Chomp.onTrue(new InstantCommand(() -> {
     // // ace.setSpeed(1);
@@ -428,6 +408,8 @@ public class RobotContainer {
     // mArm.wrist.setSpeed(0);
     // System.out.println("Chomp is off");
     // })); // Chomp is off
+
+   
 
     lTrigger.whileTrue(
         new RunCommand(() -> {
@@ -472,124 +454,84 @@ public class RobotContainer {
     // .onFalse(new InstantCommand(swerve::stop, swerve));
     // }
     // **************TRUE ******** */
-    CoveredSwitch.onTrue(new InstantCommand(() -> {
-      climb = true;
-      }
-    ));
-    CoveredSwitch.onFalse(new InstantCommand(() -> {
-      climb = false;
-      }
-    ));
-    Lv1.onTrue(new InstantCommand(() -> {
-      if (climb) {
-        winch.setPos(5.0);
-      } else {
-        winch.setPos(-5.0);
-      }
-    }));
-    Lv2L.onTrue(new InstantCommand(() -> {
-        MaxSpeed = maxSpeedConstant;
-        MaxAngularRate = maxAngularRateConstant / 2;
-        rightTree = false;
-    }).alongWith(new MoveArmFix(mArm, ace, 2, -1)));
-    Lv2L.onFalse(new InstantCommand(() -> {
-        MaxSpeed = maxSpeedConstant;
-        MaxAngularRate = maxAngularRateConstant;
-    }).alongWith(new MoveArmFix(mArm, ace, 44, 0)));
-
-    
-    // new MoveArmFix(mArm, ace, 2, -1))
-    // .andthe;
-    // Lv2L.onTrue(new InstantCommand(() -> MaxSpeed = maxSpeedConstant));
-    // Lv2L.onTrue(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant / 2));
-    // Lv2L.onTrue(new InstantCommand(() -> rightTree = false));
-    // Lv2R.whileTrue(new MoveArmFix(mArm, ace, 2, 1));
-    // Lv2R.onTrue(new InstantCommand(() -> MaxSpeed = maxSpeedConstant));
-    // Lv2R.onTrue(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant / 2));
-    // Lv2R.onTrue(new InstantCommand(() -> rightTree = true));
+    Lv2L.whileTrue(new MoveArmFix(mArm, ace, 2, -1));
+    Lv2L.onTrue(new InstantCommand(() -> MaxSpeed = maxSpeedConstant));
+    Lv2L.onTrue(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant / 2));
+    Lv2L.onTrue(new InstantCommand(() -> rightTree = false));
+    Lv2R.whileTrue(new MoveArmFix(mArm, ace, 2, 1));
+    Lv2R.onTrue(new InstantCommand(() -> MaxSpeed = maxSpeedConstant));
+    Lv2R.onTrue(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant / 2));
+    Lv2R.onTrue(new InstantCommand(() -> rightTree = true));
 
     // ********FALSE ******** */
-    // Lv2L.onFalse(new MoveArmFix(mArm, ace, 44, 0));
-    // // .andThen(new InstantCommand(() -> ace.setSpeed(1))));
+    Lv2L.onFalse(new MoveArmFix(mArm, ace, 44, 0));
+    // .andThen(new InstantCommand(() -> ace.setSpeed(1))));
 
-    // Lv2L.onFalse(new InstantCommand(() -> MaxSpeed = maxSpeedConstant));
-    // Lv2L.onFalse(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant));
-    // Lv2R.onFalse(new MoveArmFix(mArm, ace, 44, 0));
-    // // .andThen(new InstantCommand(() -> ace.setSpeed(1))));
-    // Lv2R.onFalse(new InstantCommand(() -> MaxSpeed = maxSpeedConstant));
-    // Lv2R.onFalse(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant));
+    Lv2L.onFalse(new InstantCommand(() -> MaxSpeed = maxSpeedConstant));
+    Lv2L.onFalse(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant));
+    Lv2R.onFalse(new MoveArmFix(mArm, ace, 44, 0));
+    // .andThen(new InstantCommand(() -> ace.setSpeed(1))));
+    Lv2R.onFalse(new InstantCommand(() -> MaxSpeed = maxSpeedConstant));
+    Lv2R.onFalse(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant));
 
     // ******** True ****** */
+    Lv3L.whileTrue(new MoveArmFix(mArm, ace, 3, -1));
+    Lv3L.onTrue(new InstantCommand(() -> MaxSpeed = maxSpeedConstant / 3));
+    Lv3L.onTrue(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant / 2));
+    Lv3L.onTrue(new InstantCommand(() -> rightTree = false));
 
-    Lv3L.onTrue(new InstantCommand(() -> {
-      MaxSpeed = maxSpeedConstant/3;
-      MaxAngularRate = maxAngularRateConstant / 2;
-      rightTree = false;
-  }).alongWith(new MoveArmFix(mArm, ace, 3, -1)));
-  Lv3L.onFalse(new InstantCommand(() -> {
-      MaxSpeed = maxSpeedConstant;
-      MaxAngularRate = maxAngularRateConstant;
-  }).alongWith(new MoveArmFix(mArm, ace, 44, 0)));
-
-    // Lv3L.whileTrue(new MoveArmFix(mArm, ace, 3, -1));
-    // Lv3L.onTrue(new InstantCommand(() -> MaxSpeed = maxSpeedConstant / 3));
-    // Lv3L.onTrue(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant / 2));
-    // Lv3L.onTrue(new InstantCommand(() -> rightTree = false));
-
-    // Lv3R.whileTrue(new MoveArmFix(mArm, ace, 3, 1));
-    // Lv3R.onTrue(new InstantCommand(() -> MaxSpeed = maxSpeedConstant / 3));
-    // Lv3R.onTrue(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant / 2));
-    // Lv3R.onTrue(new InstantCommand(() -> rightTree = true));
+    Lv3R.whileTrue(new MoveArmFix(mArm, ace, 3, 1));
+    Lv3R.onTrue(new InstantCommand(() -> MaxSpeed = maxSpeedConstant / 3));
+    Lv3R.onTrue(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant / 2));
+    Lv3R.onTrue(new InstantCommand(() -> rightTree = true));
     // ******** FALSE *** *****************************************/
     // Lv3L.onFalse(new Retract(mArm, 3).andThen(new MoveArmFix(mArm, 1, 0)));
-    // Lv3L.onFalse(new MoveArmFix(mArm, ace, 44, 0));
-    // // .andThen(new InstantCommand(() -> ace.setSpeed(1))));
-    // Lv3L.onFalse(new InstantCommand(() -> MaxSpeed = maxSpeedConstant));
-    // Lv3L.onFalse(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant));
+    Lv3L.onFalse(new MoveArmFix(mArm, ace, 44, 0));
+    // .andThen(new InstantCommand(() -> ace.setSpeed(1))));
+    Lv3L.onFalse(new InstantCommand(() -> MaxSpeed = maxSpeedConstant));
+    Lv3L.onFalse(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant));
 
-    // // Lv3R.onFalse(new Retract(mArm, 3).andThen(new MoveArmFix(mArm, 1, 0)));
-    // Lv3R.onFalse(new MoveArmFix(mArm, ace, 44, 0));
-    // // .andThen(new InstantCommand(() -> ace.setSpeed(1))));
-    // Lv3R.onFalse(new InstantCommand(() -> MaxSpeed = maxSpeedConstant));
-    // Lv3R.onFalse(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant));
+    // Lv3R.onFalse(new Retract(mArm, 3).andThen(new MoveArmFix(mArm, 1, 0)));
+    Lv3R.onFalse(new MoveArmFix(mArm, ace, 44, 0));
+    // .andThen(new InstantCommand(() -> ace.setSpeed(1))));
+    Lv3R.onFalse(new InstantCommand(() -> MaxSpeed = maxSpeedConstant));
+    Lv3R.onFalse(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant));
     // *********TRUE *************************************** */
-    Lv4L.onTrue(new FollowCurve(mArm, ace, Constants.startPoint, Constants.controlPoint1, Constants.controlPoint2,
-        Constants.endPoint, Constants.base, () -> mArm.lowerArm.getDegs(), () -> mArm.upperArm.getDegs(),
-        () -> mArm.slider.getMM(), false)
-        .andThen(new InstantCommand(() -> {
-          MaxSpeed = maxSpeedConstant / 4;
-          MaxAngularRate = maxAngularRateConstant / 2.5;
-          rightTree = false;
-        })));
-    Lv4R.onTrue(new FollowCurve(mArm, ace, Constants.startPoint, Constants.controlPoint1, Constants.controlPoint2,
-        Constants.endPoint, Constants.base, () -> mArm.lowerArm.getDegs(), () -> mArm.upperArm.getDegs(),
-        () -> mArm.slider.getMM(), false)
-        .andThen(new InstantCommand(() -> {
-          MaxSpeed = maxSpeedConstant / 4;
+    Lv4L.onTrue(new FollowCurve(mArm, ace,Constants.startPoint,Constants.controlPoint1,Constants.controlPoint2,Constants.endPoint,Constants.base,() ->mArm.lowerArm.getDegs(), () ->mArm.upperArm.getDegs(),() ->mArm.slider.getMM(),false)
+    .andThen(new InstantCommand(() ->  {
+      MaxSpeed = maxSpeedConstant / 4;
+        MaxAngularRate = maxAngularRateConstant / 2.5;
+        rightTree = false;
+        }))
+    );
+Lv4R.onTrue(new FollowCurve(mArm, ace,Constants.startPoint,Constants.controlPoint1,Constants.controlPoint2,Constants.endPoint,Constants.base,() ->mArm.lowerArm.getDegs(), () ->mArm.upperArm.getDegs(),() ->mArm.slider.getMM(),false)
+.andThen(new InstantCommand(() ->  {
+  MaxSpeed = maxSpeedConstant / 4;
 
-          MaxAngularRate = maxAngularRateConstant / 2.5;
-          rightTree = true;
-        })));
+    MaxAngularRate = maxAngularRateConstant / 2.5;
+    rightTree = true;
+    }))
+);
+
+
 
     // Lv4L.onTrue(new MoveArmFix(mArm, ace, 4, -1));
     // Lv4L.onTrue(new InstantCommand(() -> MaxSpeed = maxSpeedConstant / 4));
-    // Lv4L.onTrue(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant
-    // / 2.5));
+    // Lv4L.onTrue(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant / 2.5));
     // Lv4L.onTrue(new InstantCommand(() -> rightTree = false));
 
     // Lv4R.onTrue(new MoveArmFix(mArm, ace, 4, 1));
     // Lv4R.onTrue(new InstantCommand(() -> MaxSpeed = maxSpeedConstant / 4));
-    // Lv4R.onTrue(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant
-    // / 2.5));
+    // Lv4R.onTrue(new InstantCommand(() -> MaxAngularRate = maxAngularRateConstant / 2.5));
     // Lv4R.onTrue(new InstantCommand(() -> rightTree = true));
     // *********FALSE **************************************************/
     Lv4L.onFalse(new MoveArmFix(mArm, ace, 0, 0)
-        .alongWith(new InstantCommand(() -> {
+            .alongWith(new InstantCommand(() -> {
 
           MaxSpeed = maxSpeedConstant;
 
           MaxAngularRate = maxAngularRateConstant;
-          // mArm.wrist.setPos(0.7);
+         // mArm.wrist.setPos(0.7);
         })));
 
     // .andThen(new InstantCommand(() -> ace.setSpeed(1))));
@@ -599,7 +541,7 @@ public class RobotContainer {
         .alongWith(new InstantCommand(() -> {
           MaxSpeed = maxSpeedConstant;
           MaxAngularRate = maxAngularRateConstant;
-          // mArm.wrist.setPos(0.7);
+         // mArm.wrist.setPos(0.7);
         })));
 
     Intake
@@ -611,7 +553,7 @@ public class RobotContainer {
     Outtake
         .onFalse(new InstantCommand(() -> ace.setSpeed(0)));
 
-    rightBumper
+   rightBumper
 
         .onTrue(new InstantCommand(() -> {
 
