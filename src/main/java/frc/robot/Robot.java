@@ -61,11 +61,12 @@ public class Robot extends TimedRobot {
   public void robotInit() {
     InitLogger.startLogging();
     InitLogger.logMessage("robot", "RobotInit/Start");
+    ensureRobotContainerInitialized();
   }
 
   @Override
   public void robotPeriodic() {
-    ensureRobotContainerInitialized();
+    
     CommandScheduler.getInstance().run();
 
     var alliance = DriverStation.getAlliance();
@@ -76,7 +77,7 @@ public class Robot extends TimedRobot {
         RobotContainer.BlueAlliance = 1;
       }
     }
-    SmartDashboard.putBoolean("followcurve",Constants.followCurve);
+   // SmartDashboard.putBoolean("followcurve",Constants.followCurve);
     
   }
 
