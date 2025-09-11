@@ -64,10 +64,10 @@ public class Ace extends SubsystemBase {
   }
 
   public void setBrakeMode(NeutralModeValue mode) {
-    // MotorOutputConfigs config = new MotorOutputConfigs();
-    // ace.getConfigurator().refresh(config);
-    // config.NeutralMode = mode;
-    // ace.getConfigurator().apply(config);
+    MotorOutputConfigs config = new MotorOutputConfigs();
+    ace.getConfigurator().refresh(config);
+    config.NeutralMode = mode;
+    ace.getConfigurator().apply(config);
   }
 
   public void setSpeed(double speed) {

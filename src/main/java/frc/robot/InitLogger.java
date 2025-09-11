@@ -5,20 +5,14 @@ import edu.wpi.first.util.datalog.DataLog;
 import edu.wpi.first.util.datalog.DoubleLogEntry;
 import edu.wpi.first.util.datalog.StringLogEntry;
 import edu.wpi.first.wpilibj.DataLogManager;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 
 import java.util.concurrent.ConcurrentHashMap;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Map;
 
 public class InitLogger {
   private static final String INIT_PREFIX = "Init/";
-
-  public enum Level {
-    INFO, WARN, ERROR
-  }
+  public enum Level { INFO, WARN, ERROR }
 
   // Caches to avoid recreating entries
   private static final Map<String, StringLogEntry> stringEntries = new ConcurrentHashMap<>();
@@ -27,28 +21,19 @@ public class InitLogger {
 
   /** Start logging early (call once in robotInit) */
   public static void startLogging() {
-    String dir = Files.exists(Path.of("/U")) ? "/U/logs" : "/home/lvuser/logs";
-    try {
-      Files.createDirectories(Path.of(dir));
-    } catch (Exception ignored) {
-    }
-    DataLogManager.start();//.start(dir, ""); // ~250ms flush = low I/O contention
-    DataLogManager.logConsoleOutput(false); // avoid spam/overhead
-    DriverStation.reportWarning("Logging to " + dir, false);
-    //DataLogManager.start();
+    DataLogManager.start();
   }
-
-  public static void stopLogging() {
+public static void stopLogging() {
     DataLogManager.stop();
   }
-
   /** Log a double value under a given name/field (e.g., position). */
-  public static void logDouble(String name, String field, double value) {
-    String key = name + "/" + field;
-    DoubleLogEntry entry = doubleEntries.computeIfAbsent(key,
-        k -> new DoubleLogEntry(DataLogManager.getLog(), k));
-    entry.append(value);
-  }
+public static void logDouble(String name, String field, double value) {
+  String key = name + "/" + field;
+  DoubleLogEntry entry = doubleEntries.computeIfAbsent(key,
+      k -> new DoubleLogEntry(DataLogManager.getLog(), k));
+  entry.append(value);
+}
+
 
   /** Log a named duration in seconds */
   public static void logDuration(String name, double durationSeconds) {
