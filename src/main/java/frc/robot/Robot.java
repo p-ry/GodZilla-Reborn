@@ -29,7 +29,8 @@ import com.pathplanner.lib.pathfinding.LocalADStar;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.Timer;
-
+import edu.wpi.first.wpilibj.livewindow.LiveWindow;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import au.grapplerobotics.CanBridge;
 
 public class Robot extends TimedRobot {
@@ -59,8 +60,11 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotInit() {
+    NetworkTableInstance.getDefault().getTable("SmartDashboard").getEntry(".updateRate").setDouble(0.010); // 100Hz
+    LiveWindow.disableAllTelemetry();
+    Shuffleboard.disableActuatorWidgets();
     InitLogger.startLogging();
-    
+
     InitLogger.logMessage("robot", "RobotInit/Start");
   }
 
