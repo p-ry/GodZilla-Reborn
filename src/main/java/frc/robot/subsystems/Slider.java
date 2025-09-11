@@ -20,28 +20,28 @@ import com.ctre.phoenix6.hardware.TalonFXS;
 import com.ctre.phoenix6.signals.*;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 
-public class Slider extends SubsystemBase implements Sendable {
+public class Slider extends SubsystemBase {
 
   private final TalonFXS slider;
- 
-  private final TalonFXSConfiguration sliderConfigs = new TalonFXSConfiguration();
 
-  private final Slot0Configs pidConfigs;
-  private final MotionMagicConfigs mmConfigs;
+  // private final TalonFXSConfiguration sliderConfigs = new
+  // TalonFXSConfiguration();
 
-  private static final DynamicMotionMagicVoltage dynamic = new DynamicMotionMagicVoltage(0, 300, 300, 800);
-  private static final PositionVoltage sController = new PositionVoltage(0);
-  private static final PositionDutyCycle  pControllerDuty = new PositionDutyCycle(0).withSlot(2);
+  // private final Slot0Configs pidConfigs;
+  // private final MotionMagicConfigs mmConfigs;
 
-  
+  private static DynamicMotionMagicVoltage dynamic;// = new DynamicMotionMagicVoltage(0, 300, 300, 800);
+  private static PositionVoltage sController;// = new PositionVoltage(0);
+  private static PositionDutyCycle pControllerDuty;// = new PositionDutyCycle(0).withSlot(2);
+
   private boolean fast = true;
   private double requestedPosition = 0.0;
   private double cachedPosition = 0.0;
   private boolean atPosition = false;
   private boolean updatePending = false;
-  private final VelocityDutyCycle velocityRequest = new VelocityDutyCycle(0).withSlot(0);
-  
- private static double velocitySetpoint = 0.0;
+  private final VelocityDutyCycle velocityRequest;// = new VelocityDutyCycle(0).withSlot(0);
+
+  private static double velocitySetpoint = 0.0;
 
   // Tunable PID constants
   public double kP = 0.05, kI = 0.0, kD = 0.0, kV = 0.25, kS = 0.6;
@@ -52,44 +52,24 @@ public class Slider extends SubsystemBase implements Sendable {
 
   public Slider() {
     slider = new TalonFXS(35, "Canivore2");
-   //lider.getConfigurator().refresh(sliderConfigs);
-   slider.getConfigurator().refresh(sliderConfigs);
+    velocityRequest = new VelocityDutyCycle(0).withSlot(0);
+    sController = new PositionVoltage(0);
+    pControllerDuty = new PositionDutyCycle(0).withSlot(2);
+    dynamic = new DynamicMotionMagicVoltage(0, 300, 300, 800);
 
- 
-   
-    
+    // lider.getConfigurator().refresh(sliderConfigs);
 
-    // Motor config
-    sliderConfigs.Commutation.MotorArrangement = MotorArrangementValue.Minion_JST;
-    sliderConfigs.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-    sliderConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-
-    // PID
-    pidConfigs = sliderConfigs.Slot0;
-    pidConfigs.kP = kP;
-    pidConfigs.kI = kI;
-    pidConfigs.kD = kD;
-    pidConfigs.kV = kV;
-    pidConfigs.kS = kS;
-
-    // Motion Magic
-    mmConfigs = sliderConfigs.MotionMagic;
-    mmConfigs.MotionMagicCruiseVelocity = fastVel;
-    mmConfigs.MotionMagicAcceleration = fastAcc;
-    mmConfigs.MotionMagicJerk = fastJerk;
-
-    slider.getConfigurator().apply(sliderConfigs);
-    if (Constants.enableShuffleboard) {
+    if (Constants.debug) {
       ShuffleboardTab tab = Shuffleboard.getTab("Arms");
       tab.add("Wrist", this);
-  }
-  
+    }
+
   }
 
   public void setBrakeMode(NeutralModeValue mode) {
-    slider.getConfigurator().refresh(sliderConfigs);
-    sliderConfigs.MotorOutput.NeutralMode = mode;
-    slider.getConfigurator().apply(sliderConfigs);
+    // slider.getConfigurator().refresh(sliderConfigs);
+    // sliderConfigs.MotorOutput.NeutralMode = mode;
+    // slider.getConfigurator().apply(sliderConfigs);
   }
 
   public void setTargetVelocityRPS(double velocityRPS) {
@@ -97,7 +77,7 @@ public class Slider extends SubsystemBase implements Sendable {
     velocityRequest.Velocity = velocitySetpoint;
     slider.setControl(velocityRequest);
     SmartDashboard.putNumber("SliderRPSCmd", velocitySetpoint);
-    
+
   }
 
   public void stop(TalonFXS motor) {
@@ -112,16 +92,17 @@ public class Slider extends SubsystemBase implements Sendable {
     return Math.abs(getCurrentVelocity(motor) - targetRPS) < tolerance;
   }
 
-public void setMM(double distance) {
-  double position = (distance * 12.0)/(9.525*16.0 );
-   slider.setControl(pControllerDuty.withPosition(position));
-    
+  public void setMM(double distance) {
+    double position = (distance * 12.0) / (9.525 * 16.0);
+    slider.setControl(pControllerDuty.withPosition(position));
+
   }
+
   public double getMM() {
-  double distance = cachedPosition * (9.525 * 16.0) / 12.0;
-    
+    double distance = cachedPosition * (9.525 * 16.0) / 12.0;
+
     return distance;
-    
+
   }
 
   public void setPos(double position) {
@@ -132,11 +113,11 @@ public void setMM(double distance) {
     // this.fast = fast;
     // this.requestedPosition = position;
     // slider.setControl(
-    //   dynamic
-    //     .withVelocity(fast ? fastVel : slowVel)
-    //     .withAcceleration(fast ? fastAcc : slowAcc)
-    //     .withJerk(fast ? fastJerk : slowJerk)
-    //     .withPosition(position)
+    // dynamic
+    // .withVelocity(fast ? fastVel : slowVel)
+    // .withAcceleration(fast ? fastAcc : slowAcc)
+    // .withJerk(fast ? fastJerk : slowJerk)
+    // .withPosition(position)
     // );
   }
 
@@ -148,93 +129,17 @@ public void setMM(double distance) {
     return atPosition;
   }
 
-  public void updatePID() {
-    pidConfigs.kP = kP;
-    pidConfigs.kI = kI;
-    pidConfigs.kD = kD;
-    pidConfigs.kV = kV;
-    pidConfigs.kS = kS;
-    slider.getConfigurator().apply(pidConfigs);
-  }
-
   @Override
   public void periodic() {
     cachedPosition = slider.getPosition().getValueAsDouble();
     atPosition = Math.abs(cachedPosition - requestedPosition) < 1.0;
+    if (Constants.debug) {
+      SmartDashboard.putNumber("SliderPos", cachedPosition);
+      SmartDashboard.putNumber("SliderMMCmd", requestedPosition);
+      SmartDashboard.putBoolean("SliderAtPos", atPosition);
 
-    if (updatePending) {
-      updatePID();
-      updatePending = false;
     }
+
   }
 
-  @Override
-  public void initSendable(SendableBuilder builder) {
-    builder.setSmartDashboardType("Slider");
-
-    builder.addDoubleProperty("Position", this::getPos, null);
-    builder.addDoubleProperty("Setpoint", () -> requestedPosition, this::setPos);
-    builder.addBooleanProperty("AtPosition", () -> atPosition, null);
-    builder.addBooleanProperty("Fast", () -> fast, null);
-    builder.addDoubleProperty("VelocityRPS", () -> slider.getVelocity().getValueAsDouble(), null);
-
-    // Motion Magic profile tuning
-    builder.addDoubleProperty("MMVel", () -> slowVel, (val) -> {
-      if (slowVel != val) {
-        slowVel = val;
-      }
-    });
-    builder.addDoubleProperty("MMAccel", () -> slowAcc, (val) -> {
-      if (slowAcc != val) {
-        slowAcc = val;
-      }
-    });
-    builder.addDoubleProperty("MMJerk", () -> slowJerk, (val) -> {
-      if (slowJerk != val) {
-        slowJerk = val;
-      }
-    });
-
-    // PID tuning
-    builder.addDoubleProperty("kP", () -> kP, (val) -> {
-      if (kP != val) {
-        kP = val;
-        updatePending = true;
-      }
-    });
-    builder.addDoubleProperty("kI", () -> kI, (val) -> {
-      if (kI != val) {
-        kI = val;
-        updatePending = true;
-      }
-    });
-    builder.addDoubleProperty("kD", () -> kD, (val) -> {
-      if (kD != val) {
-        kD = val;
-        updatePending = true;
-      }
-    });
-    builder.addDoubleProperty("kF", () -> kV, (val) -> {
-      if (kV != val) {
-        kV = val;
-        updatePending = true;
-      }
-    });
-
-    // Field offsets
-    builder.addDoubleProperty("LeftOffset", () -> Constants.leftOffset, (val) -> {
-      if (Constants.leftOffset != val) Constants.leftOffset = val;
-    });
-    builder.addDoubleProperty("RightOffset", () -> Constants.rightOffset, (val) -> {
-      if (Constants.rightOffset != val) Constants.rightOffset = val;
-    });
-    builder.addDoubleProperty("ForwardOffset", () -> Constants.forwardOffset, (val) -> {
-      if (Constants.forwardOffset != val) Constants.forwardOffset = val;
-    });
-
-    // Trigger PID apply manually
-    builder.addBooleanProperty("ApplyPID", () -> false, (val) -> {
-      if (val) updatePending = true;
-    });
-  }
 }

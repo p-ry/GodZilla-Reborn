@@ -89,7 +89,7 @@ public class MoveArmFix extends Command {
     this.ace = ace;
     this.levelEnum = levelEnum;
     this.shiftDirection = shiftDirection;
-    //addRequirements(arm, ace);
+    // addRequirements(arm, ace);
   }
 
   @Override
@@ -105,14 +105,17 @@ public class MoveArmFix extends Command {
     offset = false;
 
     tagId = Utilitys.grabTagID();
-    SmartDashboard.putNumber("TagID", tagId);
+
     if (tagId > 0) {
       aprilTag = Utilitys.getAprilTagPose(tagId);
-      SmartDashboard.putNumberArray(
-          "AprilTag",
-          new double[] {
-              aprilTag.getX(), aprilTag.getY(), aprilTag.getRotation().getRadians()
-          });
+      if (Constants.debug) {
+        SmartDashboard.putNumber("TagID", tagId);
+        SmartDashboard.putNumberArray(
+            "AprilTag",
+            new double[] {
+                aprilTag.getX(), aprilTag.getY(), aprilTag.getRotation().getRadians()
+            });
+      }
     }
 
     applyDynamic = false;
@@ -150,7 +153,7 @@ public class MoveArmFix extends Command {
         } else {
           arm.upperArm.setPos(3.0, true);
           arm.wrist.setPos(0.1);
-         
+
         }
         arm.slider.setMM(5);
         arm.slider.setPos(0.50);
@@ -166,10 +169,10 @@ public class MoveArmFix extends Command {
           arm.lowerArm.setPos(18.00);
           arm.upperArm.setPos(1.5, true);
           arm.wrist.setPos(0.1);
-          
+
           arm.slider.setMM(5);
-          //arm.slider.setPos(0.5);
-          
+          // arm.slider.setPos(0.5);
+
         }
         break;
 
@@ -194,7 +197,7 @@ public class MoveArmFix extends Command {
           arm.slider.setPos(1.5);
           arm.wrist.setPos(6.0);
         } else {
-          arm.lowerArm.setPos(20,true);
+          arm.lowerArm.setPos(20, true);
           arm.upperArm.setPos(21, true);
           arm.slider.setPos(0.5);
           arm.wrist.setPos(6.5);
@@ -220,7 +223,7 @@ public class MoveArmFix extends Command {
         break;
 
       case LEVEL6:
-        arm.lowerArm.setPos(27.30,true);
+        arm.lowerArm.setPos(27.30, true);
         arm.upperArm.setPos(8.9, true);
         arm.slider.setPos(0.50);
         arm.wrist.setPos(0.7);
@@ -249,7 +252,7 @@ public class MoveArmFix extends Command {
 
       case LOWER_FROM_4:
         arm.lowerArm.setPos(18.00);
-        arm.upperArm.setPos(1.5, true);//false);
+        arm.upperArm.setPos(1.5, true);// false);
         arm.wrist.setPos(0.1);
         arm.slider.setPos(0.5, true);
         break;
@@ -303,7 +306,7 @@ public class MoveArmFix extends Command {
       reachedThisLevel = true; // avoid repeat spam
     }
 
-    //SmartDashboard.putString("MoveArmFix/Level", levelEnum.toString());
+    // SmartDashboard.putString("MoveArmFix/Level", levelEnum.toString());
   }
 
   @Override

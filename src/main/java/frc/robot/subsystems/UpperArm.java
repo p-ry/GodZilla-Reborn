@@ -9,9 +9,9 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 
 public class UpperArm extends DualArmSegmentBase {
   // Motion Magic Profiles
-  private static final double FAST_VEL = 400;//300
+  private static final double FAST_VEL = 400;// 300
   private static final double FAST_ACC = 300;
-  private static final double FAST_JERK = 500;//800
+  private static final double FAST_JERK = 500;// 800
 
   private static final double SLOW_VEL = 150;
   private static final double SLOW_ACC = 300;
@@ -30,15 +30,15 @@ public class UpperArm extends DualArmSegmentBase {
         /* slowAcc */ SLOW_ACC,
         /* slowJerk */ SLOW_JERK,
         /* invertLeft */ false,
-        /* invertRight */ true
-    );
+        /* invertRight */ true);
 
-    // Optional: set initial brake mode (already covered by base but kept for clarity)
-    setBrakeMode(NeutralModeValue.Brake);
-if (Constants.enableShuffleboard) {
-    ShuffleboardTab tab = Shuffleboard.getTab("Arms");
-    tab.add("Wrist", this);
-}
+    // Optional: set initial brake mode (already covered by base but kept for
+    // clarity)
+    // setBrakeMode(NeutralModeValue.Brake);
+    if (Constants.debug) {
+      ShuffleboardTab tab = Shuffleboard.getTab("Arms");
+      tab.add("Wrist", this);
+    }
 
   }
 }

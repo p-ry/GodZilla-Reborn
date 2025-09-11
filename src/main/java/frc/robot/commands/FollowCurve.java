@@ -199,7 +199,7 @@ public class FollowCurve extends Command {
         }
         startT = clamp(bestT, 0.0, 1.0);
 
-        if (debug) {
+        if (Constants.debug) {
             SmartDashboard.putNumber("FollowCurve/start_t", startT);
             SmartDashboard.putNumber("FollowCurve/start_shoulder_user", startShoulderUser);
             SmartDashboard.putNumber("FollowCurve/start_elbow_int", startElbowInternal);
@@ -328,8 +328,9 @@ public class FollowCurve extends Command {
         }
 
         cmdShoulderUser = lerpDegShortest(startShoulderUser, targetShoulderUser, blendAng);
-        SmartDashboard.putBoolean("FollowCurve/noDip_active", timer.get() < 0.30);
-
+       if(Constants.debug){
+         SmartDashboard.putBoolean("FollowCurve/noDip_active", timer.get() < 0.30);
+       }
         cmdElbowInt = lerpDegShortest(startElbowInternal, ik.elbowInteriorDeg, blendAng);
 
         // L3 moves LAST: hold until late in the path, then ramp to target
@@ -381,7 +382,7 @@ public class FollowCurve extends Command {
 
         // ---- Dashboard keys (clear & explicit) ----
 
-        if (debug) {
+        if (Constants.debug) {
             SmartDashboard.putNumber("FollowCurve/wrist_x_meas", fkWorldMeas[0]);
             SmartDashboard.putNumber("FollowCurve/wrist_y_meas", fkWorldMeas[1]);
             SmartDashboard.putNumber("FollowCurve/wrist_x_cmd", fkWorldCmd[0]);
