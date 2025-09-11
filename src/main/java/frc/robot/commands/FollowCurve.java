@@ -14,7 +14,6 @@ import java.util.function.DoubleSupplier;
 import frc.robot.subsystems.Ace;
 import frc.robot.subsystems.ArmAssembly;
 import frc.robot.Constants;
-import frc.robot.InitLogger;
 
 /**
  * Follow a cubic Bézier path in XY using POSITION-ONLY control.
@@ -329,7 +328,7 @@ public class FollowCurve extends Command {
         }
 
         cmdShoulderUser = lerpDegShortest(startShoulderUser, targetShoulderUser, blendAng);
-        //SmartDashboard.putBoolean("FollowCurve/noDip_active", timer.get() < 0.30);
+        SmartDashboard.putBoolean("FollowCurve/noDip_active", timer.get() < 0.30);
 
         cmdElbowInt = lerpDegShortest(startElbowInternal, ik.elbowInteriorDeg, blendAng);
 
@@ -412,8 +411,7 @@ public class FollowCurve extends Command {
 
     @Override
     public void end(boolean interrupted) {
-       // SmartDashboard.putString("FollowCurve/reach", interrupted ? "interrupted" : "complete");
-        InitLogger.logMessage("FollowCurve", interrupted ? "interrupted" : "complete");
+        SmartDashboard.putString("FollowCurve/reach", interrupted ? "interrupted" : "complete");
         ace.setPos(3.0);
         arm.wrist.setPos(9.4); // example wrist reset
         Constants.followCurve = false; // disable FollowCurve mode
