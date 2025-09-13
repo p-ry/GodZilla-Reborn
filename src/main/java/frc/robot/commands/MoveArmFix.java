@@ -185,8 +185,8 @@ public class MoveArmFix extends Command {
         } else {
           arm.lowerArm.setPos(1.0);
           arm.upperArm.setPos(6.0, true);
-          arm.slider.setPos(6.0);
-          arm.wrist.setPos(5.0);
+          arm.slider.setPos(10.0);
+          arm.wrist.setPos(3.0);
         }
         break;
 
@@ -200,7 +200,7 @@ public class MoveArmFix extends Command {
           arm.lowerArm.setPos(20, true);
           arm.upperArm.setPos(21, true);
           arm.slider.setPos(0.5);
-          arm.wrist.setPos(6.5);
+          arm.wrist.setPos(4.0);
         }
         break;
 
@@ -254,7 +254,7 @@ public class MoveArmFix extends Command {
         arm.lowerArm.setPos(18.00);
         arm.upperArm.setPos(1.5, true);// false);
         arm.wrist.setPos(0.1);
-        arm.slider.setPos(0.5, true);
+        arm.slider.setPos(0.5);
         break;
 
       case CHOMP:

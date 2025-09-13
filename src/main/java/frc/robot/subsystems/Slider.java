@@ -32,7 +32,8 @@ public class Slider extends SubsystemBase {
 
   private static DynamicMotionMagicVoltage dynamic;// = new DynamicMotionMagicVoltage(0, 300, 300, 800);
   private static PositionVoltage sController;// = new PositionVoltage(0);
-  private static PositionDutyCycle pControllerDuty;// = new PositionDutyCycle(0).withSlot(2);
+  private static PositionDutyCycle pControllerDuty;
+  private static PositionDutyCycle sliderPositionDutyCycle;// = new PositionDutyCycle(0).withSlot(2);
 
   private boolean fast = true;
   private double requestedPosition = 0.0;
@@ -54,6 +55,7 @@ public class Slider extends SubsystemBase {
     slider = new TalonFXS(35, "Canivore2");
     velocityRequest = new VelocityDutyCycle(0).withSlot(0);
     sController = new PositionVoltage(0);
+    sliderPositionDutyCycle = new PositionDutyCycle(0).withSlot(0);
     pControllerDuty = new PositionDutyCycle(0).withSlot(2);
     dynamic = new DynamicMotionMagicVoltage(0, 300, 300, 800);
 
@@ -110,6 +112,9 @@ public class Slider extends SubsystemBase {
   }
 
   public void setPos(double position, boolean fast) {
+
+    //slider.setControl(sliderPositionDutyCycle.withPosition(position));
+    
     // this.fast = fast;
     // this.requestedPosition = position;
     // slider.setControl(
@@ -118,7 +123,7 @@ public class Slider extends SubsystemBase {
     // .withAcceleration(fast ? fastAcc : slowAcc)
     // .withJerk(fast ? fastJerk : slowJerk)
     // .withPosition(position)
-    // );
+    //);
   }
 
   public double getPos() {
