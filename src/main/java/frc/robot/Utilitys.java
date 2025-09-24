@@ -83,7 +83,7 @@ public class Utilitys {
         public static DriveToOptions defaults() {
             return new DriveToOptions(
                     new PathConstraints(2.0, 2.0, 3.0, 3.0),
-                    HeadingStrategy.FACE_TAG,
+                    HeadingStrategy.MATCH_TAG_YAW,
                     new Rotation2d(),
                     0.05,
                     Rotation2d.fromDegrees(3),

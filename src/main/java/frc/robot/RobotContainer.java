@@ -185,7 +185,7 @@ public class RobotContainer {
       0.25, // re-eval target at 4 Hz
       0.10, // replan if target shifts >10 cm
       Rotation2d.fromDegrees(5.0), // or heading shifts >5°
-      true // allow nearest tag to reselect
+      false // allow nearest tag to reselect
   );
 
   /* Path follower */
