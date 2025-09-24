@@ -471,7 +471,7 @@ public class RobotContainer {
         .onFalse(new InstantCommand(() -> ace.setSpeed(0)));
 
     leftBumper.onTrue(new InstantCommand(() -> {
-      driveIt = makeDriveToNearestTag(APPROACH_X, -LATERAL_Y);
+      driveIt = makeDriveToNearestTag(APPROACH_X, +LATERAL_Y);
       if (driveIt != null) {
         driveIt.schedule();
       }
@@ -486,7 +486,7 @@ public class RobotContainer {
         }));
 
         rightBumper.onTrue(new InstantCommand(() -> {
-          driveIt = makeDriveToNearestTag(APPROACH_X, +LATERAL_Y);
+          driveIt = makeDriveToNearestTag(APPROACH_X, -LATERAL_Y);
           if (driveIt != null) {
             driveIt.schedule();
           }
