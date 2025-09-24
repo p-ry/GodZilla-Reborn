@@ -24,6 +24,7 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import frc.robot.LimelightHelpers.PoseEstimate;
 import frc.robot.LimelightHelpers.RawFiducial;
+import frc.robot.Utilitys.HeadingStrategy;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -34,6 +35,17 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
 import java.awt.geom.Point2D;
 
+import com.pathplanner.lib.util.PathPlannerLogging;
+
+import java.util.function.BooleanSupplier;
+
+import edu.wpi.first.wpilibj2.command.Commands;
+
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Supplier;
+
 /** Add your docs here. */
 public class Utilitys {
     public static LimelightHelpers.PoseEstimate mt2;
@@ -41,6 +53,199 @@ public class Utilitys {
     public LimelightHelpers.PoseEstimate rightPose;
     public LimelightHelpers.PoseEstimate[] cameraPoses = new LimelightHelpers.PoseEstimate[2];
     public SwerveDrivePoseEstimator m_poseEstimator;
+
+    /**
+     * Strategy for selecting the robot's final heading when targeting a tag offset.
+     */
+    public enum HeadingStrategy {
+        /** Keep the robot's current heading. */
+        KEEP_CURRENT,
+        /** Match the tag's yaw (face same direction as the tag). */
+        MATCH_TAG_YAW,
+        /** Face the tag (rotate to look at the tag). */
+        FACE_TAG,
+        /** Use a provided explicit heading. */
+        EXPLICIT
+    }
+
+    /** Simple container for drive-to-target settings. */
+    public record DriveToOptions(
+            PathConstraints constraints,
+            HeadingStrategy headingStrategy,
+            Rotation2d explicitHeading,
+            double positionToleranceMeters,
+            Rotation2d headingTolerance,
+            // NEW: periodic replanning controls
+            double replanPeriodSec,
+            double replanPosDeltaMeters,
+            Rotation2d replanHeadingDelta,
+            boolean reselectNearestTag) {
+        public static DriveToOptions defaults() {
+            return new DriveToOptions(
+                    new PathConstraints(2.0, 2.0, 3.0, 3.0),
+                    HeadingStrategy.MATCH_TAG_YAW,
+                    new Rotation2d(),
+                    0.05,
+                    Rotation2d.fromDegrees(3),
+                    // Replanning defaults
+                    0.3, // check ~3x/sec
+                    0.10, // replan if target shifts >10 cm
+                    Rotation2d.fromDegrees(5), // or heading target shifts >5°
+                    true // allow nearest-tag to change while driving
+            );
+        }
+    }
+
+
+
+    /**
+     * Build a command that pathfinds to an offset (dx, dy) from the <b>nearest</b>
+     * AprilTag.
+     *
+     * @param drivetrain  Your holonomic drivetrain (already configured for
+     *                    AutoBuilder elsewhere).
+     * @param robotPose   Supplier of the current estimated robot Pose2d
+     *                    (field-relative).
+     * @param fieldLayout Supplier for the AprilTagFieldLayout in use (so we can
+     *                    read tag poses).
+     * @param dxMeters    X offset in the tag's frame (meters). Positive is forward
+     *                    from tag.
+     * @param dyMeters    Y offset in the tag's frame (meters). Positive is left
+     *                    from tag.
+     * @param options     Tuning/options (constraints, heading strategy,
+     *                    tolerances). Use {@link DriveToOptions#defaults()} if
+     *                    unsure.
+     */
+    public static Command driveToDxDyFromNearestTag(
+            CommandSwerveDrivetrain drivetrain,
+            Supplier<Pose2d> robotPose,
+            Supplier<AprilTagFieldLayout> fieldLayout,
+            double dxMeters,
+            double dyMeters,
+            DriveToOptions options) {
+
+        final DriveToOptions opts = (options == null) ? DriveToOptions.defaults() : options;
+
+        // Supplier computes a target pose from the (possibly changing) robot pose &
+        // current nearest tag.
+        Supplier<Pose2d> computeTarget = () -> computeDxDyTarget(robotPose.get(), fieldLayout.get(), dxMeters, dyMeters,
+                opts);
+
+        // State for adaptive replanning
+        class State {
+            Pose2d lastTarget = null;
+            Command active = null;
+            double lastCheckTime = 0;
+        }
+        State state = new State();
+
+        BooleanSupplier atGoal = () -> {
+            Pose2d cur = robotPose.get();
+            Pose2d tgt = computeTarget.get();
+            boolean posOk = cur.getTranslation().getDistance(tgt.getTranslation()) <= opts.positionToleranceMeters();
+            boolean rotOk = Math.abs(cur.getRotation().minus(tgt.getRotation()).getDegrees()) <= opts.headingTolerance()
+                    .getDegrees();
+            return posOk && rotOk;
+        };
+
+        Command initAndPlan = Commands.runOnce(() -> {
+            Pose2d tgt = computeTarget.get();
+            // PathPlannerLogging.logActivePathPlannerTargetPose(tgt);
+            state.lastTarget = tgt;
+            state.active = AutoBuilder.pathfindToPose(tgt, opts.constraints());
+            state.active.schedule();
+        }, drivetrain);
+
+        Command periodicReplan = Commands.run(() -> {
+            double now = edu.wpi.first.wpilibj.Timer.getFPGATimestamp();
+            if (now - state.lastCheckTime < opts.replanPeriodSec())
+                return;
+            state.lastCheckTime = now;
+
+            Pose2d newTarget = computeTarget.get();
+            if (state.lastTarget == null) {
+                state.lastTarget = newTarget;
+                return;
+            }
+
+            double dPos = state.lastTarget.getTranslation().getDistance(newTarget.getTranslation());
+            double dDeg = Math.abs(state.lastTarget.getRotation().minus(newTarget.getRotation()).getDegrees());
+            boolean needsReplan = (dPos > opts.replanPosDeltaMeters())
+                    || (dDeg > opts.replanHeadingDelta().getDegrees());
+
+            if (needsReplan) {
+                if (state.active != null)
+                    state.active.cancel();
+                state.active = AutoBuilder.pathfindToPose(newTarget, opts.constraints());
+                state.active.schedule();
+                state.lastTarget = newTarget;
+                // PathPlannerLogging.logActivePathPlannerTargetPose(newTarget);
+            }
+        }, drivetrain);
+
+        Command finishWhenAtGoal = Commands.waitUntil(atGoal);
+
+        Command cleanup = Commands.runOnce(() -> {
+            if (state.active != null)
+                state.active.cancel();
+        }, drivetrain);
+
+        return initAndPlan.andThen(periodicReplan.until(atGoal)).andThen(cleanup);
+    }
+
+    /** Find the field pose of the nearest tag to the given robot pose. */
+    public static Optional<Pose3d> getNearestTagPose(Pose2d robot, AprilTagFieldLayout layout) {
+        if (layout == null || layout.getTags().isEmpty())
+            return Optional.empty();
+        return layout.getTags().stream()
+                .map(t -> layout.getTagPose(t.ID).orElse(null))
+                .filter(p -> p != null)
+                .min(Comparator
+                        .comparingDouble(p -> p.toPose2d().getTranslation().getDistance(robot.getTranslation())));
+    }
+
+    /**
+     * Convenience overload with default options.
+     */
+    public static Command driveToDxDyFromNearestTag(
+            CommandSwerveDrivetrain drivetrain,
+            Supplier<Pose2d> robotPose,
+            Supplier<AprilTagFieldLayout> fieldLayout,
+            double dxMeters,
+            double dyMeters) {
+        return driveToDxDyFromNearestTag(
+                drivetrain, robotPose, fieldLayout, dxMeters, dyMeters, DriveToOptions.defaults());
+    }
+
+    /**
+     * Compute the dx/dy-from-nearest-tag target using provided options (heading
+     * strategy).
+     */
+    private static Pose2d computeDxDyTarget(
+            Pose2d current,
+            AprilTagFieldLayout layout,
+            double dxMeters,
+            double dyMeters,
+            DriveToOptions opts) {
+        Optional<Pose3d> nearestTag = getNearestTagPose(current, layout);
+        Pose2d tagPose = nearestTag.map(Pose3d::toPose2d).orElse(current);
+
+        Translation2d offsetTagFrame = new Translation2d(dxMeters, dyMeters);
+        Translation2d offsetFieldFrame = offsetTagFrame.rotateBy(tagPose.getRotation());
+        Translation2d fieldTranslation = tagPose.getTranslation().plus(offsetFieldFrame);
+
+        Rotation2d goalHeading = switch (opts.headingStrategy()) {
+            case KEEP_CURRENT -> current.getRotation();
+            case MATCH_TAG_YAW -> tagPose.getRotation();
+            case FACE_TAG -> new Rotation2d(
+                    Math.atan2(
+                            tagPose.getY() - current.getY(),
+                            tagPose.getX() - current.getX()));
+            case EXPLICIT -> opts.explicitHeading();
+        };
+
+        return new Pose2d(fieldTranslation, goalHeading);
+    }
 
     public static Pose2d shiftPoseLeft(Pose2d originalPose, double forwardInches, double rightInches) {
         // Get current pose components
@@ -107,15 +312,17 @@ public class Utilitys {
         LimelightHelpers.LimelightResults resultsLeft = LimelightHelpers.getLatestResults("limelight-left");
 
         LimelightHelpers.LimelightResults resultsRight = LimelightHelpers.getLatestResults("limelight-right");
-       // LimelightHelpers.LimelightResults results = LimelightHelpers.getLatestResults("limelight-left");
+        // LimelightHelpers.LimelightResults results =
+        // LimelightHelpers.getLatestResults("limelight-left");
         Pose3d targetPose3D;
-        Pose2d robotPose =  drivetrain.getPose();
+        Pose2d robotPose = drivetrain.getPose();
         where = robotPose;
         double leftAmbiguity = 0;
         double rightAmbiguity = 0;
         double yawToTagRad, desiredRotationDeg;
         Rotation2d desiredHeading;
-        //double[] targetPose = LimelightHelpers.getTargetPose_RobotSpace("limelight-left");
+        // double[] targetPose =
+        // LimelightHelpers.getTargetPose_RobotSpace("limelight-left");
         Rotation2d tagFieldYaw, robotRelYaw;
         Transform2d robotToTag;
         Pose2d tagRel2d;
@@ -124,55 +331,53 @@ public class Utilitys {
         RawFiducial[] fiducialsRight;
         boolean algae;
 
-        if (Constants.cameraPoses[0]!= null && Constants.cameraPoses[0].rawFiducials.length > 0 ) {
-            //fiducialsLeft = LimelightHelpers.getRawFiducials("limelight-left");
-            //leftAmbiguity = fiducialsLeft[0].ambiguity;
+        if (Constants.cameraPoses[0] != null && Constants.cameraPoses[0].rawFiducials.length > 0) {
+            // fiducialsLeft = LimelightHelpers.getRawFiducials("limelight-left");
+            // leftAmbiguity = fiducialsLeft[0].ambiguity;
             leftAmbiguity = Constants.cameraPoses[0].rawFiducials[0].ambiguity;
             leftDist = Constants.cameraPoses[0].rawFiducials[0].distToRobot;
-            //leftDist = resultsLeft.botpose_avgdist;
+            // leftDist = resultsLeft.botpose_avgdist;
             validTarget = true;
             // leftAmbiguity = resultsLeft.targets_Fiducials[0].
             // getAmbiguity().getValueAsDouble; // Ensure getAmbiguity() is a valid method
-            tagIds[0] =Constants.cameraPoses[0].rawFiducials[0].id; //         (int) resultsLeft.targets_Fiducials[0].fiducialID;
+            tagIds[0] = Constants.cameraPoses[0].rawFiducials[0].id; // (int)
+                                                                     // resultsLeft.targets_Fiducials[0].fiducialID;
         } else {
             leftDist = 999999;
         }
-        if (Constants.cameraPoses[1]!= null &&Constants.cameraPoses[1].rawFiducials.length > 0 ) {
-            //fiducialsLeft = LimelightHelpers.getRawFiducials("limelight-left");
-            //leftAmbiguity = fiducialsLeft[0].ambiguity;
+        if (Constants.cameraPoses[1] != null && Constants.cameraPoses[1].rawFiducials.length > 0) {
+            // fiducialsLeft = LimelightHelpers.getRawFiducials("limelight-left");
+            // leftAmbiguity = fiducialsLeft[0].ambiguity;
             rightAmbiguity = Constants.cameraPoses[1].rawFiducials[0].ambiguity;
             rightDist = Constants.cameraPoses[1].rawFiducials[0].distToRobot;
-            //leftDist = resultsLeft.botpose_avgdist;
+            // leftDist = resultsLeft.botpose_avgdist;
             validTarget = true;
             // leftAmbiguity = resultsLeft.targets_Fiducials[0].
             // getAmbiguity().getValueAsDouble; // Ensure getAmbiguity() is a valid method
-            tagIds[1] =Constants.cameraPoses[1].rawFiducials[0].id; //         (int) resultsLeft.targets_Fiducials[0].fiducialID;
+            tagIds[1] = Constants.cameraPoses[1].rawFiducials[0].id; // (int)
+                                                                     // resultsLeft.targets_Fiducials[0].fiducialID;
         } else {
             rightDist = 999999;
         }
 
-        
-
         // if (resultsRight.valid) {
-        //     fiducialsRight = LimelightHelpers.getRawFiducials("limelight-right");
-        //     rightAmbiguity = fiducialsRight[0].ambiguity;
-        //     rightDist = resultsRight.botpose_avgdist;
+        // fiducialsRight = LimelightHelpers.getRawFiducials("limelight-right");
+        // rightAmbiguity = fiducialsRight[0].ambiguity;
+        // rightDist = resultsRight.botpose_avgdist;
 
-        //     tagIds[1] = (int) resultsRight.targets_Fiducials[0].fiducialID;
-        //     validTarget = true;
+        // tagIds[1] = (int) resultsRight.targets_Fiducials[0].fiducialID;
+        // validTarget = true;
         // } else {
-        //     rightDist = 999999;
+        // rightDist = 999999;
         // }
 
         // SmartDashboard.putNumber("Left C Distance",leftDist);
         // SmartDashboard.putNumber("Right C Distance",rightDist);
         Pose3d tagPose3d = LimelightHelpers.getTargetPose3d_RobotSpace("limelight-left");
-//******* may need to tchange to constants */
-
+        // ******* may need to tchange to constants */
 
         // Pose3d robotPoseTargetSpacePose3d =
         // LimelightHelpers.getBotPose3d_TargetSpace("limelight-left");
-        
 
         if (validTarget) {
             if (leftDist < rightDist) {
@@ -180,7 +385,7 @@ public class Utilitys {
                 // targetPose3D = LimelightHelpers.getTargetPose3d_RobotSpace("limelight-left");
             } else {
                 tagId = tagIds[1];
-               // results = resultsRight;
+                // results = resultsRight;
                 tagPose3d = LimelightHelpers.getTargetPose3d_RobotSpace("limelight-right");
 
                 // tagPose3d = LimelightHelpers.getBotPose3d_TargetSpace("limelight-right");
@@ -189,9 +394,8 @@ public class Utilitys {
 
             Rotation2d yawOffset = new Rotation2d(tagPose3d.getRotation().getY());
             // Rotation2d yawOffset = new Rotation2d(targetPose3D.getRotation().getY());
-          
+
             if (right) {
-             
 
                 // tagRel2d = new Pose2d(tagPose3d.getZ()-0.8, -tagPose3d.getX()
                 // -Units.inchesToMeters(6.0),
@@ -218,7 +422,7 @@ public class Utilitys {
                 // tagRel2d.getRotation().unaryMinus());
 
             }
-            algae =Constants.algaeMode.get();
+            algae = Constants.algaeMode.get();
             if (algae) {
                 where = Utilitys.shiftPoseRight(Utilitys.getAprilTagPose(tagId),
                         Constants.forwardOffset, 0.0);// 12//6.5); // 0.164285833);
@@ -264,7 +468,7 @@ public class Utilitys {
         }
     }
 
-    public static double distanceToTag(CommandSwerveDrivetrain drivetrain,int tagID) {
+    public static double distanceToTag(CommandSwerveDrivetrain drivetrain, int tagID) {
         Optional<Pose2d> tagPose = Constants.fieldLayout.getTagPose(tagID).map(pose3d -> pose3d.toPose2d());
         Pose2d botPose = drivetrain.botPose2d;
         Translation2d targetTranslation = tagPose.get().getTranslation();
@@ -354,11 +558,11 @@ public class Utilitys {
         if (validTarget) {
             if (leftDist < rightDist) {
                 tagId = tagIds[0];
-               // SmartDashboard.putString("Camera", "left");
+                // SmartDashboard.putString("Camera", "left");
 
             } else {
                 tagId = tagIds[1];
-               // SmartDashboard.putString("Camera", "right");
+                // SmartDashboard.putString("Camera", "right");
             }
         }
         return tagId;
@@ -369,31 +573,29 @@ public class Utilitys {
         return new Pose2d(pose3d.getX(), pose3d.getY(), pose3d.getRotation().toRotation2d());
     }
 
-
     public class BezierCurve {
 
-    public static List<Point2D.Double> generateCurve(Point2D p0, Point2D p1, Point2D p2, int numPoints) {
+        public static List<Point2D.Double> generateCurve(Point2D p0, Point2D p1, Point2D p2, int numPoints) {
 
-        List<Point2D.Double> curve = new ArrayList<>();
+            List<Point2D.Double> curve = new ArrayList<>();
 
-        for (int i = 0; i <= numPoints; i++) {
+            for (int i = 0; i <= numPoints; i++) {
 
-            double t = i / (double) numPoints;
+                double t = i / (double) numPoints;
 
-            double x = Math.pow(1 - t, 2) * p0.getX() + 2 * (1 - t) * t * p1.getX() + Math.pow(t, 2) * p2.getX();
+                double x = Math.pow(1 - t, 2) * p0.getX() + 2 * (1 - t) * t * p1.getX() + Math.pow(t, 2) * p2.getX();
 
-            double y = Math.pow(1 - t, 2) * p0.getY() + 2 * (1 - t) * t * p1.getY() + Math.pow(t, 2) * p2.getY();
+                double y = Math.pow(1 - t, 2) * p0.getY() + 2 * (1 - t) * t * p1.getY() + Math.pow(t, 2) * p2.getY();
 
-            curve.add(new Point2D.Double(x, y));
+                curve.add(new Point2D.Double(x, y));
+
+            }
+
+            return curve;
 
         }
 
-        return curve;
-
     }
-    
-
-}
     // public void updateOdometry() {
     // boolean doRejectUpdate = false;
     // Pigeon2 gyro = RobotContainer.drivetrain.gyro;

@@ -62,6 +62,16 @@ import com.pathplanner.lib.pathfinding.Pathfinding;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.awt.geom.Point2D;
 import frc.robot.commands.FollowCurve;
+import frc.robot.Utilitys.DriveToOptions;
+import frc.robot.Utilitys.HeadingStrategy;
+
+import com.pathplanner.lib.path.PathConstraints;
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.math.geometry.Pose2d;
+//import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj2.command.Command;
+
+import java.util.function.Supplier;
 
 public class RobotContainer {
 
@@ -155,6 +165,29 @@ public class RobotContainer {
   // public static Point2D.Double endPoint = new
   // Point2D.Double(0.00,2020.0);//80.0,2040.0-20.1,1160.95);//0.0041,1.85795);
 
+  private final Supplier<AprilTagFieldLayout> fieldLayoutSupplier = () -> Constants.fieldLayout;
+
+  // === Robot pose supplier ===
+  private final Supplier<Pose2d> robotPoseSupplier = drivetrain::getPose; // adapt if your API differs
+
+  // === Offsets (meters) ===
+  // Positive X is forward from tag; Positive Y is left from tag.
+  private static final double APPROACH_X = 0.80; // stand 0.80m in front of tag
+  private static final double LATERAL_Y = 0.40; // 0.40m left/right of tag centerline
+
+  // Optional: override heading behavior & tolerances
+  private static final DriveToOptions DRIVE_OPTS = new DriveToOptions(
+      new PathConstraints(2.0, 2.0, 3.0, 3.0),
+      HeadingStrategy.MATCH_TAG_YAW, // face same yaw as tag
+      new Rotation2d(), // not used unless EXPLICIT
+      0.05, // 5 cm position window
+      Rotation2d.fromDegrees(3.0), // 3 deg heading window
+      0.25, // re-eval target at 4 Hz
+      0.10, // replan if target shifts >10 cm
+      Rotation2d.fromDegrees(5.0), // or heading shifts >5°
+      true // allow nearest tag to reselect
+  );
+
   /* Path follower */
   private final SendableChooser<Command> AutoChooser;
 
@@ -188,7 +221,6 @@ public class RobotContainer {
             -(controller.getLeftY())
                 * MaxSpeed * BlueAlliance) // Drive
 
-           
             .withVelocityY(-(controller.getLeftX()) * MaxSpeed * BlueAlliance) // Drive
 
             .withRotationalRate(-controller.getRightX() * MaxAngularRate) // Drive
@@ -230,7 +262,6 @@ public class RobotContainer {
             .alongWith(new InstantCommand(() -> ace.gotIt = false))
             .alongWith(new InstantCommand(() -> ace.coralPresent = false)));
 
-
     drivetrain.configureAutoBuilder();
     Pathfinding.setPathfinder(new LocalADStar());
     CommandScheduler.getInstance().schedule(
@@ -244,6 +275,16 @@ public class RobotContainer {
   public void scheduleWarmups() {
     scheduleFollowPathWarmup();
     schedulePathfindingWarmup();
+  }
+
+  private Command makeDriveToNearestTag(double dxMeters, double dyMeters) {
+    return Utilitys.driveToDxDyFromNearestTag(
+        drivetrain,
+        robotPoseSupplier,
+        fieldLayoutSupplier,
+        dxMeters,
+        dyMeters,
+        DRIVE_OPTS);
   }
 
   private void scheduleFollowPathWarmup() {
@@ -327,7 +368,6 @@ public class RobotContainer {
           // SmartDashboard.putNumber("endpoinY", Constants.endPoint.getY());
         }));
 
-
     Barge
         .onTrue(new InstantCommand(() -> {
           Constants.endX += 25.0;
@@ -337,14 +377,11 @@ public class RobotContainer {
           // SmartDashboard.putNumber("endpoinY", Constants.endPoint.getY());
         }));
 
-   
-
     Dump
         .whileTrue(new MoveArmFix(mArm, ace, 6, 0));
     Dump
         .onFalse(new MoveArmFix(mArm, ace, 0, 0));
 
-    
     lTrigger.whileTrue(
         new RunCommand(() -> {
           double axis = controller.getLeftTriggerAxis(); // 0 → 1
@@ -384,7 +421,6 @@ public class RobotContainer {
               .withRotationalRate(0.0)); // no spin
     }, drivetrain));
 
-
     Lv2L.onTrue(new InstantCommand(() -> {
       MaxSpeed = maxSpeedConstant;
       MaxAngularRate = maxAngularRateConstant / 2;
@@ -399,12 +435,11 @@ public class RobotContainer {
       MaxSpeed = maxSpeedConstant;
       MaxAngularRate = maxAngularRateConstant / 3;
       rightTree = false;
-  }).alongWith(new MoveArmFix(mArm, ace, 3, -1)));
-  Lv3L.onFalse(new InstantCommand(() -> {
+    }).alongWith(new MoveArmFix(mArm, ace, 3, -1)));
+    Lv3L.onFalse(new InstantCommand(() -> {
       MaxSpeed = maxSpeedConstant;
       MaxAngularRate = maxAngularRateConstant;
-  }).alongWith(new MoveArmFix(mArm, ace, 44, 0)));
-
+    }).alongWith(new MoveArmFix(mArm, ace, 44, 0)));
 
     // *********TRUE *************************************** */
     Lv4L.onTrue(new FollowCurve(mArm, ace, Constants.startPoint, Constants.controlPoint1, Constants.controlPoint2,
@@ -424,7 +459,6 @@ public class RobotContainer {
           // mArm.wrist.setPos(0.7);
         })));
 
-    
     Intake
         .whileTrue(new InstantCommand(() -> ace.setSpeed(1)));
     Intake
@@ -434,35 +468,13 @@ public class RobotContainer {
     Outtake
         .onFalse(new InstantCommand(() -> ace.setSpeed(0)));
 
-    rightBumper
+    leftBumper.onTrue(new InstantCommand(() -> {
+      driveIt = makeDriveToNearestTag(APPROACH_X, +LATERAL_Y);
+      if (driveIt != null) {
+        driveIt.schedule();
+      }
+    }));
 
-        .onTrue(new InstantCommand(() -> {
-
-          driveIt = Utilitys.driveToIt(drivetrain, true);// rightTree
-
-          if (driveIt != null) {
-            driveIt.schedule();
-
-          }
-
-        }));
-    rightBumper
-        .onFalse(new InstantCommand(() -> {
-
-          if (driveIt != null) {
-            driveIt.cancel();
-          }
-        }));
-
-    leftBumper.onTrue(
-
-        new InstantCommand(() -> {
-
-          driveIt = Utilitys.driveToIt(drivetrain, false);
-          if (driveIt != null) {
-            driveIt.schedule();
-          }
-        }));
     leftBumper
         .onFalse(new InstantCommand(() -> {
 
@@ -470,6 +482,59 @@ public class RobotContainer {
             driveIt.cancel();
           }
         }));
+
+        rightBumper.onTrue(new InstantCommand(() -> {
+          driveIt = makeDriveToNearestTag(APPROACH_X, -LATERAL_Y);
+          if (driveIt != null) {
+            driveIt.schedule();
+          }
+        }));
+    
+        rightBumper
+            .onFalse(new InstantCommand(() -> {
+    
+              if (driveIt != null) {
+                driveIt.cancel();
+              }
+            }));
+
+    
+    // rightBumper
+
+    // .onTrue(new InstantCommand(() -> {
+
+    // driveIt = Utilitys.driveToIt(drivetrain, true);// rightTree
+
+    // if (driveIt != null) {
+    // driveIt.schedule();
+
+    // }
+
+    // }));
+    // rightBumper
+    // .onFalse(new InstantCommand(() -> {
+
+    // if (driveIt != null) {
+    // driveIt.cancel();
+    // }
+    // }));
+
+    // leftBumper.onTrue(
+
+    // new InstantCommand(() -> {
+
+    // driveIt = Utilitys.driveToIt(drivetrain, false);
+    // if (driveIt != null) {
+    // driveIt.schedule();
+    // }
+    // }));
+    // leftBumper
+    // .onFalse(new InstantCommand(() -> {
+
+    // if (driveIt != null) {
+    // driveIt.cancel();
+    // }
+    // }));
 
     controller
         .start()
