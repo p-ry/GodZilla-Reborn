@@ -178,14 +178,14 @@ public class RobotContainer {
   // Optional: override heading behavior & tolerances
   private static final DriveToOptions DRIVE_OPTS = new DriveToOptions(
       new PathConstraints(2.0, 2.0, 3.0, 3.0),
-      HeadingStrategy.FACE_TAG, // face same yaw as tag
+      HeadingStrategy.MATCH_TAG_YAW, // face same yaw as tag
       new Rotation2d(), // not used unless EXPLICIT
       0.05, // 5 cm position window
       Rotation2d.fromDegrees(3.0), // 3 deg heading window
       0.25, // re-eval target at 4 Hz
       0.10, // replan if target shifts >10 cm
       Rotation2d.fromDegrees(5.0), // or heading shifts >5°
-      false // allow nearest tag to reselect
+      true // allow nearest tag to reselect
   );
 
   /* Path follower */
@@ -471,7 +471,7 @@ public class RobotContainer {
         .onFalse(new InstantCommand(() -> ace.setSpeed(0)));
 
     leftBumper.onTrue(new InstantCommand(() -> {
-      driveIt = makeDriveToNearestTag(APPROACH_X, -LATERAL_Y);
+      driveIt = makeDriveToNearestTag(APPROACH_X, +LATERAL_Y);
       if (driveIt != null) {
         driveIt.schedule();
       }
@@ -486,7 +486,7 @@ public class RobotContainer {
         }));
 
         rightBumper.onTrue(new InstantCommand(() -> {
-          driveIt = makeDriveToNearestTag(APPROACH_X, +LATERAL_Y);
+          driveIt = makeDriveToNearestTag(APPROACH_X, -LATERAL_Y);
           if (driveIt != null) {
             driveIt.schedule();
           }
