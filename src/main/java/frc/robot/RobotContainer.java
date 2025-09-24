@@ -168,7 +168,7 @@ public class RobotContainer {
   private final Supplier<AprilTagFieldLayout> fieldLayoutSupplier = () -> Constants.fieldLayout;
 
   // === Robot pose supplier ===
-  private final Supplier<Pose2d> robotPoseSupplier = drivetrain::getPose; // adapt if your API differs
+  private Supplier<Pose2d> robotPoseSupplier;// = drivetrain::getPose; // adapt if your API differs
 
   // === Offsets (meters) ===
   // Positive X is forward from tag; Positive Y is left from tag.
@@ -212,6 +212,8 @@ public class RobotContainer {
     System.out.println("Left X: " + controller.getLeftX());
     System.out.println("Right X: " + controller.getRightX());
     System.out.println("Right Y: " + controller.getRightY());
+    robotPoseSupplier = drivetrain::getPose; // adapt if your API differs
+
 
     // Note that X is defined as forward according to WPILib convention,
     // and Y is defined as to the left according to WPILib convention.
