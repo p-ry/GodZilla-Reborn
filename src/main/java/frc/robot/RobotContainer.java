@@ -172,7 +172,7 @@ public class RobotContainer {
 
   // === Offsets (meters) ===
   // Positive X is forward from tag; Positive Y is left from tag.
-  private static final double APPROACH_X = 0.80; // stand 0.80m in front of tag
+  private static final double APPROACH_X = 0.20; // stand 0.80m in front of tag
   private static final double LATERAL_Y = 0.40; // 0.40m left/right of tag centerline
 
   // Optional: override heading behavior & tolerances

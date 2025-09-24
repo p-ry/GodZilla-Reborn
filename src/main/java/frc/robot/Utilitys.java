@@ -83,7 +83,7 @@ public class Utilitys {
         public static DriveToOptions defaults() {
             return new DriveToOptions(
                     new PathConstraints(2.0, 2.0, 3.0, 3.0),
-                    HeadingStrategy.MATCH_TAG_YAW,
+                    HeadingStrategy.FACE_TAG,
                     new Rotation2d(),
                     0.05,
                     Rotation2d.fromDegrees(3),
@@ -91,7 +91,7 @@ public class Utilitys {
                     0.3, // check ~3x/sec
                     0.10, // replan if target shifts >10 cm
                     Rotation2d.fromDegrees(5), // or heading target shifts >5°
-                    true // allow nearest-tag to change while driving
+                    false // allow nearest-tag to change while driving
             );
         }
     }
