@@ -178,7 +178,7 @@ public class RobotContainer {
   // Optional: override heading behavior & tolerances
   private static final DriveToOptions DRIVE_OPTS = new DriveToOptions(
       new PathConstraints(2.0, 2.0, 3.0, 3.0),
-      HeadingStrategy.MATCH_TAG_YAW, // face same yaw as tag
+      HeadingStrategy.FACE_TAG, // face same yaw as tag
       new Rotation2d(), // not used unless EXPLICIT
       0.05, // 5 cm position window
       Rotation2d.fromDegrees(3.0), // 3 deg heading window
