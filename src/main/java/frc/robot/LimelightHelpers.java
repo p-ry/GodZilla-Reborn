@@ -1719,31 +1719,49 @@ public class LimelightHelpers {
      */
     public static List<Utilitys.TagMeasurement> collectVisibleTagMeasurementsByAPI(String... limelightNames) {
         List<Utilitys.TagMeasurement> out = new ArrayList<>();
-        if (limelightNames == null)
-            return out;
-
+        if (limelightNames == null) return out;
+    
         for (String name : limelightNames) {
             try {
-                // Check if this camera currently has a valid target
+                // --- Basic "has target" flag ---
                 boolean hasTarget = LimelightHelpers.getTV(name);
-                if (!hasTarget)
+                InitLogger.logBoolean("LL/" + name, "hasTarget", hasTarget);
+                if (!hasTarget) {
+                    InitLogger.logMessage("LL/" + name, InitLogger.Level.WARN, "No target detected");
                     continue;
-
-                // Robot-space target pose (meters, degrees) for the PRIMARY target
+                }
+    
+                // --- Primary target pose in ROBOT space ---
                 Pose3d tgtRobotSpace = LimelightHelpers.getTargetPose3d_RobotSpace(name);
-                if (tgtRobotSpace == null)
+                if (tgtRobotSpace == null) {
+                    InitLogger.logMessage("LL/" + name, InitLogger.Level.WARN, "TargetPose3d_RobotSpace null");
                     continue;
-
+                }
+    
                 double dxRobot = tgtRobotSpace.getX(); // +X forward (m)
                 double dyRobot = tgtRobotSpace.getY(); // +Y left (m)
-
-                // We don't get a per-fiducial ID via this API; use -1 as "unknown"
+                double range = Math.hypot(dxRobot, dyRobot);
+    
+                // --- Log what we got from this camera ---
+                InitLogger.logDouble("LL/" + name, "target/dxRobot", dxRobot);
+                InitLogger.logDouble("LL/" + name, "target/dyRobot", dyRobot);
+                InitLogger.logDouble("LL/" + name, "target/range", range);
+                InitLogger.logDouble("LL/" + name, "target/z", tgtRobotSpace.getZ());
+                InitLogger.logDouble("LL/" + name, "target/yawDeg", tgtRobotSpace.getRotation().getZ());
+    
+                // We don’t get per-fiducial IDs via this API, so mark -1
                 out.add(new Utilitys.TagMeasurement(-1, dxRobot, dyRobot));
-
+    
             } catch (Throwable t) {
-                // Swallow per-camera errors but continue; you may want to log this.
+                InitLogger.logMessage("LL/" + name, InitLogger.Level.ERROR,
+                    "Exception in collectVisibleTagMeasurementsByAPI: " + t.getMessage());
             }
         }
+    
+        // --- Summary log ---
+        InitLogger.logDouble("LL", "totalVisibleMeasurements", out.size());
+    
         return out;
     }
+    
 }

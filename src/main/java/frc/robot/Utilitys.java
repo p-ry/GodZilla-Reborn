@@ -37,8 +37,11 @@ import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
-import java.awt.geom.Point2D;
+import frc.robot.InitLogger.Level;
 
+import java.awt.geom.Point2D;
+import static frc.robot.InitLogger.Level;
+import static java.lang.Math.*;
 import com.pathplanner.lib.util.PathPlannerLogging;
 
 import java.util.function.BooleanSupplier;
@@ -70,6 +73,8 @@ public class Utilitys {
     public LimelightHelpers.PoseEstimate[] cameraPoses = new LimelightHelpers.PoseEstimate[2];
     public SwerveDrivePoseEstimator m_poseEstimator;
 
+
+    private static final String LOG_NAME = "Drive/TagRaw"; // single log namespace
 
 
    
@@ -117,102 +122,183 @@ public class Utilitys {
 
   // NEW: raw-camera overload (does NOT use AprilTagFieldLayout at all)
   public static Command driveToDxDyFromNearestTagRaw(
-      CommandSwerveDrivetrain drivetrain,
-      Supplier<Pose2d> robotPose,
-      VisibleTagMeasurementSupplier visibleMeas,
-      double dxMeters,
-      double dyMeters,
-      DriveToOptions options) {
+    CommandSwerveDrivetrain drivetrain,
+    java.util.function.Supplier<edu.wpi.first.math.geometry.Pose2d> robotPose,
+    VisibleTagMeasurementSupplier visibleMeas,
+    double dxMeters,
+    double dyMeters,
+    DriveToOptions options) {
 
-    final DriveToOptions opts = (options == null) ? DriveToOptions.defaults() : options;
+  final DriveToOptions opts = (options == null) ? DriveToOptions.defaults() : options;
 
-    Supplier<Pose2d> computeTarget = () -> computeDxDyTargetFromRaw(
-        robotPose.get(), visibleMeas.get(), dxMeters, dyMeters, opts);
+  // Computes the latest target pose from raw camera data
+  java.util.function.Supplier<edu.wpi.first.math.geometry.Pose2d> computeTarget =
+      () -> computeDxDyTargetFromRaw(
+          robotPose.get(), visibleMeas.get(), dxMeters, dyMeters, opts);
 
-    // --- below matches your existing adaptive-replan structure (minimal changes) ---
-    class State { Pose2d lastTarget = null; Command active = null; double lastCheckTime = 0; }
-    State state = new State();
+  // Local state
+  class State { edu.wpi.first.math.geometry.Pose2d lastTarget = null; Command active = null; double lastCheckTime = 0; }
+  State state = new State();
 
-    BooleanSupplier atGoal = () -> {
-      Pose2d cur = robotPose.get();
-      Pose2d tgt = computeTarget.get();
-      boolean posOk = cur.getTranslation().getDistance(tgt.getTranslation()) <= opts.positionToleranceMeters();
-      boolean rotOk = Math.abs(cur.getRotation().minus(tgt.getRotation()).getDegrees()) <= opts.headingTolerance().getDegrees();
-      return posOk && rotOk;
-    };
+  // === FINISH CONDITION (this runs every loop; we can log errors here) ===
+  java.util.function.BooleanSupplier atGoal = () -> {
+    var cur = robotPose.get();
+    var tgt = computeTarget.get();
 
-    Command initAndPlan = Commands.runOnce(() -> {
-      Pose2d tgt = computeTarget.get();
-      state.lastTarget = tgt;
-      state.active = AutoBuilder.pathfindToPose(tgt, opts.constraints());
+    double posErr = cur.getTranslation().getDistance(tgt.getTranslation());
+    double degErr = Math.abs(cur.getRotation().minus(tgt.getRotation()).getDegrees());
+
+    // LOG: finish condition errors
+    InitLogger.logDouble(LOG_NAME, "error/pos", posErr);
+    InitLogger.logDouble(LOG_NAME, "error/deg", degErr);
+
+    boolean done = (posErr <= opts.positionToleranceMeters())
+                && (degErr <= opts.headingTolerance().getDegrees());
+
+    InitLogger.logBoolean(LOG_NAME, "atGoal", done);
+    return done;
+  };
+
+  // === INIT (happens once when the command starts) ===
+  Command initAndPlan = edu.wpi.first.wpilibj2.command.Commands.runOnce(() -> {
+    var tgt = computeTarget.get();
+
+    // LOG: initial plan target
+    InitLogger.logMessage(LOG_NAME, Level.INFO, "Initial pathfind to computed target");
+    InitLogger.logDouble(LOG_NAME, "init/target/x", tgt.getX());
+    InitLogger.logDouble(LOG_NAME, "init/target/y", tgt.getY());
+    InitLogger.logDouble(LOG_NAME, "init/target/headingDeg", tgt.getRotation().getDegrees());
+
+    state.lastTarget = tgt;
+    state.active = AutoBuilder.pathfindToPose(tgt, opts.constraints());
+    state.active.schedule();
+  }, drivetrain);
+
+  // === PERIODIC REPLAN (runs while command is active) ===
+  Command periodicReplan = edu.wpi.first.wpilibj2.command.Commands.run(() -> {
+    double now = edu.wpi.first.wpilibj.Timer.getFPGATimestamp();
+    if (now - state.lastCheckTime < opts.replanPeriodSec()) return;
+    state.lastCheckTime = now;
+
+    var newTarget = computeTarget.get();
+    if (state.lastTarget == null) { state.lastTarget = newTarget; return; }
+
+    double dPos = state.lastTarget.getTranslation().getDistance(newTarget.getTranslation());
+    double dDeg = Math.abs(state.lastTarget.getRotation().minus(newTarget.getRotation()).getDegrees());
+
+    // LOG: replan deltas
+    InitLogger.logDouble(LOG_NAME, "delta/pos", dPos);
+    InitLogger.logDouble(LOG_NAME, "delta/deg", dDeg);
+
+    boolean needsReplan = (dPos > opts.replanPosDeltaMeters())
+                       || (dDeg > opts.replanHeadingDelta().getDegrees());
+
+    InitLogger.logBoolean(LOG_NAME, "replan/needed", needsReplan);
+
+    if (needsReplan) {
+      InitLogger.logMessage(LOG_NAME, Level.INFO,
+          "Replan: dPos=" + dPos + " dDeg=" + dDeg);
+
+      if (state.active != null) state.active.cancel();
+      state.active = AutoBuilder.pathfindToPose(newTarget, opts.constraints());
       state.active.schedule();
-    }, drivetrain);
+      state.lastTarget = newTarget;
 
-    Command periodicReplan = Commands.run(() -> {
-      double now = edu.wpi.first.wpilibj.Timer.getFPGATimestamp();
-      if (now - state.lastCheckTime < opts.replanPeriodSec()) return;
-      state.lastCheckTime = now;
+      // LOG: replan target
+      InitLogger.logDouble(LOG_NAME, "replan/target/x", newTarget.getX());
+      InitLogger.logDouble(LOG_NAME, "replan/target/y", newTarget.getY());
+      InitLogger.logDouble(LOG_NAME, "replan/target/headingDeg", newTarget.getRotation().getDegrees());
+    }
+  }, drivetrain);
 
-      Pose2d newTarget = computeTarget.get();
-      if (state.lastTarget == null) { state.lastTarget = newTarget; return; }
+  Command finishWhenAtGoal = edu.wpi.first.wpilibj2.command.Commands.waitUntil(atGoal);
 
-      double dPos = state.lastTarget.getTranslation().getDistance(newTarget.getTranslation());
-      double dDeg = Math.abs(state.lastTarget.getRotation().minus(newTarget.getRotation()).getDegrees());
-      boolean needsReplan = (dPos > opts.replanPosDeltaMeters()) ||
-                            (dDeg > opts.replanHeadingDelta().getDegrees());
+  // Optional: one log when we finish
+  Command onFinish = edu.wpi.first.wpilibj2.command.Commands.runOnce(() -> {
+    InitLogger.logMessage(LOG_NAME, Level.INFO, "At goal; stopping command");
+  });
 
-      if (needsReplan) {
-        if (state.active != null) state.active.cancel();
-        state.active = AutoBuilder.pathfindToPose(newTarget, opts.constraints());
-        state.active.schedule();
-        state.lastTarget = newTarget;
-      }
-    }, drivetrain);
+  Command cleanup = edu.wpi.first.wpilibj2.command.Commands.runOnce(() -> {
+    if (state.active != null) state.active.cancel();
+  }, drivetrain);
 
-    Command finishWhenAtGoal = Commands.waitUntil(atGoal);
-    Command cleanup = Commands.runOnce(() -> { if (state.active != null) state.active.cancel(); }, drivetrain);
-
-    return initAndPlan.andThen(periodicReplan.until(atGoal)).andThen(cleanup);
-  }
+  return initAndPlan.andThen(periodicReplan.until(atGoal)).andThen(onFinish).andThen(cleanup);
+}
 
   // NEW: compute target from raw robot-frame measurements (no field layout)
   private static Pose2d computeDxDyTargetFromRaw(
-      Pose2d robotFieldPose,
-      List<TagMeasurement> meas,
-      double dxMeters,
-      double dyMeters,
-      DriveToOptions opts) {
+    Pose2d robotFieldPose,
+    List<TagMeasurement> meas,
+    double dxMeters,
+    double dyMeters,
+    DriveToOptions opts) {
 
-    if (meas == null || meas.isEmpty()) return robotFieldPose;
-
-    // nearest by raw camera range in ROBOT frame
-    TagMeasurement nearest = meas.stream()
-        .min(java.util.Comparator.comparingDouble(m -> m.dxRobot * m.dxRobot + m.dyRobot * m.dyRobot))
-        .orElse(meas.get(0));
-
-    // tag in ROBOT frame -> rotate into FIELD frame and add robot translation
-    Translation2d robotToTag_robot = new Translation2d(nearest.dxRobot, nearest.dyRobot);
-    Translation2d robotToTag_field = robotToTag_robot.rotateBy(robotFieldPose.getRotation());
-    Translation2d tagField = robotFieldPose.getTranslation().plus(robotToTag_field);
-
-    // APPROACH frame (+X tag->robot, +Y left) so left/right is correct in all quadrants
-    Translation2d tagToRobot_field = robotFieldPose.getTranslation().minus(tagField);
-    double approachTheta = Math.atan2(tagToRobot_field.getY(), tagToRobot_field.getX());
-    Rotation2d approachRot = new Rotation2d(approachTheta);
-
-    Translation2d offsetField = new Translation2d(dxMeters, dyMeters).rotateBy(approachRot);
-    Translation2d goalXY = tagField.plus(offsetField);
-
-    Rotation2d goalHeading = switch (opts.headingStrategy()) {
-      case KEEP_CURRENT -> robotFieldPose.getRotation();
-      case MATCH_TAG_YAW -> approachRot; // proxy when not using field layout
-      case FACE_TAG -> new Rotation2d(Math.atan2(tagField.getY() - goalXY.getY(),
-                                                tagField.getX() - goalXY.getX()));
-      case EXPLICIT -> opts.explicitHeading();
-    };
-
-    return new Pose2d(goalXY, goalHeading);
+  // --- INPUT LOGGING ---
+  InitLogger.logDouble(LOG_NAME, "visibleCount", (meas == null) ? 0 : meas.size());
+  if (meas == null || meas.isEmpty()) {
+    InitLogger.logMessage(LOG_NAME, Level.WARN, "No visible tags; returning robot pose");
+    return robotFieldPose;
   }
+  // Log each visible measurement (first few to avoid spam)
+  int idx = 0;
+  for (TagMeasurement m : meas) {
+    if (idx++ >= 4) break; // keep it light
+    double rng = hypot(m.dxRobot, m.dyRobot);
+    InitLogger.logDouble(LOG_NAME, "meas" + idx + "/dxRobot", m.dxRobot);
+    InitLogger.logDouble(LOG_NAME, "meas" + idx + "/dyRobot", m.dyRobot);
+    InitLogger.logDouble(LOG_NAME, "meas" + idx + "/range", rng);
+    InitLogger.logDouble(LOG_NAME, "meas" + idx + "/id", m.id);
+  }
+
+  // 1) Nearest visible tag in ROBOT frame
+  TagMeasurement nearest = meas.stream()
+      .min(java.util.Comparator.comparingDouble(m -> m.dxRobot * m.dxRobot + m.dyRobot * m.dyRobot))
+      .orElse(meas.get(0));
+  InitLogger.logDouble(LOG_NAME, "chosen/id", nearest.id);
+  InitLogger.logDouble(LOG_NAME, "chosen/dxRobot", nearest.dxRobot);
+  InitLogger.logDouble(LOG_NAME, "chosen/dyRobot", nearest.dyRobot);
+  InitLogger.logDouble(LOG_NAME, "chosen/range", hypot(nearest.dxRobot, nearest.dyRobot));
+
+  // Robot pose
+  InitLogger.logDouble(LOG_NAME, "robot/x", robotFieldPose.getX());
+  InitLogger.logDouble(LOG_NAME, "robot/y", robotFieldPose.getY());
+  InitLogger.logDouble(LOG_NAME, "robot/headingDeg", robotFieldPose.getRotation().getDegrees());
+
+  // 2) Convert tag ROBOT->FIELD
+  Translation2d robotToTag_robot = new Translation2d(nearest.dxRobot, nearest.dyRobot);
+  Translation2d robotToTag_field = robotToTag_robot.rotateBy(robotFieldPose.getRotation());
+  Translation2d tagFieldTranslation = robotFieldPose.getTranslation().plus(robotToTag_field);
+  InitLogger.logDouble(LOG_NAME, "tagField/x", tagFieldTranslation.getX());
+  InitLogger.logDouble(LOG_NAME, "tagField/y", tagFieldTranslation.getY());
+
+  // 3) APPROACH (+X tag->robot, +Y left)
+  Translation2d tagToRobot_field = robotFieldPose.getTranslation().minus(tagFieldTranslation);
+  double approachTheta = atan2(tagToRobot_field.getY(), tagToRobot_field.getX());
+  Rotation2d approachRot = new Rotation2d(approachTheta);
+  InitLogger.logDouble(LOG_NAME, "approach/deg", toDegrees(approachTheta));
+
+  Translation2d offsetApproach = new Translation2d(dxMeters, dyMeters);
+  Translation2d offsetField = offsetApproach.rotateBy(approachRot);
+  Translation2d goalFieldTranslation = tagFieldTranslation.plus(offsetField);
+
+  // 4) Final heading
+  Rotation2d goalHeading = switch (opts.headingStrategy()) {
+    case KEEP_CURRENT -> robotFieldPose.getRotation();
+    case MATCH_TAG_YAW -> approachRot; // proxy without field layout yaw
+    case FACE_TAG -> new Rotation2d(atan2(
+        tagFieldTranslation.getY() - goalFieldTranslation.getY(),
+        tagFieldTranslation.getX() - goalFieldTranslation.getX()));
+    case EXPLICIT -> opts.explicitHeading();
+  };
+
+  // --- OUTPUT LOGGING ---
+  InitLogger.logDouble(LOG_NAME, "goal/x", goalFieldTranslation.getX());
+  InitLogger.logDouble(LOG_NAME, "goal/y", goalFieldTranslation.getY());
+  InitLogger.logDouble(LOG_NAME, "goal/headingDeg", goalHeading.getDegrees());
+  InitLogger.logMessage(LOG_NAME, Level.INFO, "Computed new target from RAW camera dx/dy");
+
+  return new Pose2d(goalFieldTranslation, goalHeading);
+}
 
   // ... keep your existing methods/overloads untouched ...
 
