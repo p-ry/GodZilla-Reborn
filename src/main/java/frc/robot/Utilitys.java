@@ -42,12 +42,27 @@ import java.util.function.BooleanSupplier;
 import edu.wpi.first.wpilibj2.command.Commands;
 
 import java.util.Comparator;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.stream.IntStream;
 
 /** Add your docs here. */
 public class Utilitys {
+
+    public Utilitys() {
+    }
+
+    /**
+     * Supplier of currently visible AprilTag IDs (e.g., from Limelight or
+     * PhotonVision).
+     */
+    @FunctionalInterface
+    public interface VisibleTagIdSupplier {
+        int[] get();
+    }
+
     public static LimelightHelpers.PoseEstimate mt2;
     public LimelightHelpers.PoseEstimate leftPose;
     public LimelightHelpers.PoseEstimate rightPose;
@@ -69,34 +84,34 @@ public class Utilitys {
     }
 
     /** Simple container for drive-to-target settings. */
-    public record DriveToOptions(
-            PathConstraints constraints,
-            HeadingStrategy headingStrategy,
-            Rotation2d explicitHeading,
-            double positionToleranceMeters,
-            Rotation2d headingTolerance,
-            // NEW: periodic replanning controls
-            double replanPeriodSec,
-            double replanPosDeltaMeters,
-            Rotation2d replanHeadingDelta,
-            boolean reselectNearestTag) {
-        public static DriveToOptions defaults() {
-            return new DriveToOptions(
-                    new PathConstraints(2.0, 2.0, 3.0, 3.0),
-                    HeadingStrategy.MATCH_TAG_YAW,
-                    new Rotation2d(),
-                    0.05,
-                    Rotation2d.fromDegrees(3),
-                    // Replanning defaults
-                    0.3, // check ~3x/sec
-                    0.10, // replan if target shifts >10 cm
-                    Rotation2d.fromDegrees(5), // or heading target shifts >5°
-                    true // allow nearest-tag to change while driving
-            );
-        }
+    /** Options for drive-to-target behavior. */
+public record DriveToOptions(
+    PathConstraints constraints,
+    HeadingStrategy headingStrategy,
+    Rotation2d explicitHeading,
+    double positionToleranceMeters,
+    Rotation2d headingTolerance,
+    double replanPeriodSec,
+    double replanPosDeltaMeters,
+    Rotation2d replanHeadingDelta,
+    boolean reselectNearestTag,
+    boolean requireVisibility
+    ) {
+    public static DriveToOptions defaults() {
+    return new DriveToOptions(
+    new PathConstraints(2.0, 2.0, 3.0, 3.0), // max lin vel/accel, ang vel/accel
+    HeadingStrategy.MATCH_TAG_YAW,
+    new Rotation2d(),
+    0.05, // 5 cm
+    Rotation2d.fromDegrees(3),
+    0.30, // re-evaluate ~3.3 Hz
+    0.10, // replan if target shifts > 10 cm
+    Rotation2d.fromDegrees(5), // or heading changes > 5°
+    true, // allow reselection among visible tags while driving
+    true // require visible tags (do not select hidden ones)
+    );
     }
-
-
+    }
 
     /**
      * Build a command that pathfinds to an offset (dx, dy) from the <b>nearest</b>
@@ -126,11 +141,28 @@ public class Utilitys {
 
         final DriveToOptions opts = (options == null) ? DriveToOptions.defaults() : options;
 
+        VisibleTagIdSupplier visibleTags = () -> {
+            if (Constants.cameraPoses == null)
+                return new int[0];
+
+            // Flatten all rawFiducials from all camera poses
+            return Arrays.stream(Constants.cameraPoses)
+                    .filter(pose -> pose != null && pose.rawFiducials != null)
+                    .flatMapToInt(pose -> Arrays.stream(pose.rawFiducials)
+                            .mapToInt(fid -> fid.id)) // fid.id is the AprilTag ID
+                    .distinct() // avoid duplicates if both cameras see the same tag
+                    .toArray();
+        };
+
         // Supplier computes a target pose from the (possibly changing) robot pose &
         // current nearest tag.
-        Supplier<Pose2d> computeTarget = () -> computeDxDyTarget(robotPose.get(), fieldLayout.get(), dxMeters, dyMeters,
-                opts);
+        // Supplier<Pose2d> computeTarget = () -> computeDxDyTarget(robotPose.get(),
+        // fieldLayout.get(), dxMeters, dyMeters,
+        // opts);
 
+        // Compute target pose lazily from latest pose & visible-tag set
+        Supplier<Pose2d> computeTarget = () -> computeDxDyTarget(
+                robotPose.get(), fieldLayout.get(), visibleTags, dxMeters, dyMeters, opts);
         // State for adaptive replanning
         class State {
             Pose2d lastTarget = null;
@@ -217,11 +249,26 @@ public class Utilitys {
                 drivetrain, robotPose, fieldLayout, dxMeters, dyMeters, DriveToOptions.defaults());
     }
 
+    /** Nearest tag among the set of currently visible tag IDs. */
+    public static Optional<Pose3d> getNearestVisibleTagPose(Pose2d robot, AprilTagFieldLayout layout,
+            VisibleTagIdSupplier visible) {
+        if (layout == null || visible == null)
+            return Optional.empty();
+        int[] ids = visible.get();
+        if (ids == null || ids.length == 0)
+            return Optional.empty();
+        return java.util.Arrays.stream(ids)
+                .mapToObj(id -> layout.getTagPose(id).orElse(null))
+                .filter(p -> p != null)
+                .min(Comparator
+                        .comparingDouble(p -> p.toPose2d().getTranslation().getDistance(robot.getTranslation())));
+    }
+
     /**
      * Compute the dx/dy-from-nearest-tag target using provided options (heading
      * strategy).
      */
-    private static Pose2d computeDxDyTarget(
+    public static Pose2d computeDxDyTarget(
             Pose2d current,
             AprilTagFieldLayout layout,
             double dxMeters,
@@ -245,6 +292,48 @@ public class Utilitys {
         };
 
         return new Pose2d(fieldTranslation, goalHeading);
+    }
+    /** Compute the dx/dy target from the nearest visible tag using the APPROACH frame for consistent left/right. */
+private static Pose2d computeDxDyTarget(
+    Pose2d current,
+    AprilTagFieldLayout layout,
+    VisibleTagIdSupplier visibleIds,
+    double dxMeters,
+    double dyMeters,
+    DriveToOptions opts) {
+    
+    
+    Optional<Pose3d> nearestTag = opts.requireVisibility()
+    ? getNearestVisibleTagPose(current, layout, visibleIds)
+    : getNearestTagPose(current, layout);
+    
+    
+    Pose2d tagPose = nearestTag.map(Pose3d::toPose2d).orElse(current);
+    
+    
+    // APPROACH frame: +X is from tag to robot, +Y is left of that vector
+    double approachTheta = Math.atan2(current.getY() - tagPose.getY(), current.getX() - tagPose.getX());
+    Rotation2d approachRotation = new Rotation2d(approachTheta);
+    
+    
+    // Build offset in approach frame then rotate to field
+    Translation2d offsetApproach = new Translation2d(dxMeters, dyMeters);
+    Translation2d offsetField = offsetApproach.rotateBy(approachRotation);
+    
+    
+    Translation2d goalTranslation = tagPose.getTranslation().plus(offsetField);
+    
+    
+    // Choose final heading
+    Rotation2d goalHeading = switch (opts.headingStrategy()) {
+    case KEEP_CURRENT -> current.getRotation();
+    case MATCH_TAG_YAW -> tagPose.getRotation();
+    case FACE_TAG -> new Rotation2d(Math.atan2(tagPose.getY() - current.getY(), tagPose.getX() - current.getX()));
+    case EXPLICIT -> opts.explicitHeading();
+    };
+    
+    
+    return new Pose2d(goalTranslation, goalHeading);
     }
 
     public static Pose2d shiftPoseLeft(Pose2d originalPose, double forwardInches, double rightInches) {
@@ -501,9 +590,14 @@ public class Utilitys {
         }
     }
 
-    public PoseEstimate bestEstimate(PoseEstimate left, PoseEstimate right) {
-        double leftAmbiguity = 0;
-        double rightAmbiguity = 0;
+    public PoseEstimate bestEstimate() {
+        double leftAmbiguity = 42.0;
+        double rightAmbiguity = 42.0;
+        PoseEstimate left = null;
+        PoseEstimate right = null;
+
+        left = Constants.cameraPoses[0];
+        right = Constants.cameraPoses[1];
 
         if (left == null && right == null) {
             return null;
@@ -596,6 +690,17 @@ public class Utilitys {
         }
 
     }
+
+    public PoseEstimate grabPose(String camera, Pigeon2 gyro) {
+        LimelightHelpers.SetRobotOrientation(camera, gyro.getYaw().getValueAsDouble(), 0, 0, 0, 0, 0);
+        // LimelightHelpers.SetRobotOrientation("limelight-left",getGyroYaw().getDegrees(),
+        // 0, 0, 0, 0, 0);
+
+        mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(camera);
+        return mt2;
+
+    }
+
     // public void updateOdometry() {
     // boolean doRejectUpdate = false;
     // Pigeon2 gyro = RobotContainer.drivetrain.gyro;
