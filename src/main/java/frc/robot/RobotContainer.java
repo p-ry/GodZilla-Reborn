@@ -59,6 +59,8 @@ import com.pathplanner.lib.commands.FollowPathCommand;
 import com.pathplanner.lib.commands.PathfindingCommand;
 import com.pathplanner.lib.pathfinding.LocalADStar;
 import com.pathplanner.lib.pathfinding.Pathfinding;
+
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.awt.geom.Point2D;
 import frc.robot.commands.FollowCurve;
@@ -70,6 +72,7 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.math.geometry.Pose2d;
 //import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.Utilitys.VisibleTagMeasurementSupplier;
 
 import java.util.function.Supplier;
 
@@ -166,6 +169,11 @@ public class RobotContainer {
   // Point2D.Double(0.00,2020.0);//80.0,2040.0-20.1,1160.95);//0.0041,1.85795);
 
   private final Supplier<AprilTagFieldLayout> fieldLayoutSupplier = () -> Constants.fieldLayout;
+   private final VisibleTagMeasurementSupplier visibleMeas = () -> {
+    List<Utilitys.TagMeasurement> list =
+        LimelightHelpers.collectVisibleTagMeasurementsByAPI(Constants.LIMELIGHT_NAMES);
+    return list;
+  };
 
   // === Robot pose supplier ===
   private final Supplier<Pose2d> robotPoseSupplier;// = drivetrain::getPose; // adapt if your API differs
@@ -175,19 +183,28 @@ public class RobotContainer {
   private static final double APPROACH_X = 0.150; // stand 0.80m in front of tag
   private static final double LATERAL_Y = 0.40; // 0.40m left/right of tag centerline
 
-  // Optional: override heading behavior & tolerances
-  private static final DriveToOptions DRIVE_OPTS = new DriveToOptions(
-      new PathConstraints(2.0, 2.0, 3.0, 3.0),
-      HeadingStrategy.FACE_TAG, // face same yaw as tag
-      new Rotation2d(), // not used unless EXPLICIT
-      0.05, // 5 cm position window
-      Rotation2d.fromDegrees(3.0), // 3 deg heading window
-      0.25, // re-eval target at 4 Hz
-      0.10, // replan if target shifts >10 cm
-      Rotation2d.fromDegrees(5.0), // or heading shifts >5°
-      false, // allow nearest tag to reselect,
-      true
-  );
+// DriveToOptions(
+//   PathConstraints constraints,
+//   HeadingStrategy headingStrategy,
+//   Rotation2d explicitHeading,
+//   double positionToleranceMeters,
+//   Rotation2d headingTolerance,
+//   double replanPeriodSec,
+//   double replanPosDeltaMeters,
+//   Rotation2d replanHeadingDelta
+// )
+
+private static final DriveToOptions DRIVE_OPTS = new DriveToOptions(
+    new PathConstraints(2.0, 2.0, 3.0, 3.0), // m/s, m/s^2, rad/s, rad/s^2
+    HeadingStrategy.FACE_TAG,                // Turn to face the tag
+    new Rotation2d(),                        // Only used if EXPLICIT
+    0.05,                                    // 5 cm position window
+    Rotation2d.fromDegrees(3.0),             // 3° heading window
+    0.25,                                    // Re-evaluate 4 Hz
+    0.10,                                    // Replan if target shifts > 10 cm
+    Rotation2d.fromDegrees(5.0)              // Or heading shifts > 5°
+);
+
 
   /* Path follower */
   private final SendableChooser<Command> AutoChooser;
@@ -279,17 +296,17 @@ public class RobotContainer {
     scheduleFollowPathWarmup();
     schedulePathfindingWarmup();
   }
-
-  private Command makeDriveToNearestTag(double dxMeters, double dyMeters) {
-    return Utilitys.driveToDxDyFromNearestTag(
+  private Command makeDriveToNearestVisibleTag(double dxMeters, double dyMeters) {
+    return Utilitys.driveToDxDyFromNearestTagRaw(
         drivetrain,
-        robotPoseSupplier,
-        fieldLayoutSupplier,
-        
+        robotPoseSupplier,   // your field Pose2d (odom/estimator)
+        visibleMeas,         // <-- now uses the correct API
         dxMeters,
         dyMeters,
-        DRIVE_OPTS);
+        DRIVE_OPTS
+    );
   }
+  
 
   private void scheduleFollowPathWarmup() {
     System.out.println("[Init] Scheduling FollowPathCommand warmup...");
@@ -473,7 +490,7 @@ public class RobotContainer {
         .onFalse(new InstantCommand(() -> ace.setSpeed(0)));
 
     leftBumper.onTrue(new InstantCommand(() -> {
-      driveIt = makeDriveToNearestTag(APPROACH_X, +LATERAL_Y);
+      driveIt = makeDriveToNearestVisibleTag(APPROACH_X, +LATERAL_Y);
       if (driveIt != null) {
         driveIt.schedule();
       }
@@ -488,7 +505,7 @@ public class RobotContainer {
         }));
 
         rightBumper.onTrue(new InstantCommand(() -> {
-          driveIt = makeDriveToNearestTag(APPROACH_X, -LATERAL_Y);
+          driveIt = makeDriveToNearestVisibleTag(APPROACH_X, -LATERAL_Y);
           if (driveIt != null) {
             driveIt.schedule();
           }

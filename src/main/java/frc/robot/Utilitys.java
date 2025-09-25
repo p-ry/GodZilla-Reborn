@@ -24,7 +24,11 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import frc.robot.LimelightHelpers.PoseEstimate;
 import frc.robot.LimelightHelpers.RawFiducial;
+import frc.robot.Utilitys.DriveToOptions;
 import frc.robot.Utilitys.HeadingStrategy;
+import frc.robot.Utilitys.TagMeasurement;
+import frc.robot.Utilitys.VisibleTagMeasurementSupplier;
+//import frc.robot.VisibleTagIdSupplier;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -42,6 +46,7 @@ import java.util.function.BooleanSupplier;
 import edu.wpi.first.wpilibj2.command.Commands;
 
 import java.util.Comparator;
+import edu.wpi.first.wpilibj.Timer;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -58,10 +63,6 @@ public class Utilitys {
      * Supplier of currently visible AprilTag IDs (e.g., from Limelight or
      * PhotonVision).
      */
-    @FunctionalInterface
-    public interface VisibleTagIdSupplier {
-        int[] get();
-    }
 
     public static LimelightHelpers.PoseEstimate mt2;
     public LimelightHelpers.PoseEstimate leftPose;
@@ -69,272 +70,152 @@ public class Utilitys {
     public LimelightHelpers.PoseEstimate[] cameraPoses = new LimelightHelpers.PoseEstimate[2];
     public SwerveDrivePoseEstimator m_poseEstimator;
 
+
+
+   
+
     /**
-     * Strategy for selecting the robot's final heading when targeting a tag offset.
+     * Strategy for selecting the robot's final heading when reaching the offset.
      */
     public enum HeadingStrategy {
-        /** Keep the robot's current heading. */
-        KEEP_CURRENT,
-        /** Match the tag's yaw (face same direction as the tag). */
-        MATCH_TAG_YAW,
-        /** Face the tag (rotate to look at the tag). */
-        FACE_TAG,
-        /** Use a provided explicit heading. */
-        EXPLICIT
+        KEEP_CURRENT, MATCH_TAG_YAW, FACE_TAG, EXPLICIT
     }
 
-    /** Simple container for drive-to-target settings. */
     /** Options for drive-to-target behavior. */
-public record DriveToOptions(
-    PathConstraints constraints,
-    HeadingStrategy headingStrategy,
-    Rotation2d explicitHeading,
-    double positionToleranceMeters,
-    Rotation2d headingTolerance,
-    double replanPeriodSec,
-    double replanPosDeltaMeters,
-    Rotation2d replanHeadingDelta,
-    boolean reselectNearestTag,
-    boolean requireVisibility
-    ) {
-    public static DriveToOptions defaults() {
-    return new DriveToOptions(
-    new PathConstraints(2.0, 2.0, 3.0, 3.0), // max lin vel/accel, ang vel/accel
-    HeadingStrategy.MATCH_TAG_YAW,
-    new Rotation2d(),
-    0.05, // 5 cm
-    Rotation2d.fromDegrees(3),
-    0.30, // re-evaluate ~3.3 Hz
-    0.10, // replan if target shifts > 10 cm
-    Rotation2d.fromDegrees(5), // or heading changes > 5°
-    true, // allow reselection among visible tags while driving
-    true // require visible tags (do not select hidden ones)
-    );
-    }
-    }
-
-    /**
-     * Build a command that pathfinds to an offset (dx, dy) from the <b>nearest</b>
-     * AprilTag.
-     *
-     * @param drivetrain  Your holonomic drivetrain (already configured for
-     *                    AutoBuilder elsewhere).
-     * @param robotPose   Supplier of the current estimated robot Pose2d
-     *                    (field-relative).
-     * @param fieldLayout Supplier for the AprilTagFieldLayout in use (so we can
-     *                    read tag poses).
-     * @param dxMeters    X offset in the tag's frame (meters). Positive is forward
-     *                    from tag.
-     * @param dyMeters    Y offset in the tag's frame (meters). Positive is left
-     *                    from tag.
-     * @param options     Tuning/options (constraints, heading strategy,
-     *                    tolerances). Use {@link DriveToOptions#defaults()} if
-     *                    unsure.
-     */
-    public static Command driveToDxDyFromNearestTag(
-            CommandSwerveDrivetrain drivetrain,
-            Supplier<Pose2d> robotPose,
-            Supplier<AprilTagFieldLayout> fieldLayout,
-            double dxMeters,
-            double dyMeters,
-            DriveToOptions options) {
-
-        final DriveToOptions opts = (options == null) ? DriveToOptions.defaults() : options;
-
-        VisibleTagIdSupplier visibleTags = () -> {
-            if (Constants.cameraPoses == null)
-                return new int[0];
-
-            // Flatten all rawFiducials from all camera poses
-            return Arrays.stream(Constants.cameraPoses)
-                    .filter(pose -> pose != null && pose.rawFiducials != null)
-                    .flatMapToInt(pose -> Arrays.stream(pose.rawFiducials)
-                            .mapToInt(fid -> fid.id)) // fid.id is the AprilTag ID
-                    .distinct() // avoid duplicates if both cameras see the same tag
-                    .toArray();
-        };
-
-        // Supplier computes a target pose from the (possibly changing) robot pose &
-        // current nearest tag.
-        // Supplier<Pose2d> computeTarget = () -> computeDxDyTarget(robotPose.get(),
-        // fieldLayout.get(), dxMeters, dyMeters,
-        // opts);
-
-        // Compute target pose lazily from latest pose & visible-tag set
-        Supplier<Pose2d> computeTarget = () -> computeDxDyTarget(
-                robotPose.get(), fieldLayout.get(), visibleTags, dxMeters, dyMeters, opts);
-        // State for adaptive replanning
-        class State {
-            Pose2d lastTarget = null;
-            Command active = null;
-            double lastCheckTime = 0;
+    public record DriveToOptions(
+            PathConstraints constraints,
+            HeadingStrategy headingStrategy,
+            Rotation2d explicitHeading,
+            double positionToleranceMeters,
+            Rotation2d headingTolerance,
+            double replanPeriodSec,
+            double replanPosDeltaMeters,
+            Rotation2d replanHeadingDelta) {
+        public static DriveToOptions defaults() {
+            return new DriveToOptions(
+                    new PathConstraints(2.0, 2.0, 3.0, 3.0),
+                    HeadingStrategy.MATCH_TAG_YAW,
+                    new Rotation2d(),
+                    0.05,
+                    Rotation2d.fromDegrees(3),
+                    0.30,
+                    0.10,
+                    Rotation2d.fromDegrees(5));
         }
-        State state = new State();
-
-        BooleanSupplier atGoal = () -> {
-            Pose2d cur = robotPose.get();
-            Pose2d tgt = computeTarget.get();
-            boolean posOk = cur.getTranslation().getDistance(tgt.getTranslation()) <= opts.positionToleranceMeters();
-            boolean rotOk = Math.abs(cur.getRotation().minus(tgt.getRotation()).getDegrees()) <= opts.headingTolerance()
-                    .getDegrees();
-            return posOk && rotOk;
-        };
-
-        Command initAndPlan = Commands.runOnce(() -> {
-            Pose2d tgt = computeTarget.get();
-            // PathPlannerLogging.logActivePathPlannerTargetPose(tgt);
-            state.lastTarget = tgt;
-            state.active = AutoBuilder.pathfindToPose(tgt, opts.constraints());
-            state.active.schedule();
-        }, drivetrain);
-
-        Command periodicReplan = Commands.run(() -> {
-            double now = edu.wpi.first.wpilibj.Timer.getFPGATimestamp();
-            if (now - state.lastCheckTime < opts.replanPeriodSec())
-                return;
-            state.lastCheckTime = now;
-
-            Pose2d newTarget = computeTarget.get();
-            if (state.lastTarget == null) {
-                state.lastTarget = newTarget;
-                return;
-            }
-
-            double dPos = state.lastTarget.getTranslation().getDistance(newTarget.getTranslation());
-            double dDeg = Math.abs(state.lastTarget.getRotation().minus(newTarget.getRotation()).getDegrees());
-            boolean needsReplan = (dPos > opts.replanPosDeltaMeters())
-                    || (dDeg > opts.replanHeadingDelta().getDegrees());
-
-            if (needsReplan) {
-                if (state.active != null)
-                    state.active.cancel();
-                state.active = AutoBuilder.pathfindToPose(newTarget, opts.constraints());
-                state.active.schedule();
-                state.lastTarget = newTarget;
-                // PathPlannerLogging.logActivePathPlannerTargetPose(newTarget);
-            }
-        }, drivetrain);
-
-        Command finishWhenAtGoal = Commands.waitUntil(atGoal);
-
-        Command cleanup = Commands.runOnce(() -> {
-            if (state.active != null)
-                state.active.cancel();
-        }, drivetrain);
-
-        return initAndPlan.andThen(periodicReplan.until(atGoal)).andThen(cleanup);
     }
+  // ... keep your existing code ...
 
-    /** Find the field pose of the nearest tag to the given robot pose. */
-    public static Optional<Pose3d> getNearestTagPose(Pose2d robot, AprilTagFieldLayout layout) {
-        if (layout == null || layout.getTags().isEmpty())
-            return Optional.empty();
-        return layout.getTags().stream()
-                .map(t -> layout.getTagPose(t.ID).orElse(null))
-                .filter(p -> p != null)
-                .min(Comparator
-                        .comparingDouble(p -> p.toPose2d().getTranslation().getDistance(robot.getTranslation())));
-    }
+  // NEW: minimal raw-measurement container (robot-frame)
+  public record TagMeasurement(int id, double dxRobot, double dyRobot) {}
 
-    /**
-     * Convenience overload with default options.
-     */
-    public static Command driveToDxDyFromNearestTag(
-            CommandSwerveDrivetrain drivetrain,
-            Supplier<Pose2d> robotPose,
-            Supplier<AprilTagFieldLayout> fieldLayout,
-            double dxMeters,
-            double dyMeters) {
-        return driveToDxDyFromNearestTag(
-                drivetrain, robotPose, fieldLayout, dxMeters, dyMeters, DriveToOptions.defaults());
-    }
+  // NEW: supplier of current visible tag measurements (from Limelight adapter)
+  @FunctionalInterface
+  public interface VisibleTagMeasurementSupplier { List<TagMeasurement> get(); }
 
-    /** Nearest tag among the set of currently visible tag IDs. */
-    public static Optional<Pose3d> getNearestVisibleTagPose(Pose2d robot, AprilTagFieldLayout layout,
-            VisibleTagIdSupplier visible) {
-        if (layout == null || visible == null)
-            return Optional.empty();
-        int[] ids = visible.get();
-        if (ids == null || ids.length == 0)
-            return Optional.empty();
-        return java.util.Arrays.stream(ids)
-                .mapToObj(id -> layout.getTagPose(id).orElse(null))
-                .filter(p -> p != null)
-                .min(Comparator
-                        .comparingDouble(p -> p.toPose2d().getTranslation().getDistance(robot.getTranslation())));
-    }
+  // NEW: if you already have DriveToOptions, reuse it; otherwise keep as-is.
+  // (No changes needed to your existing DriveToOptions)
 
-    /**
-     * Compute the dx/dy-from-nearest-tag target using provided options (heading
-     * strategy).
-     */
-    public static Pose2d computeDxDyTarget(
-            Pose2d current,
-            AprilTagFieldLayout layout,
-            double dxMeters,
-            double dyMeters,
-            DriveToOptions opts) {
-        Optional<Pose3d> nearestTag = getNearestTagPose(current, layout);
-        Pose2d tagPose = nearestTag.map(Pose3d::toPose2d).orElse(current);
+  // NEW: raw-camera overload (does NOT use AprilTagFieldLayout at all)
+  public static Command driveToDxDyFromNearestTagRaw(
+      CommandSwerveDrivetrain drivetrain,
+      Supplier<Pose2d> robotPose,
+      VisibleTagMeasurementSupplier visibleMeas,
+      double dxMeters,
+      double dyMeters,
+      DriveToOptions options) {
 
-        Translation2d offsetTagFrame = new Translation2d(dxMeters, dyMeters);
-        Translation2d offsetFieldFrame = offsetTagFrame.rotateBy(tagPose.getRotation());
-        Translation2d fieldTranslation = tagPose.getTranslation().plus(offsetFieldFrame);
+    final DriveToOptions opts = (options == null) ? DriveToOptions.defaults() : options;
 
-        Rotation2d goalHeading = switch (opts.headingStrategy()) {
-            case KEEP_CURRENT -> current.getRotation();
-            case MATCH_TAG_YAW -> tagPose.getRotation();
-            case FACE_TAG -> new Rotation2d(
-                    Math.atan2(
-                            tagPose.getY() - current.getY(),
-                            tagPose.getX() - current.getX()));
-            case EXPLICIT -> opts.explicitHeading();
-        };
+    Supplier<Pose2d> computeTarget = () -> computeDxDyTargetFromRaw(
+        robotPose.get(), visibleMeas.get(), dxMeters, dyMeters, opts);
 
-        return new Pose2d(fieldTranslation, goalHeading);
-    }
-    /** Compute the dx/dy target from the nearest visible tag using the APPROACH frame for consistent left/right. */
-private static Pose2d computeDxDyTarget(
-    Pose2d current,
-    AprilTagFieldLayout layout,
-    VisibleTagIdSupplier visibleIds,
-    double dxMeters,
-    double dyMeters,
-    DriveToOptions opts) {
-    
-    
-    Optional<Pose3d> nearestTag = opts.requireVisibility()
-    ? getNearestVisibleTagPose(current, layout, visibleIds)
-    : getNearestTagPose(current, layout);
-    
-    
-    Pose2d tagPose = nearestTag.map(Pose3d::toPose2d).orElse(current);
-    
-    
-    // APPROACH frame: +X is from tag to robot, +Y is left of that vector
-    double approachTheta = Math.atan2(current.getY() - tagPose.getY(), current.getX() - tagPose.getX());
-    Rotation2d approachRotation = new Rotation2d(approachTheta);
-    
-    
-    // Build offset in approach frame then rotate to field
-    Translation2d offsetApproach = new Translation2d(dxMeters, dyMeters);
-    Translation2d offsetField = offsetApproach.rotateBy(approachRotation);
-    
-    
-    Translation2d goalTranslation = tagPose.getTranslation().plus(offsetField);
-    
-    
-    // Choose final heading
-    Rotation2d goalHeading = switch (opts.headingStrategy()) {
-    case KEEP_CURRENT -> current.getRotation();
-    case MATCH_TAG_YAW -> tagPose.getRotation();
-    case FACE_TAG -> new Rotation2d(Math.atan2(tagPose.getY() - current.getY(), tagPose.getX() - current.getX()));
-    case EXPLICIT -> opts.explicitHeading();
+    // --- below matches your existing adaptive-replan structure (minimal changes) ---
+    class State { Pose2d lastTarget = null; Command active = null; double lastCheckTime = 0; }
+    State state = new State();
+
+    BooleanSupplier atGoal = () -> {
+      Pose2d cur = robotPose.get();
+      Pose2d tgt = computeTarget.get();
+      boolean posOk = cur.getTranslation().getDistance(tgt.getTranslation()) <= opts.positionToleranceMeters();
+      boolean rotOk = Math.abs(cur.getRotation().minus(tgt.getRotation()).getDegrees()) <= opts.headingTolerance().getDegrees();
+      return posOk && rotOk;
     };
-    
-    
-    return new Pose2d(goalTranslation, goalHeading);
-    }
+
+    Command initAndPlan = Commands.runOnce(() -> {
+      Pose2d tgt = computeTarget.get();
+      state.lastTarget = tgt;
+      state.active = AutoBuilder.pathfindToPose(tgt, opts.constraints());
+      state.active.schedule();
+    }, drivetrain);
+
+    Command periodicReplan = Commands.run(() -> {
+      double now = edu.wpi.first.wpilibj.Timer.getFPGATimestamp();
+      if (now - state.lastCheckTime < opts.replanPeriodSec()) return;
+      state.lastCheckTime = now;
+
+      Pose2d newTarget = computeTarget.get();
+      if (state.lastTarget == null) { state.lastTarget = newTarget; return; }
+
+      double dPos = state.lastTarget.getTranslation().getDistance(newTarget.getTranslation());
+      double dDeg = Math.abs(state.lastTarget.getRotation().minus(newTarget.getRotation()).getDegrees());
+      boolean needsReplan = (dPos > opts.replanPosDeltaMeters()) ||
+                            (dDeg > opts.replanHeadingDelta().getDegrees());
+
+      if (needsReplan) {
+        if (state.active != null) state.active.cancel();
+        state.active = AutoBuilder.pathfindToPose(newTarget, opts.constraints());
+        state.active.schedule();
+        state.lastTarget = newTarget;
+      }
+    }, drivetrain);
+
+    Command finishWhenAtGoal = Commands.waitUntil(atGoal);
+    Command cleanup = Commands.runOnce(() -> { if (state.active != null) state.active.cancel(); }, drivetrain);
+
+    return initAndPlan.andThen(periodicReplan.until(atGoal)).andThen(cleanup);
+  }
+
+  // NEW: compute target from raw robot-frame measurements (no field layout)
+  private static Pose2d computeDxDyTargetFromRaw(
+      Pose2d robotFieldPose,
+      List<TagMeasurement> meas,
+      double dxMeters,
+      double dyMeters,
+      DriveToOptions opts) {
+
+    if (meas == null || meas.isEmpty()) return robotFieldPose;
+
+    // nearest by raw camera range in ROBOT frame
+    TagMeasurement nearest = meas.stream()
+        .min(java.util.Comparator.comparingDouble(m -> m.dxRobot * m.dxRobot + m.dyRobot * m.dyRobot))
+        .orElse(meas.get(0));
+
+    // tag in ROBOT frame -> rotate into FIELD frame and add robot translation
+    Translation2d robotToTag_robot = new Translation2d(nearest.dxRobot, nearest.dyRobot);
+    Translation2d robotToTag_field = robotToTag_robot.rotateBy(robotFieldPose.getRotation());
+    Translation2d tagField = robotFieldPose.getTranslation().plus(robotToTag_field);
+
+    // APPROACH frame (+X tag->robot, +Y left) so left/right is correct in all quadrants
+    Translation2d tagToRobot_field = robotFieldPose.getTranslation().minus(tagField);
+    double approachTheta = Math.atan2(tagToRobot_field.getY(), tagToRobot_field.getX());
+    Rotation2d approachRot = new Rotation2d(approachTheta);
+
+    Translation2d offsetField = new Translation2d(dxMeters, dyMeters).rotateBy(approachRot);
+    Translation2d goalXY = tagField.plus(offsetField);
+
+    Rotation2d goalHeading = switch (opts.headingStrategy()) {
+      case KEEP_CURRENT -> robotFieldPose.getRotation();
+      case MATCH_TAG_YAW -> approachRot; // proxy when not using field layout
+      case FACE_TAG -> new Rotation2d(Math.atan2(tagField.getY() - goalXY.getY(),
+                                                tagField.getX() - goalXY.getX()));
+      case EXPLICIT -> opts.explicitHeading();
+    };
+
+    return new Pose2d(goalXY, goalHeading);
+  }
+
+  // ... keep your existing methods/overloads untouched ...
+
 
     public static Pose2d shiftPoseLeft(Pose2d originalPose, double forwardInches, double rightInches) {
         // Get current pose components

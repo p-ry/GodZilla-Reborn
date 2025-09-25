@@ -63,7 +63,14 @@ public final class Constants {
   public static double endY = 2020.0;
   public static Point2D.Double endPoint = new Point2D.Double(endX,2020.0);//80.0,2040.0-20.1,1160.95);//0.0041,1.85795);
   public static LimelightHelpers.PoseEstimate[] cameraPoses = new LimelightHelpers.PoseEstimate[2];
-  
+   // Limelight camera names as configured in the Limelight UI
+   public static final String[] LIMELIGHT_NAMES = {
+    "limelight-left",
+    "limelight-right"
+};
+   // NEW: store the latest full JSON results per camera (index them same order as your cameras)
+   public static LimelightHelpers.LimelightResults[] limelightResults =
+   new LimelightHelpers.LimelightResults[2];
 
   public Pose3d tag1 = fieldLayout.getTagPose(1).get();
   public Pose3d tag2 = fieldLayout.getTagPose(2).get();
