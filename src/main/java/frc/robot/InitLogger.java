@@ -29,17 +29,13 @@ public class InitLogger {
   /** Start logging early (call once in robotInit) */
   public static void startLogging() {
     if(Constants.logging){
-    String dir = Files.exists(Path.of("/U")) ? "/U/logs" : "/home/lvuser/logs";
-    try {
-      Files.createDirectories(Path.of(dir));
-    } catch (Exception ignored) {
-    }
-    DataLogManager.start(dir,"",0.5);//.start(dir, ""); // ~250ms flush = low I/O contention
+    DataLogManager.start();//dir,"",0.25);//.start(dir, ""); // ~250ms flush = low I/O contention
     DataLogManager.logConsoleOutput(false); // avoid spam/overhead
-    DriverStation.reportWarning("Logging to " + dir, false);
+    //DriverStation.reportWarning("Logging to " + dir, false);
    
   }
-  }
+}
+  
 
   public static void stopLogging() {
    if(Constants.logging){
@@ -49,12 +45,12 @@ public class InitLogger {
 
   /** Log a double value under a given name/field (e.g., position). */
   public static void logDouble(String name, String field, double value) {
-    if(Constants.logging){
+  //  if(Constants.logging){
       String key = name + "/" + field;
     DoubleLogEntry entry = doubleEntries.computeIfAbsent(key,
         k -> new DoubleLogEntry(DataLogManager.getLog(), k));
     entry.append(value);
-    }
+   // }
   }
 
   /** Log a named duration in seconds */

@@ -165,9 +165,9 @@ public class Utilitys {
 
     // LOG: initial plan target
     InitLogger.logMessage(LOG_NAME, Level.INFO, "Initial pathfind to computed target");
-    InitLogger.logDouble(LOG_NAME, "/init/target/x", tgt.getX());
-    InitLogger.logDouble(LOG_NAME, "/init/target/y", tgt.getY());
-    InitLogger.logDouble(LOG_NAME, "/init/target/headingDeg", tgt.getRotation().getDegrees());
+    InitLogger.logDouble(LOG_NAME, "init/target/x", tgt.getX());
+    InitLogger.logDouble(LOG_NAME, "init/target/y", tgt.getY());
+    InitLogger.logDouble(LOG_NAME, "init/target/headingDeg", tgt.getRotation().getDegrees());
 
     state.lastTarget = tgt;
     state.active = AutoBuilder.pathfindToPose(tgt, opts.constraints());

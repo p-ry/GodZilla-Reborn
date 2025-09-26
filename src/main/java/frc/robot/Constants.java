@@ -51,7 +51,7 @@ public final class Constants {
   public static boolean AutonomousMode = false;
   public static boolean autoLoaded = false;
   public static boolean debug = false;
-  public static boolean logging = true;
+  public static boolean logging = false;
 
   public static Point2D.Double base = new Point2D.Double(85.393,509.0);//.17645,.50898890);
   public static Point2D.Double startPoint = new Point2D.Double(-90.00,780.0);//-.02777, .5207621); 

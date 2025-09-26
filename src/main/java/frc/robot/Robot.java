@@ -60,14 +60,20 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotInit() {
-    InitLogger.startLogging();
+    DataLogManager.start();                         // start the underlying .wpilog
+    DriverStation.startDataLog(DataLogManager.getLog(), true); // (optional) DS data
+  
+    InitLogger.logMessage("Logger", InitLogger.Level.INFO, "DataLog started");
+    // Sanity test: this MUST show up in AdvantageScope as a double
+    InitLogger.logDouble("TEST", "number", 123.456);
+    //InitLogger.startLogging();
     
+    ensureRobotContainerInitialized();
     InitLogger.logMessage("robot", "RobotInit/Start");
      NetworkTableInstance.getDefault().getEntry(".updateRate").setDouble(0.10); // 10 Hz UI
     Shuffleboard.disableActuatorWidgets();
     LiveWindow.disableAllTelemetry();
 
-    ensureRobotContainerInitialized();
   }
 
   @Override
@@ -103,7 +109,7 @@ public void disabledInit() {
 
   @Override
   public void disabledPeriodic() {
-    
+    ensureRobotContainerInitialized();
   }
 
   @Override
