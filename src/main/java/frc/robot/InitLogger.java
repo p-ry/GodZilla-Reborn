@@ -19,6 +19,7 @@ public class InitLogger {
   public enum Level {
     INFO, WARN, ERROR
   }
+  
 
   // Caches to avoid recreating entries
   private static final Map<String, StringLogEntry> stringEntries = new ConcurrentHashMap<>();

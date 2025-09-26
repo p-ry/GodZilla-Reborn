@@ -61,6 +61,7 @@ public class Robot extends TimedRobot {
   @Override
   public void robotInit() {
     InitLogger.startLogging();
+    
     InitLogger.logMessage("robot", "RobotInit/Start");
      NetworkTableInstance.getDefault().getEntry(".updateRate").setDouble(0.10); // 10 Hz UI
     Shuffleboard.disableActuatorWidgets();
