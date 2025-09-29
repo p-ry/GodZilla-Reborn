@@ -19,6 +19,8 @@ import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import frc.robot.Constants;
+import frc.robot.InitLogger;
+
 import com.ctre.phoenix6.swerve.SwerveModule;
 
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -97,7 +99,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private boolean m_hasAppliedOperatorPerspective = false;
 
     /** Swerve request to apply during robot-centric path following */
-    private final SwerveRequest.ApplyRobotSpeeds m_pathApplyRobotSpeeds = new SwerveRequest.ApplyRobotSpeeds();
+    public final SwerveRequest.ApplyRobotSpeeds m_pathApplyRobotSpeeds = new SwerveRequest.ApplyRobotSpeeds();
 
     /* Swerve requests to apply during SysId characterization */
     // private final SwerveRequest.SysIdSwerveTranslation
@@ -214,33 +216,40 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         try {
             var config = RobotConfig.fromGUISettings();
             AutoBuilder.configure(
-                    () -> getPose(), /// getState().Pose, // Supplier of current robot pose
-                    this::resetOdometry, // resetPose, // Consumer for seeding pose against auto
-                    () -> getState().Speeds, // Supplier of current robot speeds
-                    // Consumer of ChassisSpeeds and feedforwards to drive the robot
-                    (speeds, feedforwards) -> setControl(
-                            m_pathApplyRobotSpeeds.withSpeeds(speeds)
-                                    .withWheelForceFeedforwardsX(feedforwards.robotRelativeForcesXNewtons())
-                                    .withWheelForceFeedforwardsY(feedforwards.robotRelativeForcesYNewtons())),
-                    new PPHolonomicDriveController(
-                            // PID constants for translation
-                            new PIDConstants(2.8, 0, 0), // was 2.0 was 0.5 //was 0.7
-                            // kP10
-                            // PID constants for rotation
-                            new PIDConstants(2, 0, 0)), // was 2.0
-                    config,
-                    // Assume the path needs to be flipped for Red vs Blue, this is normally the
-                    // case
-                    () -> {
-                        var alliance = DriverStation.getAlliance();
-                        if (alliance.isPresent()) {
-                            return alliance.get() == DriverStation.Alliance.Red;
+    () -> getPose(),
+    this::resetOdometry,
+    () -> getState().Speeds,   // MUST be robot-relative ChassisSpeeds
+    (speeds, feedforwards) -> {
+        // --- TEMP: flip omega sign to test rotation convention ---
+        var corrected = new edu.wpi.first.math.kinematics.ChassisSpeeds(
+            speeds.vxMetersPerSecond,
+            speeds.vyMetersPerSecond,
+            -speeds.omegaRadiansPerSecond  // <— flip once here
+        );
 
-                        }
-                        return false;
-                    },
-                    this // Subsystem for requirements
-            );
+        // Logging to confirm what we’re feeding
+        InitLogger.logDouble("PP","cmd.vx", corrected.vxMetersPerSecond);
+        InitLogger.logDouble("PP","cmd.vy", corrected.vyMetersPerSecond);
+        InitLogger.logDouble("PP","cmd.omega", corrected.omegaRadiansPerSecond);
+
+        setControl(
+            m_pathApplyRobotSpeeds
+              .withSpeeds(corrected)
+              .withWheelForceFeedforwardsX(feedforwards.robotRelativeForcesXNewtons())
+              .withWheelForceFeedforwardsY(feedforwards.robotRelativeForcesYNewtons())
+        );
+    },
+    new PPHolonomicDriveController(
+        // Translation PID
+        new PIDConstants(2.8, 0.0, 0.0),
+        // Rotation PID (give it some authority + a touch of D)
+        new PIDConstants(5.0, 0.0, 0.25)  // was 2,0,0
+    ),
+    config,
+    () -> DriverStation.getAlliance().map(a -> a == DriverStation.Alliance.Red).orElse(false),
+    this
+);
+
         } catch (Exception ex) {
             DriverStation.reportError("Failed to load PathPlanner config and configure AutoBuilder",
                     ex.getStackTrace());
@@ -265,6 +274,11 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * @param direction Direction of the SysId Quasistatic test
      * @return Command to run
      */
+
+
+
+
+
 
     public void updateCameraPose() {
         boolean doRejectUpdate = false;

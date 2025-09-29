@@ -16,12 +16,14 @@ import com.pathplanner.lib.path.PathConstraints;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import frc.robot.LimelightHelpers.PoseEstimate;
 import frc.robot.LimelightHelpers.RawFiducial;
 import frc.robot.Utilitys.DriveToOptions;
@@ -108,6 +110,64 @@ public class Utilitys {
                     Rotation2d.fromDegrees(5));
         }
     }
+
+// Flip this if the robot spins the wrong direction during the test
+private static final double OMEGA_SIGN = +1.0;
+
+/**
+ * Heading-only test that drives (vx, vy) = (0, 0) and ω from a PID until the robot
+ * reaches targetHeading. Uses the SAME control path as AutoBuilder:
+ *   setControl(m_pathApplyRobotSpeeds.withSpeeds(ChassisSpeeds))
+ */
+public static Command rotateToHeading(
+    CommandSwerveDrivetrain drivetrain,
+    java.util.function.Supplier<Pose2d> robotPose,
+    Rotation2d targetHeading,
+    double kP, double kI, double kD,
+    double maxOmegaRadPerSec,
+    double tolDeg
+) {
+  final PIDController rotPID = new PIDController(kP, kI, kD);
+  rotPID.enableContinuousInput(-Math.PI, Math.PI); // wrap at ±180°
+  rotPID.setTolerance(Math.toRadians(tolDeg));
+
+  return Commands.run(
+      () -> {
+        Rotation2d cur = robotPose.get().getRotation();
+        double omega = rotPID.calculate(cur.getRadians(), targetHeading.getRadians());
+        // Clamp & apply sign convention
+        double lim = Math.abs(maxOmegaRadPerSec);
+        omega = Math.max(-lim, Math.min(lim, omega)) * OMEGA_SIGN;
+
+        // === IMPORTANT: same pipeline as AutoBuilder ===
+        drivetrain.setControl(
+            drivetrain.m_pathApplyRobotSpeeds.withSpeeds(
+                new ChassisSpeeds(0.0, 0.0, omega)
+            )
+        );
+
+        // Telemetry
+        InitLogger.logDouble("RotateTest", "targetDeg", targetHeading.getDegrees());
+        InitLogger.logDouble("RotateTest", "robotDeg", cur.getDegrees());
+        InitLogger.logDouble("RotateTest", "omegaCmd", omega);
+      },
+      drivetrain
+    )
+    .until(rotPID::atSetpoint)
+    .beforeStarting(() -> {
+      rotPID.reset(); // correct WPILib signature: no-arg reset()
+      InitLogger.logMessage("RotateTest", InitLogger.Level.INFO, "BEGIN rotateToHeading");
+      InitLogger.logDouble("RotateTest", "targetDeg", targetHeading.getDegrees());
+    })
+    .finallyDo(() -> {
+      // Stop via the same control path
+      drivetrain.setControl(
+          drivetrain.m_pathApplyRobotSpeeds.withSpeeds(new ChassisSpeeds())
+      );
+      InitLogger.logMessage("RotateTest", InitLogger.Level.INFO, "Done (at setpoint)");
+    });
+}
+    
   // ... keep your existing code ...
 
   // NEW: minimal raw-measurement container (robot-frame)

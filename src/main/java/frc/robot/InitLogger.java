@@ -31,6 +31,8 @@ public class InitLogger {
     if(Constants.logging){
     DataLogManager.start();//dir,"",0.25);//.start(dir, ""); // ~250ms flush = low I/O contention
     DataLogManager.logConsoleOutput(false); // avoid spam/overhead
+    DriverStation.startDataLog(DataLogManager.getLog(), true);
+    
     //DriverStation.reportWarning("Logging to " + dir, false);
    
   }
@@ -102,14 +104,16 @@ public class InitLogger {
     entry.append(value);
    }
   }
-
-  /** Measure and log how long a block of code takes */
   public static void time(String name, Runnable block) {
-    if(!Constants.logging){
-    double start = Timer.getFPGATimestamp();
-    block.run();
-    double end = Timer.getFPGATimestamp();
-    logDuration(name, end - start);
+    if (Constants.logging) {
+      double start = Timer.getFPGATimestamp();
+      block.run();
+      double end = Timer.getFPGATimestamp();
+      logDuration(name, end - start);
+    } else {
+      // Logging disabled: still run the code!
+      block.run();
     }
   }
+  
 }
