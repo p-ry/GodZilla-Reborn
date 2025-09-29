@@ -563,10 +563,9 @@ private static final DriveToOptions DRIVE_OPTS = new DriveToOptions(
     controller.start()
         .onTrue(new InstantCommand(() -> drivetrain.setHeading(new Rotation2d(0))));
 
-    controller.b().onTrue(new InstantCommand(() -> {
+    controller.b().onTrue(
       Utilitys.rotateToHeading(drivetrain, () -> drivetrain.botPose2d, Rotation2d.fromDegrees(90.0),
-      5.0,0.0,0.25,Math.toRadians(6.0),2.0);
-    }));
+      5.0,0.0,0.25,Math.toRadians(6.0),2.0));
 
     controller.y().whileTrue(
         new InstantCommand(() -> mArm.wrist.moveIt(-0.5)));

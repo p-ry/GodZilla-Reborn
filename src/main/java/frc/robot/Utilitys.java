@@ -112,7 +112,7 @@ public class Utilitys {
     }
 
 // Flip this if the robot spins the wrong direction during the test
-private static final double OMEGA_SIGN = +1.0;
+private static final double OMEGA_SIGN = -1.0;
 
 /**
  * Heading-only test that drives (vx, vy) = (0, 0) and ω from a PID until the robot
