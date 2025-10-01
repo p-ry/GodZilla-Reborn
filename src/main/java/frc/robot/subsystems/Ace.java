@@ -40,6 +40,7 @@ public class Ace extends SubsystemBase {
   private String stateText = "";
   private double lastLogTime = 0.0; // Initialize lastLogTime to 0
   private boolean debug = false;
+  private boolean doubleChecked = false;
 
   public enum CoralIntakeState {
     IDLE,
@@ -118,6 +119,7 @@ public class Ace extends SubsystemBase {
 
   private void handleIdleState() {
     setSpeed(0.9);
+    doubleChecked = false;
 
     if (!coralPresent && (funnelSensorDetected || aceSensorDetected)) {
       coralPresent = true;
@@ -146,7 +148,7 @@ public class Ace extends SubsystemBase {
 
   private void handleBackdriveState() {
     setSpeed(BACKDRIVE_SPEED);
-    
+    ace.setPosition(0);
 
     // Check for transitions back to other states
     if (funnelSensorDetected && !aceSensorDetected) {
@@ -195,6 +197,12 @@ public class Ace extends SubsystemBase {
   }
 
   private void handleCompleteState() {
+    if (!doubleChecked){
+      currentState = CoralIntakeState.BACKDRIVE;
+    stateChange = true;
+    doubleChecked = true;
+    }
+
     // if (Constants.AutonomousMode) {
     // Constants.autoLoaded = true;
     // Constants.AutonomousMode = false;

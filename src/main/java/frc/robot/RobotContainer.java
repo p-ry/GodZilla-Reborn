@@ -192,7 +192,7 @@ public class RobotContainer {
 // )
 
 private static final DriveToOptions DRIVE_OPTS = new DriveToOptions(
-    new PathConstraints(2.0, 2.0, 3.0, 3.0), // m/s, m/s^2, rad/s, rad/s^2
+    new PathConstraints(2.0, 2.0, 0.5, 1.0), // m/s, m/s^2, rad/s, rad/s^2
     HeadingStrategy.FACE_TAG,                // Turn to face the tag
     new Rotation2d(),                        // Only used if EXPLICIT
     0.05,                                    // 5 cm position window
