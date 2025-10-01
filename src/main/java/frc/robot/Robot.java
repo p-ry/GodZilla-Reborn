@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -73,11 +74,43 @@ public class Robot extends TimedRobot {
      NetworkTableInstance.getDefault().getEntry(".updateRate").setDouble(0.10); // 10 Hz UI
     Shuffleboard.disableActuatorWidgets();
     LiveWindow.disableAllTelemetry();
+    
+    
 
   }
 
   @Override
   public void robotPeriodic() {
+     Pose2d pose = m_robotContainer.getDrivetrain().getPose();   // or drivetrain.botPose2d
+  double hdg = pose.getRotation().getDegrees();
+  InitLogger.logDouble("Sensor", "pose.x", pose.getX());
+  InitLogger.logDouble("Sensor", "pose.y", pose.getY());
+  InitLogger.logDouble("Sensor", "pose.headingDeg", hdg);
+  InitLogger.logBoolean("Sensor", "pose.headingFinite", Double.isFinite(hdg));
+
+  // --- Limelights: left + right ---
+  for (String name : new String[] { "limelight-left", "limelight-right" }) {
+    boolean tv = false;
+    try { tv = LimelightHelpers.getTV(name); } catch (Throwable ignored) {}
+    InitLogger.logBoolean("LL." + name, "hasTarget", tv);
+
+    if (tv) {
+      try {
+        var rs = LimelightHelpers.getTargetPose3d_RobotSpace(name);
+        if (rs != null) {
+          double dx = rs.getX(), dy = rs.getY();
+          InitLogger.logDouble("LL." + name, "dxRobot", dx);
+          InitLogger.logDouble("LL." + name, "dyRobot", dy);
+          InitLogger.logDouble("LL." + name, "range", Math.hypot(dx, dy));
+        } else {
+          InitLogger.logMessage("LL." + name, InitLogger.Level.WARN, "TargetPose3d_RobotSpace null");
+        }
+      } catch (Throwable t) {
+        InitLogger.logMessage("LL." + name, InitLogger.Level.ERROR, "RS pose exception: " + t.getMessage());
+      }
+    }
+  }
+
     
     CommandScheduler.getInstance().run();
 

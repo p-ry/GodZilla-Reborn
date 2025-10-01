@@ -146,6 +146,7 @@ public class Ace extends SubsystemBase {
 
   private void handleBackdriveState() {
     setSpeed(BACKDRIVE_SPEED);
+    
 
     // Check for transitions back to other states
     if (funnelSensorDetected && !aceSensorDetected) {

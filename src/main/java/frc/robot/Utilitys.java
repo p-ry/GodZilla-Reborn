@@ -49,6 +49,7 @@ import com.pathplanner.lib.util.PathPlannerLogging;
 import java.util.function.BooleanSupplier;
 
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 
 import java.util.Comparator;
 import edu.wpi.first.wpilibj.Timer;
@@ -111,6 +112,45 @@ public class Utilitys {
         }
     }
 
+
+// Heartbeat that runs every 0.2s (5Hz)
+public static Command sensorHeartbeat(
+    Supplier<Pose2d> robotPose,
+    String... limelights
+) {
+  return new RunCommand(() -> {
+    // Gyro / pose sanity
+    Pose2d pose = robotPose.get();
+    double hdg = pose.getRotation().getDegrees();
+    InitLogger.logDouble("Sensor", "pose.headingDeg", hdg);
+    InitLogger.logBoolean("Sensor", "pose.headingFinite", Double.isFinite(hdg));
+    InitLogger.logDouble("Sensor", "pose.x", pose.getX());
+    InitLogger.logDouble("Sensor", "pose.y", pose.getY());
+
+    // Each limelight
+    for (String name : limelights) {
+      boolean tv = false;
+      try { tv = LimelightHelpers.getTV(name); } catch (Throwable ignore) {}
+      InitLogger.logBoolean("LL." + name, "hasTarget", tv);
+      if (tv) {
+        var rs = LimelightHelpers.getTargetPose3d_RobotSpace(name);
+        if (rs != null) {
+          InitLogger.logDouble("LL." + name, "dxRobot", rs.getX());
+          InitLogger.logDouble("LL." + name, "dyRobot", rs.getY());
+          InitLogger.logDouble("LL." + name, "range", Math.hypot(rs.getX(), rs.getY()));
+        }
+      }
+    }
+  })
+  .withName("SensorHeartbeat")
+  .withTimeout(0)  // no timeout, keep running
+  .repeatedly();   // repeat continuously
+}
+
+
+
+
+    
 // Flip this if the robot spins the wrong direction during the test
 private static final double OMEGA_SIGN = -1.0;
 
@@ -176,6 +216,49 @@ public static Command rotateToHeading(
   // NEW: supplier of current visible tag measurements (from Limelight adapter)
   @FunctionalInterface
   public interface VisibleTagMeasurementSupplier { List<TagMeasurement> get(); }
+  /**
+ * Read visible tag measurements (robot-space dx/dy) from the given Limelights.
+ * Uses LimelightHelpers.getTV(name) and getTargetPose3d_RobotSpace(name).
+ */
+public static List<TagMeasurement> collectVisibleTagMeasurementsByAPI(String... limelightNames) {
+    List<TagMeasurement> out = new ArrayList<>();
+    if (limelightNames == null) return out;
+  
+    for (String name : limelightNames) {
+      try {
+        boolean tv = LimelightHelpers.getTV(name);
+        InitLogger.logBoolean("LL." + name, "hasTarget", tv);
+        if (!tv) continue;
+  
+        var rs = LimelightHelpers.getTargetPose3d_RobotSpace(name);
+        if (rs == null) continue;
+  
+        double dx = rs.getX();  // +X forward (meters)
+        double dy = rs.getY();  // +Y left (meters)
+        double rng = Math.hypot(dx, dy);
+  
+        // sanity guard
+        if (!Double.isFinite(dx) || !Double.isFinite(dy) || rng > 8.0) {
+          InitLogger.logMessage("LL." + name, InitLogger.Level.WARN, "Rejecting bad/huge target");
+          continue;
+        }
+  
+        InitLogger.logDouble("LL." + name, "dxRobot", dx);
+        InitLogger.logDouble("LL." + name, "dyRobot", dy);
+        InitLogger.logDouble("LL." + name, "range", rng);
+  
+        // We don’t have fiducial ID via this API; use -1 as unknown
+        out.add(new TagMeasurement(-1, dx, dy));
+      } catch (Throwable t) {
+        InitLogger.logMessage("LL." + name, InitLogger.Level.ERROR,
+            "collector exception: " + t.getMessage());
+      }
+    }
+  
+    InitLogger.logDouble("LL", "totalVisibleMeasurements", out.size());
+    return out;
+  }
+  
 
   // NEW: if you already have DriveToOptions, reuse it; otherwise keep as-is.
   // (No changes needed to your existing DriveToOptions)
