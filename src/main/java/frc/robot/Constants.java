@@ -96,9 +96,9 @@ public final class Constants {
   public Pose3d tag21 = fieldLayout.getTagPose(21).get();
   public Pose3d tag22 = fieldLayout.getTagPose(22).get();
 
-  public static double leftOffset =5;//2  more
-  public static double rightOffset =9;//10
-  public static double forwardOffset = 12;//19
+  public static double leftOffset =0.2;//2  more
+  public static double rightOffset =0.3;//10
+  public static double forwardOffset = 0.35;//19
 
 
   /**

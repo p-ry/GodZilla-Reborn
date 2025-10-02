@@ -92,21 +92,21 @@ public class Robot extends TimedRobot {
   for (String name : new String[] { "limelight-left", "limelight-right" }) {
     boolean tv = false;
     try { tv = LimelightHelpers.getTV(name); } catch (Throwable ignored) {}
-    InitLogger.logBoolean("LL." + name, "hasTarget", tv);
+    InitLogger.logBoolean("LL" + name, "hasTarget", tv);
 
     if (tv) {
       try {
         var rs = LimelightHelpers.getTargetPose3d_RobotSpace(name);
         if (rs != null) {
           double dx = rs.getX(), dy = rs.getY();
-          InitLogger.logDouble("LL." + name, "dxRobot", dx);
-          InitLogger.logDouble("LL." + name, "dyRobot", dy);
-          InitLogger.logDouble("LL." + name, "range", Math.hypot(dx, dy));
+          InitLogger.logDouble("LL" + name, "dxRobot", dx);
+          InitLogger.logDouble("LL" + name, "dyRobot", dy);
+          InitLogger.logDouble("LL" + name, "range", Math.hypot(dx, dy));
         } else {
-          InitLogger.logMessage("LL." + name, InitLogger.Level.WARN, "TargetPose3d_RobotSpace null");
+          InitLogger.logMessage("LL" + name, InitLogger.Level.WARN, "TargetPose3d_RobotSpace null");
         }
       } catch (Throwable t) {
-        InitLogger.logMessage("LL." + name, InitLogger.Level.ERROR, "RS pose exception: " + t.getMessage());
+        InitLogger.logMessage("LL" + name, InitLogger.Level.ERROR, "RS pose exception: " + t.getMessage());
       }
     }
   }

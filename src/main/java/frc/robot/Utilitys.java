@@ -127,13 +127,13 @@ public class Utilitys {
                     tv = LimelightHelpers.getTV(name);
                 } catch (Throwable ignore) {
                 }
-                InitLogger.logBoolean("LL." + name, "hasTarget", tv);
+                InitLogger.logBoolean("LL" + name, "hasTarget", tv);
                 if (tv) {
                     var rs = LimelightHelpers.getTargetPose3d_RobotSpace(name);
                     if (rs != null) {
-                        InitLogger.logDouble("LL." + name, "dxRobot", rs.getX());
-                        InitLogger.logDouble("LL." + name, "dyRobot", rs.getY());
-                        InitLogger.logDouble("LL." + name, "range", Math.hypot(rs.getX(), rs.getY()));
+                        InitLogger.logDouble("LL" + name, "dxRobot", rs.getX());
+                        InitLogger.logDouble("LL" + name, "dyRobot", rs.getY());
+                        InitLogger.logDouble("LL" + name, "range", Math.hypot(rs.getX(), rs.getY()));
                     }
                 }
             }
