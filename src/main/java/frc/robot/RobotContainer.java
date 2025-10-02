@@ -40,6 +40,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.DriveItCommand;
 import frc.robot.commands.Extend;
+import frc.robot.commands.FaceNearestVisibleTag;
 import frc.robot.commands.MoveArm;
 import frc.robot.commands.MoveArmFix;
 //import frc.robot.commands.MoveArmFix;
@@ -565,9 +566,14 @@ private static final DriveToOptions DRIVE_OPTS = new DriveToOptions(
         .onTrue(new InstantCommand(() -> drivetrain.gyro.reset()));
     controller.start()
         .onTrue(new InstantCommand(() -> drivetrain.setHeading(new Rotation2d(0))));
-controller.b().whileTrue(
-  Utilitys.faceNearestVisibleTagCmd(drivetrain,drivetrain::getPose,"limelight-left","limelight-right")
 
+controller.b().whileTrue(
+  new FaceNearestVisibleTag(
+    drivetrain,
+    drivetrain::getPose,
+    new PathConstraints(2.0, 2.0, 3.0, 3.0),   // your constraints
+    "limelight-left", "limelight-right"
+  )
 );
 
 
