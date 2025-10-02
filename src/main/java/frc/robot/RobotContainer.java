@@ -41,7 +41,8 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.DriveItCommand;
 import frc.robot.commands.Extend;
 import frc.robot.commands.FaceNearestVisibleTag;
-import frc.robot.commands.FaceNearestVisibleTagPIDDrive;
+import frc.robot.commands.FaceNearestVisibleTagPDrive;
+//import frc.robot.commands.FaceNearestVisibleTagPIDDrive;
 import frc.robot.commands.MoveArm;
 import frc.robot.commands.MoveArmFix;
 //import frc.robot.commands.MoveArmFix;
@@ -571,12 +572,11 @@ private static final DriveToOptions DRIVE_OPTS = new DriveToOptions(
         .onTrue(new InstantCommand(() -> drivetrain.setHeading(new Rotation2d(0))));
 
 controller.b().whileTrue(
-  new FaceNearestVisibleTagPIDDrive(
-    
-      drivetrain,
-      drivetrain::getPose,
-      "limelight-left", "limelight-right"
-    )
+  new FaceNearestVisibleTagPDrive(
+    drivetrain,
+    drivetrain::getPose,
+    "limelight-left", "limelight-right"
+  )
 );
 
 
