@@ -24,6 +24,7 @@ import com.pathplanner.lib.events.EventTrigger;
 import com.pathplanner.lib.auto.CommandUtil;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -564,10 +565,11 @@ private static final DriveToOptions DRIVE_OPTS = new DriveToOptions(
         .onTrue(new InstantCommand(() -> drivetrain.gyro.reset()));
     controller.start()
         .onTrue(new InstantCommand(() -> drivetrain.setHeading(new Rotation2d(0))));
+controller.b().whileTrue(
+  Utilitys.faceNearestVisibleTagCmd(drivetrain,drivetrain::getPose,"limelight-left","limelight-right")
 
-    controller.b().onTrue(
-      Utilitys.rotateToHeading(drivetrain, () -> drivetrain.botPose2d, Rotation2d.fromDegrees(90.0),
-      5.0,0.0,0.25,Math.toRadians(6.0),2.0));
+);
+
 
     controller.y().whileTrue(
         new InstantCommand(() -> mArm.wrist.moveIt(-0.5)));

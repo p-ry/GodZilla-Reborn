@@ -153,6 +153,216 @@ public class Utilitys {
      * reaches targetHeading. Uses the SAME control path as AutoBuilder:
      * setControl(m_pathApplyRobotSpeeds.withSpeeds(ChassisSpeeds))
      */
+
+    /** Allowed field headings (deg) for your tags. */
+    private static final double[] FIELD_TAG_HEADINGS_DEG = { 0, 60, 120, 180, -60, -120 };
+
+    /** Wrap a heading in degrees to (-180, 180]. */
+    private static double wrapDeg(double deg) {
+        double d = deg % 360.0;
+        if (d <= -180.0)
+            d += 360.0;
+        if (d > 180.0)
+            d -= 360.0;
+        return d;
+    }
+
+    /** Smallest signed difference a-b in degrees (result in (-180, 180]). */
+    private static double angDiffDeg(double a, double b) {
+        return wrapDeg(a - b);
+    }
+
+    /** Pick the nearest discrete field heading from FIELD_TAG_HEADINGS_DEG. */
+    private static double snapToFieldHeadings(double deg) {
+        double best = FIELD_TAG_HEADINGS_DEG[0];
+        double bestAbs = Math.abs(angDiffDeg(deg, best));
+        for (int i = 1; i < FIELD_TAG_HEADINGS_DEG.length; i++) {
+            double cand = FIELD_TAG_HEADINGS_DEG[i];
+            double err = Math.abs(angDiffDeg(deg, cand));
+            if (err < bestAbs) {
+                bestAbs = err;
+                best = cand;
+            }
+        }
+        return wrapDeg(best);
+    }
+
+    public static Rotation2d computeFacingHeadingFromNearestVisibleTag(
+        Pose2d robotPose,
+        String... limelightNames
+    ) {
+      if (limelightNames == null || limelightNames.length == 0) {
+        limelightNames = new String[] { "limelight-left", "limelight-right" };
+      }
+    
+      String usedCam = null;
+      Pose3d bestRS = null;
+      double bestRange = Double.POSITIVE_INFINITY;
+    
+      for (String name : limelightNames) {
+        try {
+          boolean tv = LimelightHelpers.getTV(name);
+          InitLogger.logBoolean("FaceTag." + name, "hasTarget", tv);
+          if (!tv) continue;
+    
+          Pose3d rs = LimelightHelpers.getTargetPose3d_RobotSpace(name);
+          if (rs == null) continue;
+    
+          double dx = rs.getX();
+          double dy = rs.getY();
+          double range = Math.hypot(dx, dy);
+          InitLogger.logDouble("FaceTag." + name, "dxRobot", dx);
+          InitLogger.logDouble("FaceTag." + name, "dyRobot", dy);
+          InitLogger.logDouble("FaceTag." + name, "range", range);
+    
+          if (range < bestRange) { // choose NEAREST visible target
+            bestRange = range;
+            bestRS = rs;
+            usedCam = name;
+          }
+        } catch (Throwable t) {
+          InitLogger.logMessage("FaceTag." + name, InitLogger.Level.ERROR,
+              "RobotSpace read exception: " + t.getMessage());
+        }
+      }
+    
+      if (bestRS == null) {
+        InitLogger.logMessage("FaceTag", InitLogger.Level.WARN, "No visible tag on any camera");
+        return null;
+      }
+    
+      // Tag yaw in ROBOT frame (Δ = θ_tag - θ_robot), degrees
+      double tagYawRobotDeg = Math.toDegrees(bestRS.getRotation().getZ()); // yaw is Z in WPILib Rotation3d
+      tagYawRobotDeg = wrapDeg(tagYawRobotDeg);
+    
+      // Absolute desired heading = θ_robot + (Δ + 180°)
+      double robotHeadingDeg = robotPose.getRotation().getDegrees();
+      double deltaDeg = wrapDeg(tagYawRobotDeg + 180.0);
+      double desiredRawDeg = wrapDeg(robotHeadingDeg + deltaDeg);
+    
+      // Snap to nearest of the allowed field headings to tolerate small setup error
+      double desiredSnappedDeg = snapToFieldHeadings(desiredRawDeg);
+    
+      // Telemetry
+      InitLogger.logMessage("FaceTag", InitLogger.Level.INFO, "Using camera=" + usedCam);
+      InitLogger.logDouble("FaceTag", "robotHeadingDeg", robotHeadingDeg);
+      InitLogger.logDouble("FaceTag", "tagYawRobotDeg", tagYawRobotDeg);
+      InitLogger.logDouble("FaceTag", "deltaAddDeg", deltaDeg);
+      InitLogger.logDouble("FaceTag", "desiredRawDeg", desiredRawDeg);
+      InitLogger.logDouble("FaceTag", "desiredSnappedDeg", desiredSnappedDeg);
+    
+      return Rotation2d.fromDegrees(desiredSnappedDeg);
+    }
+
+// Rotate-in-place to face the nearest visible tag (ends on align/timeout/tag lost).
+public static edu.wpi.first.wpilibj2.command.Command faceNearestVisibleTagCmd(
+    frc.robot.subsystems.CommandSwerveDrivetrain drivetrain,
+    java.util.function.Supplier<edu.wpi.first.math.geometry.Pose2d> robotPose,
+    String... limelights
+) {
+  final double kP = 0.3;                  // tune 1.0–3.0
+  final double tolDeg = 3.0;              // finish when |error| < 3°
+  final double maxOmegaRad = Math.toRadians(180.0); // clamp 180°/s
+  final double timeoutSec = 2.5;          // safety timeout
+
+  var timer = new edu.wpi.first.wpilibj.Timer();
+
+  return new edu.wpi.first.wpilibj2.command.FunctionalCommand(
+      // init
+      () -> {
+        timer.restart();
+        InitLogger.logMessage("FaceTag", InitLogger.Level.INFO, "Rotate-to-face START");
+      },
+      // execute
+      () -> {
+        var desired = computeFacingHeadingFromNearestVisibleTag(robotPose.get(), limelights);
+        if (desired == null) {
+          InitLogger.logBoolean("FaceTag", "visible", false);
+          // hold still this tick
+          drivetrain.setControl(
+              drivetrain.m_pathApplyRobotSpeeds.withSpeeds(
+                  new edu.wpi.first.math.kinematics.ChassisSpeeds(0.0, 0.0, 0.0)
+              )
+          );
+          return;
+        }
+        InitLogger.logBoolean("FaceTag", "visible", true);
+
+        var curRot = robotPose.get().getRotation();
+        double errRad = curRot.minus(desired).getRadians(); // signed shortest diff
+        double omega = kP * errRad;
+
+        // Clamp angular velocity
+        if (omega >  maxOmegaRad) omega =  maxOmegaRad;
+        if (omega < -maxOmegaRad) omega = -maxOmegaRad;
+
+        // If it spins the wrong way, flip once here:
+        // omega = -omega;
+
+        // Rotate in place using YOUR API
+        drivetrain.setControl(
+            drivetrain.m_pathApplyRobotSpeeds.withSpeeds(
+                new edu.wpi.first.math.kinematics.ChassisSpeeds(0.0, 0.0, omega)
+            )
+        );
+
+        // Logs
+        InitLogger.logDouble("FaceTag", "targetHeadingDeg", desired.getDegrees());
+        InitLogger.logDouble("FaceTag", "robotHeadingDeg", curRot.getDegrees());
+        InitLogger.logDouble("FaceTag", "headingErrDeg", Math.toDegrees(errRad));
+        InitLogger.logDouble("FaceTag", "omegaCmd", omega);
+      },
+      // end (interrupted or finished) -> STOP the robot so it doesn't "lock"
+      (interrupted) -> {
+        drivetrain.setControl(
+            drivetrain.m_pathApplyRobotSpeeds.withSpeeds(
+                new edu.wpi.first.math.kinematics.ChassisSpeeds(0.0, 0.0, 0.0)
+            )
+        );
+        InitLogger.logMessage("FaceTag", InitLogger.Level.INFO,
+            interrupted ? "Rotate-to-face CANCEL" : "Rotate-to-face DONE");
+      },
+      // isFinished
+      () -> {
+        var desired = Utilitys.computeFacingHeadingFromNearestVisibleTag(robotPose.get(), limelights);
+        boolean haveHeading = (desired != null);
+        boolean timedOut = timer.hasElapsed(timeoutSec);
+
+        boolean aligned = false;
+        if (haveHeading) {
+          double errDeg = robotPose.get().getRotation().minus(desired).getDegrees();
+          // wrap to [-180, 180]
+          errDeg = (errDeg + 180.0) % 360.0 - 180.0;
+          aligned = Math.abs(errDeg) <= tolDeg;
+        }
+
+        InitLogger.logBoolean("FaceTag", "finish.aligned", aligned);
+        InitLogger.logBoolean("FaceTag", "finish.timeout", timedOut);
+        InitLogger.logBoolean("FaceTag", "finish.haveHeading", haveHeading);
+
+        return aligned || timedOut || !haveHeading;
+      },
+      drivetrain // require drivetrain only while this runs
+  ).withName("FaceNearestVisibleTag");
+}
+
+    /**
+     * Compute the ABSOLUTE field heading the robot should face to look directly at
+     * the
+     * currently visible tag, without relying on field layout.
+     *
+     * Logic:
+     * - From the nearest camera/target, read tag yaw in the ROBOT frame (Δ =
+     * tagYawRobotFrame).
+     * - Desired robot heading change = Δ + 180° (so robot and tag face each other).
+     * - Absolute desired = robotPose.yaw + (Δ + 180°), wrapped to (-180,180].
+     * - Snap to nearest of {0, ±60, ±120, 180} so small field/setup error (<~5°)
+     * doesn’t matter.
+     *
+     * Returns null if no tag is visible from either camera.
+     */
+  
+
     public static Command rotateToHeading(
             CommandSwerveDrivetrain drivetrain,
             java.util.function.Supplier<Pose2d> robotPose,
@@ -438,19 +648,19 @@ public class Utilitys {
                 double r2t_dx = tagFieldTranslation.getX() - robotFieldPose.getX();
                 double r2t_dy = tagFieldTranslation.getY() - robotFieldPose.getY();
                 Rotation2d robotToTagHeading = new Rotation2d(Math.atan2(r2t_dy, r2t_dx));
-              
+
                 // Also compute GOAL→TAG (final-facing) just for logging
                 double g2t_dx = tagFieldTranslation.getX() - goalFieldTranslation.getX();
                 double g2t_dy = tagFieldTranslation.getY() - goalFieldTranslation.getY();
                 Rotation2d goalToTagHeading = new Rotation2d(Math.atan2(g2t_dy, g2t_dx));
-              
+
                 InitLogger.logDouble(LOG_NAME, "sanity/robotToTagDeg", robotToTagHeading.getDegrees());
-                InitLogger.logDouble(LOG_NAME, "sanity/goalToTagDeg",  goalToTagHeading.getDegrees());
+                InitLogger.logDouble(LOG_NAME, "sanity/goalToTagDeg", goalToTagHeading.getDegrees());
                 InitLogger.logDouble(LOG_NAME, "sanity/goalHeadingDeg", robotToTagHeading.getDegrees());
-              
+
                 yield robotToTagHeading;
-              }
-              
+            }
+
             case EXPLICIT -> opts.explicitHeading();
         };
 
