@@ -74,7 +74,8 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.math.geometry.Pose2d;
 //import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.Utilitys.VisibleTagMeasurementSupplier;
+
+//import frc.robot.Utilitys.VisibleTagMeasurementSupplier;
 
 import java.util.function.Supplier;
 
@@ -171,8 +172,8 @@ public class RobotContainer {
   // Point2D.Double(0.00,2020.0);//80.0,2040.0-20.1,1160.95);//0.0041,1.85795);
 
   private final Supplier<AprilTagFieldLayout> fieldLayoutSupplier = () -> Constants.fieldLayout;
-  private final VisibleTagMeasurementSupplier visibleMeas = () ->
-  Utilitys.collectVisibleTagMeasurementsByAPI(Constants.LIMELIGHT_NAMES);
+  // private final VisibleTagMeasurementSupplier visibleMeas = () ->
+  // Utilitys.collectVisibleTagMeasurementsByAPI(Constants.LIMELIGHT_NAMES);
 
   // === Robot pose supplier ===
   private final Supplier<Pose2d> robotPoseSupplier;// = drivetrain::getPose; // adapt if your API differs
@@ -300,16 +301,16 @@ private static final DriveToOptions DRIVE_OPTS = new DriveToOptions(
     scheduleFollowPathWarmup();
     schedulePathfindingWarmup();
   }
-  private Command makeDriveToNearestVisibleTag(double dxMeters, double dyMeters) {
-    return Utilitys.driveToDxDyFromNearestTagRaw(
-        drivetrain,
-        robotPoseSupplier,   // your field Pose2d (odom/estimator)
-        visibleMeas,         // <-- now uses the correct API
-        dxMeters,
-        dyMeters,
-        DRIVE_OPTS
-    );
-  }
+  // private Command makeDriveToNearestVisibleTag(double dxMeters, double dyMeters) {
+  //   return Utilitys.driveToDxDyFromNearestTagRaw(
+  //       drivetrain,
+  //       robotPoseSupplier,   // your field Pose2d (odom/estimator)
+  //       visibleMeas,         // <-- now uses the correct API
+  //       dxMeters,
+  //       dyMeters,
+  //       DRIVE_OPTS
+  //   );
+  // }
   
 
   private void scheduleFollowPathWarmup() {
@@ -493,12 +494,12 @@ private static final DriveToOptions DRIVE_OPTS = new DriveToOptions(
     Outtake
         .onFalse(new InstantCommand(() -> ace.setSpeed(0)));
 
-    leftBumper.onTrue(new InstantCommand(() -> {
-      driveIt = makeDriveToNearestVisibleTag(APPROACH_X, +LATERAL_Y);
-      if (driveIt != null) {
-        driveIt.schedule();
-      }
-    }));
+    // leftBumper.onTrue(new InstantCommand(() -> {
+    //   driveIt = makeDriveToNearestVisibleTag(APPROACH_X, +LATERAL_Y);
+    //   if (driveIt != null) {
+    //     driveIt.schedule();
+    //   }
+    // }));
 
     leftBumper
         .onFalse(new InstantCommand(() -> {
@@ -508,12 +509,12 @@ private static final DriveToOptions DRIVE_OPTS = new DriveToOptions(
           }
         }));
 
-        rightBumper.onTrue(new InstantCommand(() -> {
-          driveIt = makeDriveToNearestVisibleTag(APPROACH_X, -LATERAL_Y);
-          if (driveIt != null) {
-            driveIt.schedule();
-          }
-        }));
+        // rightBumper.onTrue(new InstantCommand(() -> {
+        //   driveIt = makeDriveToNearestVisibleTag(APPROACH_X, -LATERAL_Y);
+        //   if (driveIt != null) {
+        //     driveIt.schedule();
+        //   }
+        // }));
     
         rightBumper
             .onFalse(new InstantCommand(() -> {
